@@ -25,7 +25,7 @@ const dummyProjects = [
   { id: 1, image: forest1, title: "Mangrove Restoration & Blue Carbon Project", location: "Gazi Bay, Kwale County", lastUpdated: "10th Nov, 2025", categories: ["Blue Carbon", "Mangroves", "Coastal Restoration"], progress: 78, status: 'Active' as ProjectStatus },
   { id: 2, image: forest2, title: "Mikoko Pamoja Community Mangrove Conservation", location: "Gazi & Vanga, Kwale County", lastUpdated: "18th Nov, 2025", categories: ["Community-Led", "Carbon Credits", "Mangroves"], progress: 92, status: 'Active' as ProjectStatus },
   { id: 3, image: forest3, title: "Mount Kenya Forest Rehabilitation Initiative", location: "Nyeri & Meru Counties", lastUpdated: "5th Nov, 2025", categories: ["Reforestation", "Water Catchment", "Biodiversity"], progress: 64, status: 'Active' as ProjectStatus },
-  { id: 4, image: forest4, title: "Kakamega Forest Indigenous Tree Planting", location: "Kakamega County", lastUpdated: "22nd Oct, 2025", categories: ["Tropical Rainforest", "Biodiversity Hotspot", "Community"], progress: 71, status: 'Pending' as ProjectStatus },
+  { id: 4, image: forest4, title: "Kakamega Forest Indigenous, Indigenous Tree Planting", location: "Kakamega County", lastUpdated: "22nd Oct, 2025", categories: ["Tropical Rainforest", "Biodiversity Hotspot", "Community"], progress: 71, status: 'Pending' as ProjectStatus },
   { id: 5, image: forest5, title: "Maasai Mara Conservancies Reforestation", location: "Narok County", lastUpdated: "14th Nov, 2025", categories: ["Wildlife Corridors", "Agroforestry", "Community Conservancies"], progress: 55, status: 'Active' as ProjectStatus },
   { id: 6, image: forest6, title: "Aberdare Range Cloud Forest Protection", location: "Nyandarua & Murang’a Counties", lastUpdated: "27th Nov, 2025", categories: ["Water Towers", "REDD+", "Indigenous Forest"], progress: 49, status: 'Pending' as ProjectStatus },
   { id: 7, image: forest7, title: "Lake Victoria Basin Riparian Restoration", location: "Kisumu & Siaya Counties", lastUpdated: "20th Nov, 2025", categories: ["Wetlands", "Water Quality", "Community"], progress: 83, status: 'Active' as ProjectStatus },
@@ -36,7 +36,7 @@ const dummyProjects = [
 
 const PROJECTS_PER_PAGE = 6;
 
-// Status Badge Component
+// Status Badge
 const StatusBadge = ({ status }: { status: ProjectStatus }) => {
   const config = {
     Active: { bg: 'bg-[#E2FFF2]', border: 'border-[#044D5E]', text: 'text-[#044D5E]' },
@@ -52,33 +52,43 @@ const StatusBadge = ({ status }: { status: ProjectStatus }) => {
 };
 
 const Projects = () => {
-  const [isCollapsed, setIsCollapsed] = useState<boolean>(() => {
-    if (typeof window !== 'undefined') {
-      const saved = localStorage.getItem('sidebarCollapsed');
-      return saved ? JSON.parse(saved) as boolean : true;
-    }
-    return true;
-  });
+  // Client-only mount guard
+  const [isMounted, setIsMounted] = useState(false);
 
+  // Sidebar state
+  const [isCollapsed, setIsCollapsed] = useState(true);
+
+  // Pagination
   const [currentPage, setCurrentPage] = useState(1);
 
-  // Filter states
+  // Filters
   const [selectedLocation, setSelectedLocation] = useState('All');
   const [selectedLocationCategory, setSelectedLocationCategory] = useState('All');
   const [selectedCarbonStage, setSelectedCarbonStage] = useState('Stage');
   const [selectedExpert, setSelectedExpert] = useState('All');
 
-  // Dropdown states
+  // Dropdowns
   const [locationsDropdownOpen, setLocationsDropdownOpen] = useState(false);
   const [locationCategoriesDropdownOpen, setLocationCategoriesDropdownOpen] = useState(false);
   const [carbonCreditsDropdownOpen, setCarbonCreditsDropdownOpen] = useState(false);
   const [khExpertsDropdownOpen, setKhExpertsDropdownOpen] = useState(false);
 
-  // === Load BOTH submitted projects AND drafts ===
+  // Mount effect: enable client rendering + restore sidebar state
+  useEffect(() => {
+    setIsMounted(true);
+    const saved = localStorage.getItem('sidebarCollapsed');
+    if (saved !== null) {
+      setIsCollapsed(JSON.parse(saved));
+    }
+  }, []);
+
+  // Load real projects (drafts + submitted) — only runs on client
   const realProjects = useMemo(() => {
+    if (!isMounted) return [];
+
     const projects: any[] = [];
 
-    // 1. Load submitted projects (final, completed ones)
+    // Load submitted projects
     try {
       const submittedStr = localStorage.getItem('submittedProjects');
       if (submittedStr) {
@@ -87,9 +97,9 @@ const Projects = () => {
           submitted.forEach((proj: any) => {
             const overview = proj.overview || {};
             const timestamp = proj.id.match(/_(\d+)_\w+/)?.[1];
-            const date = timestamp ? new Date(Number(timestamp)).toLocaleDateString('en-GB', {
-              day: 'numeric', month: 'short', year: 'numeric'
-            }) : 'Recently';
+            const date = timestamp
+              ? new Date(Number(timestamp)).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })
+              : 'Recently';
 
             projects.push({
               id: proj.id,
@@ -97,71 +107,67 @@ const Projects = () => {
               location: overview.county ? `${overview.county} County` : 'Kenya',
               county: overview.county,
               lastUpdated: date,
-              categories: [
-                overview.taxonomyCategory || 'Climate Action',
-                overview.subCategory || ''
-              ].filter(Boolean),
+              categories: [overview.taxonomyCategory || 'Climate Action', overview.subCategory || ''].filter(Boolean),
               progress: 100,
               status: 'Completed' as ProjectStatus,
               image: null,
-              isSubmitted: true
+              isSubmitted: true,
             });
           });
         }
       }
     } catch (e) {
-      console.warn('Failed to load submittedProjects');
+      console.warn('Failed to load submittedProjects', e);
     }
 
-    // 2. Load in-progress drafts
+    // Load drafts
     Object.keys(localStorage).forEach(key => {
       const match = key.match(/^projectDraft_(.+)_step1$/);
-      if (match) {
-        const projectId = match[1];
-        if (projects.some(p => p.id === projectId)) return; // skip if already submitted
+      if (!match) return;
+      const projectId = match[1];
+      if (projects.some(p => p.id === projectId)) return; // skip if already submitted
 
-        try {
-          const step1Data = JSON.parse(localStorage.getItem(key) || '{}');
-          if (step1Data.projectTitle) {
-            let filledSteps = 0;
-            for (let i = 1; i <= 4; i++) {
-              if (localStorage.getItem(`projectDraft_${projectId}_step${i}`)) filledSteps++;
-            }
-            const progress = Math.round((filledSteps / 4) * 100);
+      try {
+        const step1Data = JSON.parse(localStorage.getItem(key) || '{}');
+        if (!step1Data.projectTitle) return;
 
-            projects.push({
-              id: projectId,
-              title: step1Data.projectTitle || 'Untitled Draft',
-              location: step1Data.county ? `${step1Data.county} County` : 'Location not set',
-              county: step1Data.county,
-              lastUpdated: 'In Progress',
-              categories: [step1Data.taxonomyCategory || 'Draft'],
-              progress,
-              status: progress === 100 ? 'Active' : progress >= 50 ? 'Active' : 'Pending',
-              image: null,
-              isSubmitted: false
-            });
-          }
-        } catch (e) {
-          console.warn('Failed to parse draft:', key);
+        let filledSteps = 0;
+        for (let i = 1; i <= 4; i++) {
+          if (localStorage.getItem(`projectDraft_${projectId}_step${i}`)) filledSteps++;
         }
+        const progress = Math.round((filledSteps / 4) * 100);
+
+        projects.push({
+          id: projectId,
+          title: step1Data.projectTitle || 'Untitled Draft',
+          location: step1Data.county ? `${step1Data.county} County` : 'Location not set',
+          county: step1Data.county,
+          lastUpdated: 'In Progress',
+          categories: [step1Data.taxonomyCategory || 'Draft'],
+          progress,
+          status: progress === 100 ? 'Active' : progress >= 50 ? 'Active' : 'Pending',
+          image: null,
+          isSubmitted: false,
+        });
+      } catch (e) {
+        console.warn('Failed to parse draft:', key);
       }
     });
 
     return projects;
-  }, []);
+  }, [isMounted]);
 
-  // Combine: real (submitted + drafts) + dummy
+  // Combine real + dummy projects
   const allProjects = useMemo(() => {
     const dummies = dummyProjects.map(p => ({
       ...p,
       id: p.id.toString(),
-      isDummy: true
+      isDummy: true,
     }));
     return [...realProjects, ...dummies];
   }, [realProjects]);
 
-  // Extract county
+  // Extract county from location string
   const extractCounty = (location: string): string => {
     const match = location.match(/(?:^|,\s)([A-Za-z\s]+) County$/);
     return match ? match[1].trim() : '';
@@ -177,42 +183,54 @@ const Projects = () => {
     });
   }, [allProjects, selectedLocation, selectedLocationCategory, selectedCarbonStage, selectedExpert]);
 
+  // Reset page when filters change
   useEffect(() => {
     setCurrentPage(1);
   }, [filteredProjects.length]);
 
   const totalPages = Math.ceil(filteredProjects.length / PROJECTS_PER_PAGE);
-  const startIdx = (currentPage - 1) * PROJECTS_PER_PAGE;
-  const endIdx = startIdx + PROJECTS_PER_PAGE;
-  const currentProjects = filteredProjects.slice(startIdx, endIdx);
+  const currentProjects = filteredProjects.slice((currentPage - 1) * PROJECTS_PER_PAGE, currentPage * PROJECTS_PER_PAGE);
 
   const toggleSidebar = () => {
     const newState = !isCollapsed;
     setIsCollapsed(newState);
-    localStorage.setItem('sidebarCollapsed', JSON.stringify(newState));
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('sidebarCollapsed', JSON.stringify(newState));
+    }
   };
 
   const contentMarginLeft = isCollapsed ? 'md:ml-28' : 'md:ml-58';
   const sectionTextContainerClass = `space-y-4 transition-all duration-300 ease-in-out ${isCollapsed ? 'scale-x-110' : 'scale-x-100'}`;
 
+  // Prevent SSR flash / hydration mismatch
+  if (!isMounted) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-[#BFEFF8]/30 to-[#B1CA69]/30 flex">
+        <Header />
+        <div className="flex-1 flex items-center justify-center text-gray-600">
+          Loading projects...
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-[#BFEFF8]/30 to-[#B1CA69]/30 flex">
-      <div className="flex-1 flex-col relative z-10">
+      <div className="flex-1 flex flex-col relative z-10">
         <Header />
 
         <div className="flex w-full md:w-[90vw] mx-auto pt-17 bg-[#FBFDFB] relative">
-          <section className="absolute inset-x-0 top-17 w-full h-52 md:h-64 bg-cover bg-center z-20 transition-all duration-300 ease-in-out">
+          {/* Hero Banner */}
+          <section className="absolute inset-x-0 top-17 w-full h-52 md:h-64 bg-cover bg-center z-20">
             <Image src="/images/projects/summary.png" alt="Summary Banner" fill className="object-cover" />
             <div className="absolute inset-0 bg-gradient-to-br from-[#B1CA69]/30 via-transparent to-[#FBFDFB]/30 flex items-center p-6">
               <div className="flex items-end justify-between w-full">
                 <div className={`flex flex-col items-start ${contentMarginLeft} ${sectionTextContainerClass}`}>
                   <Image src={folder} alt="folder Icon" className="block md:hidden w-4 h-4 mb-2 cursor-pointer" />
-                  <h2 className="text-lg md:text-3xl font-medium text-teal-900 transition-transform duration-300 ease-in-out origin-left">
+                  <h2 className="text-lg md:text-3xl font-medium text-teal-900">
                     My Projects ({allProjects.length})
                   </h2>
-                  <span className="text-xs text-teal-700 transition-transform duration-300 ease-in-out origin-left">
-                    Projects / Listed Items
-                  </span>
+                  <span className="text-xs text-teal-700">Projects / Listed Items</span>
                 </div>
                 <Link
                   href="/projects/forms"
@@ -231,7 +249,7 @@ const Projects = () => {
 
               {/* Filters */}
               <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-                {/* Locations */}
+                {/* Location Filter */}
                 <div className="relative">
                   <div
                     className="w-full bg-white border border-gray-200 rounded-md px-3 py-2 flex justify-between items-center cursor-pointer hover:bg-gray-50"
@@ -254,7 +272,10 @@ const Projects = () => {
                         {locations.map(loc => (
                           <div
                             key={loc}
-                            onClick={() => { setSelectedLocation(loc); setLocationsDropdownOpen(false); }}
+                            onClick={() => {
+                              setSelectedLocation(loc);
+                              setLocationsDropdownOpen(false);
+                            }}
                             className={`px-3 py-2 text-xs hover:bg-green-50 cursor-pointer ${selectedLocation === loc ? 'bg-green-100 font-medium' : ''}`}
                           >
                             {loc}
@@ -265,7 +286,7 @@ const Projects = () => {
                   </AnimatePresence>
                 </div>
 
-                {/* Other filters (collapsed for brevity - you can keep them) */}
+                {/* Other filters (you can expand later) */}
                 <div className="relative">
                   <div className="w-full bg-white border border-gray-200 rounded-md px-3 py-2 flex justify-between items-center cursor-pointer hover:bg-gray-50"
                     onClick={() => setLocationCategoriesDropdownOpen(!locationCategoriesDropdownOpen)}>
@@ -275,7 +296,6 @@ const Projects = () => {
                     </div>
                     {locationCategoriesDropdownOpen ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
                   </div>
-                  {/* Dropdown content... */}
                 </div>
 
                 <div className="relative">
@@ -287,7 +307,6 @@ const Projects = () => {
                     </div>
                     {carbonCreditsDropdownOpen ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
                   </div>
-                  {/* Dropdown content... */}
                 </div>
 
                 <div className="relative">
@@ -299,7 +318,6 @@ const Projects = () => {
                     </div>
                     {khExpertsDropdownOpen ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
                   </div>
-                  {/* Dropdown content... */}
                 </div>
               </div>
 
@@ -410,6 +428,7 @@ const Projects = () => {
         </div>
       </div>
 
+      {/* Floating Help */}
       <div className="fixed bottom-5 right-5 flex flex-col items-center z-50">
         <div className="bg-white text-xs text-gray-700 px-3 py-1 rounded-lg shadow-md mb-2 relative cursor-pointer">
           need help?
