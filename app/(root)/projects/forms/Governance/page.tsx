@@ -4,14 +4,21 @@ import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ChevronDown, ChevronUp, Users } from 'lucide-react';
 
-const Governance = () => {
+interface GovernanceProps {
+    projectId: string;
+}
+
+const Governance = ({ projectId }: GovernanceProps) => {
+    // Form State
+    const [relationshipManager, setRelationshipManager] = useState<string>('');
+    const [keyHolderExpert, setKeyHolderExpert] = useState<string>('');
+
+    // Dropdown States
     const [relationshipManagerDropdownOpen, setRelationshipManagerDropdownOpen] = useState(false);
     const [keyHolderDropdownOpen, setKeyHolderDropdownOpen] = useState(false);
-    const [activeSection, setActiveSection] = useState<string>('Responsibility & Oversight');
 
-    const sectionRefs = {
-        'Responsibility & Oversight': useRef<HTMLDivElement>(null),
-    };
+    // Navigation
+    const sectionRef = useRef<HTMLDivElement>(null);
 
     const relationshipManagers = [
         'John Smith',
@@ -27,104 +34,91 @@ const Governance = () => {
         'Robert Taylor',
     ];
 
-    const handleNavClick = (section: string) => {
-        setActiveSection(section);
-        const sectionRef = sectionRefs[section as keyof typeof sectionRefs].current;
-        if (sectionRef) {
-            sectionRef.scrollIntoView({ behavior: 'smooth' });
-        }
-    };
+    // === UNIQUE STORAGE KEY FOR THIS PROJECT + STEP 4 ===
+    const storageKey = `projectDraft_${projectId}_step4`;
 
+    // Auto-save to localStorage (debounced) — per project
     useEffect(() => {
-        const observer = new IntersectionObserver(
-            (entries) => {
-                entries.forEach((entry) => {
-                    if (entry.isIntersecting) {
-                        setActiveSection(entry.target.getAttribute('data-section')!);
-                    }
-                });
-            },
-            { threshold: 0.5 }
-        );
-
-        Object.values(sectionRefs).forEach((ref) => {
-            if (ref.current) {
-                observer.observe(ref.current);
-            }
-        });
-
-        return () => {
-            Object.values(sectionRefs).forEach((ref) => {
-                if (ref.current) {
-                    observer.unobserve(ref.current);
-                }
-            });
+        const saveDraft = () => {
+            const draft = {
+                relationshipManager,
+                keyHolderExpert,
+            };
+            localStorage.setItem(storageKey, JSON.stringify(draft));
         };
-    }, []);
+
+        const timeoutId = setTimeout(saveDraft, 600);
+        return () => clearTimeout(timeoutId);
+    }, [relationshipManager, keyHolderExpert, projectId]);
+
+    // Load draft on mount — only for this project
+    useEffect(() => {
+        const saved = localStorage.getItem(storageKey);
+        if (saved) {
+            try {
+                const draft = JSON.parse(saved);
+                setRelationshipManager(draft.relationshipManager || '');
+                setKeyHolderExpert(draft.keyHolderExpert || '');
+            } catch (e) {
+                console.warn('Failed to load Step 4 draft for project:', projectId);
+            }
+        }
+    }, [projectId, storageKey]);
 
     return (
-        <div className="w-full mx-auto px-2 md:px-6 py-0 space-y-6">
-            <div className="flex gap-4">
-                {/* Sticky Sidebar Navigation */}
-                <div className="w-72 hidden md:flex flex-col gap-2 sticky top-38 self-start">
-                    <h1 className="text-lg font-semibold text-gray-600">Content</h1>
-                    <div className="flex flex-col gap-1">
-                        {[
-                            { name: 'Responsibility & Oversight', icon: Users },
-                        ].map(({ name, icon: Icon }) => (
-                            <div
-                                key={name}
-                                onClick={() => handleNavClick(name)}
-                                className={`flex items-center gap-2 px-5 py-2 rounded-lg cursor-pointer transition-colors duration-300 ${activeSection === name
-                                    ? 'bg-[#F2F2F2] text-[#044D5E]'
-                                    : 'hover:bg-gray-100 text-gray-500'
-                                    }`}
-                            >
-                                <Icon size={16} />
-                                <p className="text-xs">{name}</p>
-                            </div>
-                        ))}
+        <div className="w-full mx-auto px-2 md:px-6 py-8">
+            <div className="flex gap-8">
+                {/* Sidebar */}
+                <aside className="hidden lg:block w-72 flex-shrink-0">
+                    <div className="sticky top-36">
+                        <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-4">
+                            Form Sections
+                        </h3>
+                        <button className="w-full flex items-center gap-3 px-4 py-3 rounded-lg bg-[#F2F2F2] text-[#044D5E] font-medium shadow-sm">
+                            <Users size={18} />
+                            <span className="text-xs">Responsibility & Oversight</span>
+                        </button>
                     </div>
-                </div>
+                </aside>
 
-                {/* Form Content */}
-                <form className="w-full mx-auto px-4 md:px-6 py-0 flex-1 space-y-6">
-                    {/* Responsibility & Oversight Section */}
-                    <div ref={sectionRefs['Responsibility & Oversight']} data-section="Responsibility & Oversight">
-                        <h1 className="text-lg font-medium text-gray-600 mb-6">Responsibility & Oversight</h1>
-                        <div className="relative mb-6">
-                            <p className="text-xs text-gray-700 mb-1 font-medium">Relationship Manager*</p>
+                {/* Main Content
+                <div ref={sectionRef} className="flex-1 max-w-4xl">
+                    <h1 className="text-2xl font-semibold text-[#044D5E] mb-8">
+                        Responsibility & Oversight
+                    </h1>
+
+                    <div className="space-y-8">
+                        {/* Relationship Manager */}
+                        <div className="relative">
+                            <label className="block text-xs font-medium text-gray-700 mb-2">
+                                Relationship Manager *
+                            </label>
                             <div
-                                className={`
-                                    w-full text-xs rounded-lg px-4 py-2 flex justify-between items-center 
-                                    cursor-pointer transition-all duration-200
-                                    ${relationshipManagerDropdownOpen
-                                        ? 'border border-gray-400 bg-white shadow-sm'
-                                        : 'border border-gray-300 hover:bg-gray-50'
-                                    }`}
                                 onClick={() => setRelationshipManagerDropdownOpen(!relationshipManagerDropdownOpen)}
+                                className="w-full px-4 py-3 border border-gray-300 rounded-lg flex justify-between items-center cursor-pointer hover:bg-gray-50 transition text-xs"
                             >
-                                <span className="text-gray-600">Select Relationship Manager</span>
-                                {relationshipManagerDropdownOpen ? (
-                                    <ChevronUp size={18} className="text-gray-400" />
-                                ) : (
-                                    <ChevronDown size={18} className="text-gray-400" />
-                                )}
+                                <span className={relationshipManager ? 'text-gray-900' : 'text-gray-500'}>
+                                    {relationshipManager || 'Select Relationship Manager'}
+                                </span>
+                                {relationshipManagerDropdownOpen ? <ChevronUp size={18} /> : <ChevronDown size={18} />}
                             </div>
+
                             <AnimatePresence>
                                 {relationshipManagerDropdownOpen && (
                                     <motion.div
-                                        initial={{ opacity: 0, y: -10 }}
+                                        initial={{ opacity: 0, y: -8 }}
                                         animate={{ opacity: 1, y: 0 }}
-                                        exit={{ opacity: 0, y: -10 }}
-                                        transition={{ duration: 0.2 }}
-                                        className="absolute top-full left-0 right-0 mt-1 border border-gray-200 rounded-lg bg-white shadow-md z-10"
+                                        exit={{ opacity: 0, y: -8 }}
+                                        className="absolute z-30 w-full mt-1 bg-white border border-gray-200 rounded-lg shadow-lg max-h-60 overflow-y-auto"
                                     >
-                                        {relationshipManagers.map((manager, i) => (
+                                        {relationshipManagers.map((manager) => (
                                             <div
-                                                key={i}
-                                                onClick={() => setRelationshipManagerDropdownOpen(false)}
-                                                className="px-4 py-2 text-xs text-gray-700 hover:bg-gray-50 cursor-pointer transition"
+                                                key={manager}
+                                                onClick={() => {
+                                                    setRelationshipManager(manager);
+                                                    setRelationshipManagerDropdownOpen(false);
+                                                }}
+                                                className="px-4 py-2.5 hover:bg-gray-50 cursor-pointer text-xs text-gray-700"
                                             >
                                                 {manager}
                                             </div>
@@ -133,41 +127,40 @@ const Governance = () => {
                                 )}
                             </AnimatePresence>
                         </div>
-                        <div className="relative mb-6">
-                            <p className="text-xs text-gray-700 mb-1 font-medium">KeyHolder (KH) Expert- M&E Responsible*</p>
+
+                        {/* KeyHolder Expert */}
+                        <div className="relative">
+                            <label className="block text-xs font-medium text-gray-700 mb-2">
+                                KeyHolder (KH) Expert – M&E Responsible *
+                            </label>
                             <div
-                                className={`
-                                    w-full text-xs rounded-lg px-4 py-2 flex justify-between items-center 
-                                    cursor-pointer transition-all duration-200
-                                    ${keyHolderDropdownOpen
-                                        ? 'border border-gray-400 bg-white shadow-sm'
-                                        : 'border border-gray-300 hover:bg-gray-50'
-                                    }`}
                                 onClick={() => setKeyHolderDropdownOpen(!keyHolderDropdownOpen)}
+                                className="w-full px-4 py-3 border border-gray-300 rounded-lg flex justify-between items-center cursor-pointer hover:bg-gray-50 transition text-xs"
                             >
-                                <span className="text-gray-600">Select KeyHolder Expert</span>
-                                {keyHolderDropdownOpen ? (
-                                    <ChevronUp size={18} className="text-gray-400" />
-                                ) : (
-                                    <ChevronDown size={18} className="text-gray-400" />
-                                )}
+                                <span className={keyHolderExpert ? 'text-gray-900' : 'text-gray-500'}>
+                                    {keyHolderExpert || 'Select KeyHolder Expert'}
+                                </span>
+                                {keyHolderDropdownOpen ? <ChevronUp size={18} /> : <ChevronDown size={18} />}
                             </div>
+
                             <AnimatePresence>
                                 {keyHolderDropdownOpen && (
                                     <motion.div
-                                        initial={{ opacity: 0, y: -10 }}
+                                        initial={{ opacity: 0, y: -8 }}
                                         animate={{ opacity: 1, y: 0 }}
-                                        exit={{ opacity: 0, y: -10 }}
-                                        transition={{ duration: 0.2 }}
-                                        className="absolute top-full left-0 right-0 mt-1 border border-gray-200 rounded-lg bg-white shadow-md z-10"
+                                        exit={{ opacity: 0, y: -8 }}
+                                        className="absolute z-30 w-full mt-1 bg-white border border-gray-200 rounded-lg shadow-lg max-h-60 overflow-y-auto"
                                     >
-                                        {keyHolders.map((keyHolder, i) => (
+                                        {keyHolders.map((expert) => (
                                             <div
-                                                key={i}
-                                                onClick={() => setKeyHolderDropdownOpen(false)}
-                                                className="px-4 py-2 text-xs text-gray-700 hover:bg-gray-50 cursor-pointer transition"
+                                                key={expert}
+                                                onClick={() => {
+                                                    setKeyHolderExpert(expert);
+                                                    setKeyHolderDropdownOpen(false);
+                                                }}
+                                                className="px-4 py-2.5 hover:bg-gray-50 cursor-pointer text-xs text-gray-700"
                                             >
-                                                {keyHolder}
+                                                {expert}
                                             </div>
                                         ))}
                                     </motion.div>
@@ -175,9 +168,8 @@ const Governance = () => {
                             </AnimatePresence>
                         </div>
                     </div>
-                </form>
-            </div>
-        </div>
+                </div>
+            
     );
 };
 

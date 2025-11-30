@@ -14,7 +14,6 @@ import { motion, AnimatePresence } from 'framer-motion';
 import Image from 'next/image';
 import dynamic from 'next/dynamic';
 
-// Dynamically import LocationPicker (no SSR)
 const LocationPicker = dynamic(() => import('../../../../components/LocationPicker'), {
     ssr: false,
 });
@@ -38,7 +37,11 @@ const regions = [
 
 const urbanRuralOptions = ['Rural (<5,000 people)', 'Urban (up to 50,000 people)'];
 
-const ProjectOverview = () => {
+interface ProjectOverviewProps {
+    projectId: string;
+}
+
+const ProjectOverview = ({ projectId }: ProjectOverviewProps) => {
     // Form States
     const [projectTitle, setProjectTitle] = useState('');
     const [institution, setInstitution] = useState('');
@@ -52,8 +55,6 @@ const ProjectOverview = () => {
     const [county, setCounty] = useState('');
     const [urbanRural, setUrbanRural] = useState('');
     const [urbanRuralDropdownOpen, setUrbanRuralDropdownOpen] = useState(false);
-
-    // NEW: Store picked coordinates
     const [pickedCoords, setPickedCoords] = useState<{ lat: number; lng: number } | null>(null);
 
     // Images
@@ -107,6 +108,65 @@ const ProjectOverview = () => {
         };
     }, [sectionRefs]);
 
+    // === UNIQUE STORAGE KEY FOR THIS PROJECT & STEP ===
+    const storageKey = `projectDraft_${projectId}_step1`;
+
+    // Auto-save (debounced) — now per-project
+    useEffect(() => {
+        const saveDraft = () => {
+            const draft = {
+                projectTitle,
+                institution,
+                description,
+                taxonomyCategory,
+                subCategory,
+                region,
+                county,
+                urbanRural,
+                imagePreviews,   // Base64 strings are safe to store
+                pickedCoords,
+            };
+            localStorage.setItem(storageKey, JSON.stringify(draft));
+        };
+
+        const timeoutId = setTimeout(saveDraft, 600);
+        return () => clearTimeout(timeoutId);
+    }, [
+        projectTitle,
+        institution,
+        description,
+        taxonomyCategory,
+        subCategory,
+        region,
+        county,
+        urbanRural,
+        imagePreviews,
+        pickedCoords,
+        projectId, // important: re-run if projectId changes
+    ]);
+
+    // Load draft on mount — only for this project
+    useEffect(() => {
+        const saved = localStorage.getItem(storageKey);
+        if (saved) {
+            try {
+                const draft = JSON.parse(saved);
+                setProjectTitle(draft.projectTitle || '');
+                setInstitution(draft.institution || '');
+                setDescription(draft.description || '');
+                setTaxonomyCategory(draft.taxonomyCategory || '');
+                setSubCategory(draft.subCategory || '');
+                setRegion(draft.region || '');
+                setCounty(draft.county || '');
+                setUrbanRural(draft.urbanRural || '');
+                setImagePreviews(draft.imagePreviews || []);
+                setPickedCoords(draft.pickedCoords || null);
+            } catch (e) {
+                console.warn('Failed to load Step 1 draft for project:', projectId);
+            }
+        }
+    }, [projectId, storageKey]);
+
     // Image handlers
     const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const files = Array.from(e.target.files || []);
@@ -144,10 +204,11 @@ const ProjectOverview = () => {
                             <button
                                 key={name}
                                 onClick={() => handleNavClick(name)}
-                                className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg text-left transition-all ${activeSection === name
+                                className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg text-left transition-all ${
+                                    activeSection === name
                                         ? 'bg-[#F2F2F2] text-[#044D5E] font-medium shadow-sm'
                                         : 'text-gray-600 hover:bg-gray-50'
-                                    }`}
+                                }`}
                             >
                                 <Icon size={18} />
                                 <span className="text-xs">{name}</span>
@@ -269,7 +330,7 @@ const ProjectOverview = () => {
                                                 key={item}
                                                 onClick={() => {
                                                     setTaxonomyCategory(item);
-                                                    setSubCategory(item); // optional auto-fill
+                                                    setSubCategory(item);
                                                     setTaxonomyDropdownOpen(false);
                                                 }}
                                                 className="px-4 py-3 hover:bg-gray-50 cursor-pointer text-xs"
@@ -337,7 +398,6 @@ const ProjectOverview = () => {
                     <h2 className="text-2xl font-semibold text-[#044D5E]">Location & Geotagging</h2>
 
                     <div className="grid md:grid-cols-2 gap-6">
-                        {/* Region Dropdown */}
                         <div className="relative">
                             <label className="block text-xs font-medium text-gray-700 mb-2">Country / Region</label>
                             <div
@@ -375,7 +435,6 @@ const ProjectOverview = () => {
                             </AnimatePresence>
                         </div>
 
-                        {/* County */}
                         <div>
                             <label className="block text-xs font-medium text-gray-700 mb-2">County / Subregion *</label>
                             <input
@@ -388,7 +447,6 @@ const ProjectOverview = () => {
                         </div>
                     </div>
 
-                    {/* MAP + COORDINATES */}
                     <div className="mb-6">
                         <LocationPicker onCoordsChange={setPickedCoords} />
                         <p className="mt-3 text-xs font-medium text-gray-800">
@@ -401,7 +459,6 @@ const ProjectOverview = () => {
                         </p>
                     </div>
 
-                    {/* Rural/Urban Dropdown */}
                     <div className="relative">
                         <label className="block text-xs font-medium text-gray-700 mb-2">
                             Rural / Urban Classification *

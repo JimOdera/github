@@ -2,41 +2,59 @@
 
 import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ChevronDown, ChevronUp, Edit2, Trash2, Leaf, Plus } from 'lucide-react';
+import { ChevronDown, ChevronUp, Trash2, Leaf, Plus } from 'lucide-react';
 
-const KGFTAlignment = () => {
-    const [useOfProceedsDropdownOpen, setUseOfProceedsDropdownOpen] = useState(false);
+interface EmissionFactor {
+    type: string;
+    value: string;
+}
+
+interface KGFTAlignmentProps {
+    projectId: string;
+}
+
+const KGFTAlignment = ({ projectId }: KGFTAlignmentProps) => {
+    // === Form State ===
+    const [activityOwner, setActivityOwner] = useState('');
+    const [greenClassificationReason, setGreenClassificationReason] = useState('');
+    const [genderEquity, setGenderEquity] = useState<'yes' | 'no' | null>(null);
     const [selectedUseOfProceeds, setSelectedUseOfProceeds] = useState<string | null>(null);
-    const [activityTypeDropdownOpen, setActivityTypeDropdownOpen] = useState(false);
-    const [selectedActivityType, setSelectedActivityType] = useState<string | null>(null);
+    const [financingUse, setFinancingUse] = useState('');
+    const [activityLocation, setActivityLocation] = useState('');
+    const [listedInKGFT, setListedInKGFT] = useState<'yes' | 'no' | 'pending' | null>(null);
     const [mitigationCategorySelected, setMitigationCategorySelected] = useState<string[]>([]);
-    const [genderEquity, setGenderEquity] = useState<string | null>(null);
-    const [listedInKGFT, setListedInKGFT] = useState<string | null>(null);
-    const [supportingEvidence, setSupportingEvidence] = useState<string | null>(null);
-    const [dnshMet, setDnshMet] = useState<string | null>(null);
-    const [socialSafeguard, setSocialSafeguard] = useState<string | null>(null);
-    const [alignmentStatus, setAlignmentStatus] = useState<string | null>(null);
-    const [emissionFactorTypeDropdownOpen, setEmissionFactorTypeDropdownOpen] = useState(false);
-    const [selectedEmissionFactorType, setSelectedEmissionFactorType] = useState<string | null>(null);
-    const [emissionFactorValueDropdownOpen, setEmissionFactorValueDropdownOpen] = useState(false);
-    const [selectedEmissionFactorValue, setSelectedEmissionFactorValue] = useState<string | null>(null);
-    const [activeSection, setActiveSection] = useState<string>('Alignment Status');
-    const [ghcDropdownOpen, setGhcDropdownOpen] = useState(false);
+    const [selectedActivityType, setSelectedActivityType] = useState<string | null>(null);
+    const [ghgReduction, setGhgReduction] = useState('');
     const [selectedGhc, setSelectedGhc] = useState<string | null>(null);
+    const [ghgEmissionMechanism, setGhgEmissionMechanism] = useState('');
+    const [activityScale, setActivityScale] = useState('');
+    const [annualEmissionReduction, setAnnualEmissionReduction] = useState('');
+    const [supportingEvidence, setSupportingEvidence] = useState<'yes' | 'no' | 'pending' | null>(null);
+    const [dnshMet, setDnshMet] = useState<'yes' | 'no' | 'pending' | null>(null);
+    const [socialSafeguard, setSocialSafeguard] = useState<'yes' | 'no' | 'pending' | null>(null);
+    const [alignmentStatus, setAlignmentStatus] = useState<'yes' | 'no' | 'pending' | null>(null);
 
-    const [emissionFactors, setEmissionFactors] = useState<
-        { type: string; value: string }[]
-    >([]);
+    // Emission Factors
+    const [emissionFactors, setEmissionFactors] = useState<EmissionFactor[]>([]);
+    const [selectedEmissionFactorType, setSelectedEmissionFactorType] = useState<string | null>(null);
+    const [selectedEmissionFactorValue, setSelectedEmissionFactorValue] = useState<string | null>(null);
 
-    const sectionRefs = {
-        'Alignment Status': useRef<HTMLDivElement>(null),
-    };
+    // Dropdown States
+    const [useOfProceedsDropdownOpen, setUseOfProceedsDropdownOpen] = useState(false);
+    const [activityTypeDropdownOpen, setActivityTypeDropdownOpen] = useState(false);
+    const [ghcDropdownOpen, setGhcDropdownOpen] = useState(false);
+    const [emissionFactorTypeDropdownOpen, setEmissionFactorTypeDropdownOpen] = useState(false);
+    const [emissionFactorValueDropdownOpen, setEmissionFactorValueDropdownOpen] = useState(false);
 
+    // Navigation
+    const sectionRef = useRef<HTMLDivElement>(null);
+
+    // Options
     const useOfProceedsOptions = [
         'Renewable Energy- Solar',
         'Renewable Energy- Wind',
         'Renewable Energy- Hydro',
-        'Renewable Energy- Biomas',
+        'Renewable Energy- Biomass',
         'Energy Storage',
         'Energy Transmission & Distribution',
         'Grid Infrastructure',
@@ -47,18 +65,14 @@ const KGFTAlignment = () => {
         'Displacement of grid electricity through renewable energy (e.g., solar, wind, hydro)',
         'On-site renewable energy generation (e.g., rooftop solar)',
         'Energy efficiency improvements (e.g., machinery upgrades, LED lighting)',
-        'RElectrification of transport (e.g., electric vehicles, e-bikes)',
+        'Electrification of transport (e.g., electric vehicles, e-bikes)',
         'Modal shift to low-emission public transport',
         'Process optimization to reduce fuel or electricity use',
         'Waste-to-energy (biogas, landfill methane capture)',
         'Fuel switch to lower-emission fuels (e.g., coal to biomass, diesel to LPG)',
     ];
 
-    const activityTypes = [
-        'Own Performance',
-        'Enabling',
-        'Transitional',
-    ];
+    const activityTypes = ['Own Performance', 'Enabling', 'Transitional'];
 
     const mitigationCategories = [
         'Renewable Energy',
@@ -67,166 +81,218 @@ const KGFTAlignment = () => {
         'Carbon Energy',
     ];
 
-    const emissionFactorTypes = [
-        'Grid Electricity',
-        'Land Use',
-    ];
+    const emissionFactorTypes = ['Grid Electricity', 'Land Use'];
+    const emissionFactorValues = ['0.72 tCO₂e/MWh', '1.5 tCO₂e/ha'];
 
-    const emissionFactorValues = [
-        '0.72 tCO₂e/MWh',
-        '1.5 tCO₂e/ha',
-    ];
+    // === UNIQUE STORAGE KEY FOR THIS PROJECT + STEP 3 ===
+    const storageKey = `projectDraft_${projectId}_step3`;
 
-    const handleNavClick = (section: string) => {
-        setActiveSection(section);
-        const sectionRef = sectionRefs[section as keyof typeof sectionRefs].current;
-        if (sectionRef) {
-            sectionRef.scrollIntoView({ behavior: 'smooth' });
-        }
-    };
-
+    // === Auto-save to localStorage (debounced) ===
     useEffect(() => {
-        const observer = new IntersectionObserver(
-            (entries) => {
-                entries.forEach((entry) => {
-                    if (entry.isIntersecting) {
-                        setActiveSection(entry.target.getAttribute('data-section')!);
-                    }
-                });
-            },
-            { threshold: 0.5 }
-        );
-
-        Object.values(sectionRefs).forEach((ref) => {
-            if (ref.current) {
-                observer.observe(ref.current);
-            }
-        });
-
-        return () => {
-            Object.values(sectionRefs).forEach((ref) => {
-                if (ref.current) {
-                    observer.unobserve(ref.current);
-                }
-            });
+        const saveDraft = () => {
+            const draft = {
+                activityOwner,
+                greenClassificationReason,
+                genderEquity,
+                selectedUseOfProceeds,
+                financingUse,
+                activityLocation,
+                listedInKGFT,
+                mitigationCategorySelected,
+                selectedActivityType,
+                ghgReduction,
+                selectedGhc,
+                ghgEmissionMechanism,
+                activityScale,
+                annualEmissionReduction,
+                supportingEvidence,
+                dnshMet,
+                socialSafeguard,
+                alignmentStatus,
+                emissionFactors,
+            };
+            localStorage.setItem(storageKey, JSON.stringify(draft));
         };
-    }, []);
+
+        const timeoutId = setTimeout(saveDraft, 600);
+        return () => clearTimeout(timeoutId);
+    }, [
+        activityOwner,
+        greenClassificationReason,
+        genderEquity,
+        selectedUseOfProceeds,
+        financingUse,
+        activityLocation,
+        listedInKGFT,
+        mitigationCategorySelected,
+        selectedActivityType,
+        ghgReduction,
+        selectedGhc,
+        ghgEmissionMechanism,
+        activityScale,
+        annualEmissionReduction,
+        supportingEvidence,
+        dnshMet,
+        socialSafeguard,
+        alignmentStatus,
+        emissionFactors,
+        projectId,
+    ]);
+
+    // === Load draft on mount ===
+    useEffect(() => {
+        const saved = localStorage.getItem(storageKey);
+        if (saved) {
+            try {
+                const draft = JSON.parse(saved);
+                setActivityOwner(draft.activityOwner || '');
+                setGreenClassificationReason(draft.greenClassificationReason || '');
+                setGenderEquity(draft.genderEquity || null);
+                setSelectedUseOfProceeds(draft.selectedUseOfProceeds || null);
+                setFinancingUse(draft.financingUse || '');
+                setActivityLocation(draft.activityLocation || '');
+                setListedInKGFT(draft.listedInKGFT || null);
+                setMitigationCategorySelected(draft.mitigationCategorySelected || []);
+                setSelectedActivityType(draft.selectedActivityType || null);
+                setGhgReduction(draft.ghgReduction || '');
+                setSelectedGhc(draft.selectedGhc || null);
+                setGhgEmissionMechanism(draft.ghgEmissionMechanism || '');
+                setActivityScale(draft.activityScale || '');
+                setAnnualEmissionReduction(draft.annualEmissionReduction || '');
+                setSupportingEvidence(draft.supportingEvidence || null);
+                setDnshMet(draft.dnshMet || null);
+                setSocialSafeguard(draft.socialSafeguard || null);
+                setAlignmentStatus(draft.alignmentStatus || null);
+                setEmissionFactors(draft.emissionFactors || []);
+            } catch (e) {
+                console.warn('Failed to load Step 3 draft for project:', projectId);
+            }
+        }
+    }, [projectId, storageKey]);
 
     const toggleMitigationCategory = (category: string) => {
         setMitigationCategorySelected(prev =>
-            prev.includes(category) ? prev.filter(c => c !== category) : [...prev, category]
+            prev.includes(category)
+                ? prev.filter(c => c !== category)
+                : [...prev, category]
         );
     };
 
-    return (
-        <div className="w-full mx-auto px-2 md:px-6 py-0 space-y-6">
-            <div className="flex gap-4">
-                {/* Sticky Sidebar Navigation */}
-                <div className="w-72 hidden md:flex flex-col gap-2 sticky top-38 self-start">
-                    <h1 className="text-lg font-semibold text-gray-600">Content</h1>
-                    <div className="flex flex-col gap-1">
-                        {[
-                            { name: 'Alignment Status', icon: Leaf },
-                        ].map(({ name, icon: Icon }) => (
-                            <div
-                                key={name}
-                                onClick={() => handleNavClick(name)}
-                                className={`flex items-center gap-2 px-5 py-2 rounded-lg cursor-pointer transition-colors duration-300 ${activeSection === name
-                                    ? 'bg-[#F2F2F2] text-[#044D5E]'
-                                    : 'hover:bg-gray-100 text-gray-500'
-                                    }`}
-                            >
-                                <Icon size={16} />
-                                <p className="text-xs">{name}</p>
-                            </div>
-                        ))}
-                    </div>
-                </div>
+    const addEmissionFactor = () => {
+        if (selectedEmissionFactorType && selectedEmissionFactorValue) {
+            setEmissionFactors(prev => [...prev, { type: selectedEmissionFactorType, value: selectedEmissionFactorValue }]);
+            setSelectedEmissionFactorType(null);
+            setSelectedEmissionFactorValue(null);
+        }
+    };
 
-                {/* Form Content */}
-                <form className="w-full mx-auto px-4 md:px-6 py-0 flex-1 space-y-6">
-                    {/* KGFT Alignment Section */}
-                    <div ref={sectionRefs['Alignment Status']} data-section="Alignment Status">
-                        <h1 className="text-lg font-medium text-gray-600 mb-6">KGFT Alignment</h1>
-                        <div className="mb-6">
-                            <p className="text-xs text-gray-700 mb-2 font-medium">Indicate who owns or controls the activity*</p>
+    const removeEmissionFactor = (index: number) => {
+        setEmissionFactors(prev => prev.filter((_, i) => i !== index));
+    };
+
+    return (
+        <div className="w-full mx-auto px-2 md:px-6 py-8">
+            <div className="flex gap-8">
+                {/* Sidebar */}
+                <aside className="hidden lg:block w-72 flex-shrink-0">
+                    <div className="sticky top-36">
+                        <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-4">
+                            Form Sections
+                        </h3>
+                        <button className="w-full flex items-center gap-3 px-4 py-3 rounded-lg bg-[#F2F2F2] text-[#044D5E] font-medium shadow-sm">
+                            <Leaf size={18} />
+                            <span className="text-xs">KGFT Alignment</span>
+                        </button>
+                    </div>
+                </aside>
+
+                {/* Main Form */}
+                <div ref={sectionRef} className="flex-1 max-w-4xl">
+                    <h1 className="text-2xl font-semibold text-[#044D5E] mb-8">KGFT Alignment Assessment</h1>
+
+                    <div className="space-y-8">
+                        {/* Activity Owner */}
+                        <div>
+                            <label className="block text-xs font-medium text-gray-700 mb-2">
+                                Indicate who owns or controls the activity *
+                            </label>
                             <textarea
-                                className="w-full h-24 text-xs border border-gray-300 rounded-lg p-3 resize-none focus:outline-none focus:border-gray-400 transition"
-                                placeholder="Enter owner or controller details..."
-                                name="activityOwner"
-                                required
-                            ></textarea>
+                                value={activityOwner}
+                                onChange={(e) => setActivityOwner(e.target.value)}
+                                rows={4}
+                                className="w-full px-4 py-3 border border-gray-300 rounded-lg resize-none focus:outline-none focus:border-gray-500 text-xs"
+                                placeholder="e.g. Farmer cooperative, private company, government entity..."
+                            />
                         </div>
-                        <div className="mb-6">
-                            <p className="text-xs text-gray-700 mb-2 font-medium">Briefly explain why the activity is being considered for green classification*</p>
+
+                        {/* Green Classification Reason */}
+                        <div>
+                            <label className="block text-xs font-medium text-gray-700 mb-2">
+                                Why is this activity being considered for green classification? *
+                            </label>
                             <textarea
-                                className="w-full h-24 text-xs border border-gray-300 rounded-lg p-3 resize-none focus:outline-none focus:border-gray-400 transition"
-                                placeholder="Enter explanation..."
-                                name="greenClassificationReason"
-                                required
-                            ></textarea>
+                                value={greenClassificationReason}
+                                onChange={(e) => setGreenClassificationReason(e.target.value)}
+                                rows={4}
+                                className="w-full px-4 py-3 border border-gray-300 rounded-lg resize-none focus:outline-none focus:border-gray-500 text-xs"
+                            />
                         </div>
-                        <div className="mb-6">
-                            <p className="text-xs text-gray-700 mb-2 font-medium">Does the project contribute to gender equity? (e.g., operated by women)</p>
-                            <div className="flex gap-3 mb-4">
-                                <button
-                                    type="button"
-                                    onClick={() => setGenderEquity(genderEquity === 'yes' ? null : 'yes')}
-                                    className={`px-4 py-2 rounded-lg border text-xs font-medium text-gray-500 ${genderEquity === 'yes'
-                                        ? 'bg-green-100 border-green-500'
-                                        : 'hover:bg-gray-50 border-gray-300'
-                                        } focus:outline-none focus:border-green-500`}
-                                >
-                                    Yes
-                                </button>
-                                <button
-                                    type="button"
-                                    onClick={() => setGenderEquity(genderEquity === 'no' ? null : 'no')}
-                                    className={`px-4 py-2 rounded-lg border text-xs font-medium text-gray-500 ${genderEquity === 'no'
-                                        ? 'bg-red-100 border-red-500'
-                                        : 'hover:bg-gray-50 border-gray-300'
-                                        } focus:outline-none focus:border-red-500`}
-                                >
-                                    No
-                                </button>
+
+                        {/* Gender Equity */}
+                        <div>
+                            <p className="text-xs font-medium text-gray-700 mb-3">
+                                Does the project contribute to gender equity? (e.g., women-owned/operated)
+                            </p>
+                            <div className="flex gap-3">
+                                {(['yes', 'no'] as const).map(val => (
+                                    <button
+                                        key={val}
+                                        type="button"
+                                        onClick={() => setGenderEquity(val)}
+                                        className={`px-5 py-2.5 rounded-lg border text-xs font-medium transition ${
+                                            genderEquity === val
+                                                ? val === 'yes'
+                                                    ? 'bg-green-100 border-green-500 text-green-700'
+                                                    : 'bg-red-100 border-red-500 text-red-700'
+                                                : 'border-gray-300 hover:bg-gray-50'
+                                        }`}
+                                    >
+                                        {val === 'yes' ? 'Yes' : 'No'}
+                                    </button>
+                                ))}
                             </div>
                         </div>
-                        <div className="relative mb-6">
-                            <p className="text-xs text-gray-700 mb-1 font-medium">Use of Proceeds (sub-sector)*</p>
+
+                        {/* Use of Proceeds */}
+                        <div className="relative">
+                            <label className="block text-xs font-medium text-gray-700 mb-2">
+                                Use of Proceeds (Sub-sector) *
+                            </label>
                             <div
-                                className={`
-                                    w-full text-xs rounded-lg px-4 py-2 flex justify-between items-center 
-                                    cursor-pointer transition-all duration-200
-                                    ${useOfProceedsDropdownOpen
-                                        ? 'border border-gray-400 bg-white shadow-sm'
-                                        : 'border border-gray-300 hover:bg-gray-50'
-                                    }`}
                                 onClick={() => setUseOfProceedsDropdownOpen(!useOfProceedsDropdownOpen)}
+                                className="w-full px-4 py-3 border border-gray-300 rounded-lg flex justify-between items-center cursor-pointer hover:bg-gray-50 text-xs"
                             >
-                                <span className="text-gray-600">{selectedUseOfProceeds || 'Select Sub-sector'}</span>
-                                {useOfProceedsDropdownOpen ? (
-                                    <ChevronUp size={18} className="text-gray-400" />
-                                ) : (
-                                    <ChevronDown size={18} className="text-gray-400" />
-                                )}
+                                <span className={selectedUseOfProceeds ? 'text-gray-900' : 'text-gray-500'}>
+                                    {selectedUseOfProceeds || 'Select sub-sector'}
+                                </span>
+                                {useOfProceedsDropdownOpen ? <ChevronUp size={18} /> : <ChevronDown size={18} />}
                             </div>
                             <AnimatePresence>
                                 {useOfProceedsDropdownOpen && (
                                     <motion.div
-                                        initial={{ opacity: 0, y: -10 }}
+                                        initial={{ opacity: 0, y: -8 }}
                                         animate={{ opacity: 1, y: 0 }}
-                                        exit={{ opacity: 0, y: -10 }}
-                                        transition={{ duration: 0.2 }}
-                                        className="absolute top-full left-0 right-0 mt-1 border border-gray-200 rounded-lg bg-white shadow-md z-10"
+                                        exit={{ opacity: 0, y: -8 }}
+                                        className="absolute z-30 w-full mt-1 bg-white border border-gray-200 rounded-lg shadow-lg max-h-60 overflow-y-auto"
                                     >
-                                        {useOfProceedsOptions.map((option, i) => (
+                                        {useOfProceedsOptions.map(option => (
                                             <div
-                                                key={i}
+                                                key={option}
                                                 onClick={() => {
                                                     setSelectedUseOfProceeds(option);
                                                     setUseOfProceedsDropdownOpen(false);
                                                 }}
-                                                className="px-4 py-2 text-xs text-gray-700 hover:bg-gray-50 cursor-pointer transition"
+                                                className="px-4 py-2.5 hover:bg-gray-50 cursor-pointer text-xs"
                                             >
                                                 {option}
                                             </div>
@@ -235,113 +301,108 @@ const KGFTAlignment = () => {
                                 )}
                             </AnimatePresence>
                         </div>
-                        <div className="mb-6">
-                            <p className="text-xs text-gray-700 mb-2 font-medium">Describe what the financing is being used for i.e what/how/why and scale*</p>
+
+                        {/* Financing Use */}
+                        <div>
+                            <label className="block text-xs font-medium text-gray-700 mb-2">
+                                What is the financing being used for? (What/How/Why/Scale) *
+                            </label>
                             <textarea
-                                className="w-full h-24 text-xs border border-gray-300 rounded-lg p-3 resize-none focus:outline-none focus:border-gray-400 transition"
-                                placeholder="Enter financing details..."
-                                name="financingUse"
-                                required
-                            ></textarea>
+                                value={financingUse}
+                                onChange={(e) => setFinancingUse(e.target.value)}
+                                rows={5}
+                                className="w-full px-4 py-3 border border-gray-300 rounded-lg resize-none focus:outline-none focus:border-gray-500 text-xs"
+                            />
                         </div>
-                        <div className="mb-6">
-                            <p className="text-xs text-gray-700 mb-2 font-medium">Enter the physical location of the activity that is specific to the use of proceeds*</p>
+
+                        {/* Physical Location */}
+                        <div>
+                            <label className="block text-xs font-medium text-gray-700 mb-2">
+                                Physical location of the activity *
+                            </label>
                             <textarea
-                                className="w-full h-24 text-xs border border-gray-300 rounded-lg p-3 resize-none focus:outline-none focus:border-gray-400 transition"
-                                placeholder="Enter physical location..."
-                                name="activityLocation"
-                                required
-                            ></textarea>
+                                value={activityLocation}
+                                onChange={(e) => setActivityLocation(e.target.value)}
+                                rows={3}
+                                className="w-full px-4 py-3 border border-gray-300 rounded-lg resize-none focus:outline-none focus:border-gray-500 text-xs"
+                                placeholder="e.g. Kwale County, Kenya – 4.2°S, 39.5°E"
+                            />
                         </div>
-                        <div className="mb-6">
-                            <p className="text-xs text-gray-700 mb-2 font-medium">Is Activity listed in KGFT Mitigation Categories?*</p>
-                            <div className="flex gap-3 mb-4">
-                                <button
-                                    type="button"
-                                    onClick={() => setListedInKGFT(listedInKGFT === 'yes' ? null : 'yes')}
-                                    className={`px-4 py-2 rounded-lg border text-xs font-medium text-gray-500 ${listedInKGFT === 'yes'
-                                        ? 'bg-green-100 border-green-500'
-                                        : 'hover:bg-gray-50 border-gray-300'
-                                        } focus:outline-none focus:border-green-500`}
-                                >
-                                    Yes
-                                </button>
-                                <button
-                                    type="button"
-                                    onClick={() => setListedInKGFT(listedInKGFT === 'no' ? null : 'no')}
-                                    className={`px-4 py-2 rounded-lg border text-xs font-medium text-gray-500 ${listedInKGFT === 'no'
-                                        ? 'bg-red-100 border-red-500'
-                                        : 'hover:bg-gray-50 border-gray-300'
-                                        } focus:outline-none focus:border-red-500`}
-                                >
-                                    No
-                                </button>
-                                <button
-                                    type="button"
-                                    onClick={() => setListedInKGFT(listedInKGFT === 'pending' ? null : 'pending')}
-                                    className={`px-4 py-2 rounded-lg border text-xs font-medium text-gray-500 ${listedInKGFT === 'pending'
-                                        ? 'bg-orange-100 border-orange-500'
-                                        : 'hover:bg-gray-50 border-gray-300'
-                                        } focus:outline-none focus:border-orange-500`}
-                                >
-                                    Pending
-                                </button>
-                            </div>
-                        </div>
-                        <div className="mb-6">
-                            <p className="text-xs text-gray-700 mb-2 font-medium">KGFT Mitigation Category*</p>
-                            <div className="grid grid-cols-2 gap-3 mb-4">
-                                {mitigationCategories.map(category => (
+
+                        {/* Listed in KGFT */}
+                        <div>
+                            <p className="text-xs font-medium text-gray-700 mb-3">Is activity listed in KGFT Mitigation Categories? *</p>
+                            <div className="flex flex-wrap gap-3">
+                                {(['yes', 'no', 'pending'] as const).map(val => (
                                     <button
-                                        key={category}
+                                        key={val}
                                         type="button"
-                                        onClick={() => toggleMitigationCategory(category)}
-                                        className={`px-4 py-2 rounded-lg border text-xs font-medium text-gray-500 ${mitigationCategorySelected.includes(category)
-                                            ? 'bg-green-100 border-green-500'
-                                            : 'hover:bg-gray-50 border-gray-300'
-                                            } focus:outline-none focus:border-green-500`}
+                                        onClick={() => setListedInKGFT(val)}
+                                        className={`px-5 py-2.5 rounded-lg border text-xs font-medium capitalize transition ${
+                                            listedInKGFT === val
+                                                ? val === 'yes'
+                                                    ? 'bg-green-100 border-green-500 text-green-700'
+                                                    : val === 'no'
+                                                        ? 'bg-red-100 border-red-500 text-red-700'
+                                                        : 'bg-orange-100 border-orange-500 text-orange-700'
+                                                : 'border-gray-300 hover:bg-gray-50'
+                                        }`}
                                     >
-                                        {category}
+                                        {val === 'pending' ? 'Pending' : val === 'yes' ? 'Yes' : 'No'}
                                     </button>
                                 ))}
                             </div>
                         </div>
-                        <div className="relative mb-6">
-                            <p className="text-xs text-gray-700 mb-1 font-medium">Activity Type*</p>
+
+                        {/* Mitigation Categories */}
+                        <div>
+                            <p className="text-xs font-medium text-gray-700 mb-3">Select applicable KGFT Mitigation Categories *</p>
+                            <div className="grid grid-cols-2 gap-3">
+                                {mitigationCategories.map(cat => (
+                                    <button
+                                        key={cat}
+                                        type="button"
+                                        onClick={() => toggleMitigationCategory(cat)}
+                                        className={`px-4 py-2.5 rounded-lg border text-xs font-medium transition ${
+                                            mitigationCategorySelected.includes(cat)
+                                                ? 'bg-green-100 border-green-500 text-green-700'
+                                                : 'border-gray-300 hover:bg-gray-50'
+                                        }`}
+                                    >
+                                        {cat}
+                                    </button>
+                                ))}
+                            </div>
+                        </div>
+
+                        {/* Activity Type */}
+                        <div className="relative">
+                            <label className="block text-xs font-medium text-gray-700 mb-2">Activity Type *</label>
                             <div
-                                className={`
-                                    w-full text-xs rounded-lg px-4 py-2 flex justify-between items-center 
-                                    cursor-pointer transition-all duration-200
-                                    ${activityTypeDropdownOpen
-                                        ? 'border border-gray-400 bg-white shadow-sm'
-                                        : 'border border-gray-300 hover:bg-gray-50'
-                                    }`}
                                 onClick={() => setActivityTypeDropdownOpen(!activityTypeDropdownOpen)}
+                                className="w-full px-4 py-3 border border-gray-300 rounded-lg flex justify-between items-center cursor-pointer hover:bg-gray-50 text-xs"
                             >
-                                <span className="text-gray-600">{selectedActivityType || 'Select Activity Type'}</span>
-                                {activityTypeDropdownOpen ? (
-                                    <ChevronUp size={18} className="text-gray-400" />
-                                ) : (
-                                    <ChevronDown size={18} className="text-gray-400" />
-                                )}
+                                <span className={selectedActivityType ? 'text-gray-900' : 'text-gray-500'}>
+                                    {selectedActivityType || 'Select type'}
+                                </span>
+                                {activityTypeDropdownOpen ? <ChevronUp size={18} /> : <ChevronDown size={18} />}
                             </div>
                             <AnimatePresence>
                                 {activityTypeDropdownOpen && (
                                     <motion.div
-                                        initial={{ opacity: 0, y: -10 }}
+                                        initial={{ opacity: 0, y: -8 }}
                                         animate={{ opacity: 1, y: 0 }}
-                                        exit={{ opacity: 0, y: -10 }}
-                                        transition={{ duration: 0.2 }}
-                                        className="absolute top-full left-0 right-0 mt-1 border border-gray-200 rounded-lg bg-white shadow-md z-10"
+                                        exit={{ opacity: 0, y: -8 }}
+                                        className="absolute z-30 w-full mt-1 bg-white border border-gray-200 rounded-lg shadow-lg"
                                     >
-                                        {activityTypes.map((type, i) => (
+                                        {activityTypes.map(type => (
                                             <div
-                                                key={i}
+                                                key={type}
                                                 onClick={() => {
                                                     setSelectedActivityType(type);
                                                     setActivityTypeDropdownOpen(false);
                                                 }}
-                                                className="px-4 py-2 text-xs text-gray-700 hover:bg-gray-50 cursor-pointer transition"
+                                                className="px-4 py-2.5 hover:bg-gray-50 cursor-pointer text-xs"
                                             >
                                                 {type}
                                             </div>
@@ -350,52 +411,50 @@ const KGFTAlignment = () => {
                                 )}
                             </AnimatePresence>
                         </div>
-                        <div className="mb-6">
-                            <p className="text-xs text-gray-700 mb-2 font-medium">GHG Reduction*</p>
+
+                        {/* GHG Reduction & Mechanism */}
+                        <div>
+                            <label className="block text-xs font-medium text-gray-700 mb-2">
+                                GHG Emission Reduction Mechanism *
+                            </label>
                             <textarea
-                                className="w-full h-24 text-xs border border-gray-300 rounded-lg p-3 resize-none focus:outline-none focus:border-gray-400 transition"
-                                placeholder="Enter GHG reduction details..."
-                                name="ghgReduction"
-                                required
-                            ></textarea>
+                                value={ghgReduction}
+                                onChange={(e) => setGhgReduction(e.target.value)}
+                                rows={5}
+                                className="w-full px-4 py-3 border border-gray-300 rounded-lg resize-none focus:outline-none focus:border-gray-500 text-xs"
+                                placeholder="Describe how GHG emissions are avoided or reduced..."
+                            />
                         </div>
-                        {/*  */}
-                        <div className="relative mb-6">
-                            <p className="text-xs text-gray-700 mb-1 font-medium">GHG Emission Reduction Mechanism*</p>
+
+                        <div className="relative">
+                            <label className="block text-xs font-medium text-gray-700 mb-2">
+                                GHG Emission Reduction Pathway *
+                            </label>
                             <div
-                                className={`
-                                    w-full text-xs rounded-lg px-4 py-2 flex justify-between items-center 
-                                    cursor-pointer transition-all duration-200
-                                    ${ghcDropdownOpen
-                                        ? 'border border-gray-400 bg-white shadow-sm'
-                                        : 'border border-gray-300 hover:bg-gray-50'
-                                    }`}
                                 onClick={() => setGhcDropdownOpen(!ghcDropdownOpen)}
+                                className="w-full px-4 py-3 border border-gray-300 rounded-lg flex justify-between items-center cursor-pointer hover:bg-gray-50 text-xs"
                             >
-                                <span className="text-gray-600">{selectedGhc || 'Select Sub-sector'}</span>
-                                {ghcDropdownOpen ? (
-                                    <ChevronUp size={18} className="text-gray-400" />
-                                ) : (
-                                    <ChevronDown size={18} className="text-gray-400" />
-                                )}
+                                <span className={selectedGhc ? 'text-gray-900' : 'text-gray-500'}>
+                                    {selectedGhc || 'Select pathway'}
+                                </span>
+                                {ghcDropdownOpen ? <ChevronUp size={18} /> : <ChevronDown size={18} />}
                             </div>
                             <AnimatePresence>
                                 {ghcDropdownOpen && (
                                     <motion.div
-                                        initial={{ opacity: 0, y: -10 }}
+                                        initial={{ opacity: 0, y: -8 }}
                                         animate={{ opacity: 1, y: 0 }}
-                                        exit={{ opacity: 0, y: -10 }}
-                                        transition={{ duration: 0.2 }}
-                                        className="absolute top-full left-0 right-0 mt-1 border border-gray-200 rounded-lg bg-white shadow-md z-10"
+                                        exit={{ opacity: 0, y: -8 }}
+                                        className="absolute z-30 w-full mt-1 bg-white border border-gray-200 rounded-lg shadow-lg max-h-60 overflow-y-auto"
                                     >
-                                        {ghcOptions.map((option, i) => (
+                                        {ghcOptions.map(option => (
                                             <div
-                                                key={i}
+                                                key={option}
                                                 onClick={() => {
                                                     setSelectedGhc(option);
                                                     setGhcDropdownOpen(false);
                                                 }}
-                                                className="px-4 py-2 text-xs text-gray-700 hover:bg-gray-50 cursor-pointer transition"
+                                                className="px-4 py-2.5 hover:bg-gray-50 cursor-pointer text-xs"
                                             >
                                                 {option}
                                             </div>
@@ -404,65 +463,34 @@ const KGFTAlignment = () => {
                                 )}
                             </AnimatePresence>
                         </div>
-                        {/*  */}
-                        <div className="mb-6">
-                            <p className="text-xs text-gray-700 mb-2 font-medium">GHG Emission Reduction Mechanism*</p>
-                            <textarea
-                                className="w-full h-24 text-xs border border-gray-300 rounded-lg p-3 resize-none focus:outline-none focus:border-gray-400 transition"
-                                placeholder="Enter emission reduction mechanism..."
-                                name="ghgEmissionMechanism"
-                                required
-                            ></textarea>
-                        </div>
-                        <div className="mb-6">
-                            <p className="text-xs text-gray-700 mb-2 font-medium">Quantify the scale of the activity*</p>
-                            <textarea
-                                className="w-full h-24 text-xs border border-gray-300 rounded-lg p-3 resize-none focus:outline-none focus:border-gray-400 transition"
-                                placeholder="Enter scale quantification..."
-                                name="activityScale"
-                                required
-                            ></textarea>
-                        </div>
-                        <div className="mb-6">
-                            <p className="text-xs text-gray-700 mb-2 font-medium">Emission factor used</p>
 
-                            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
-                                {/* Emission Factor Type Dropdown */}
+                        {/* Emission Factors */}
+                        <div>
+                            <p className="text-xs font-medium text-gray-700 mb-4">Emission Factors Used</p>
+                            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                                 <div className="relative">
                                     <div
-                                        className={`
-          w-full text-xs rounded-lg px-4 py-2 flex justify-between items-center 
-          cursor-pointer transition-all duration-200 border
-          ${emissionFactorTypeDropdownOpen
-                                                ? 'border-gray-400 bg-white shadow-sm'
-                                                : 'border-gray-300 hover:bg-gray-50'
-                                            }`}
                                         onClick={() => setEmissionFactorTypeDropdownOpen(!emissionFactorTypeDropdownOpen)}
+                                        className="w-full px-4 py-3 border border-gray-300 rounded-lg flex justify-between items-center cursor-pointer hover:bg-gray-50 text-xs"
                                     >
-                                        <span className={selectedEmissionFactorType ? 'text-gray-800' : 'text-gray-500'}>
-                                            {selectedEmissionFactorType || 'Select Type'}
+                                        <span className={selectedEmissionFactorType ? 'text-gray-900' : 'text-gray-500'}>
+                                            {selectedEmissionFactorType || 'Type'}
                                         </span>
-                                        {emissionFactorTypeDropdownOpen ? <ChevronUp size={18} /> : <ChevronDown size={18} />}
+                                        {emissionFactorTypeDropdownOpen ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
                                     </div>
-
                                     <AnimatePresence>
                                         {emissionFactorTypeDropdownOpen && (
-                                            <motion.div
-                                                initial={{ opacity: 0, y: -10 }}
-                                                animate={{ opacity: 1, y: 0 }}
-                                                exit={{ opacity: 0, y: -10 }}
-                                                className="absolute top-full left-0 right-0 mt-1 bg-white border border-gray-200 rounded-lg shadow-lg z-20 overflow-hidden"
-                                            >
-                                                {emissionFactorTypes.map((type) => (
+                                            <motion.div className="absolute z-30 w-full mt-1 bg-white border border-gray-200 rounded-lg shadow-lg">
+                                                {emissionFactorTypes.map(t => (
                                                     <div
-                                                        key={type}
+                                                        key={t}
                                                         onClick={() => {
-                                                            setSelectedEmissionFactorType(type);
+                                                            setSelectedEmissionFactorType(t);
                                                             setEmissionFactorTypeDropdownOpen(false);
                                                         }}
-                                                        className="px-4 py-2.5 text-xs hover:bg-gray-50 cursor-pointer text-gray-700"
+                                                        className="px-4 py-2 hover:bg-gray-50 cursor-pointer text-xs"
                                                     >
-                                                        {type}
+                                                        {t}
                                                     </div>
                                                 ))}
                                             </motion.div>
@@ -470,42 +498,29 @@ const KGFTAlignment = () => {
                                     </AnimatePresence>
                                 </div>
 
-                                {/* Emission Factor Value Dropdown */}
                                 <div className="relative">
                                     <div
-                                        className={`
-          w-full text-xs rounded-lg px-4 py-2 flex justify-between items-center 
-          cursor-pointer transition-all duration-200 border
-          ${emissionFactorValueDropdownOpen
-                                                ? 'border-gray-400 bg-white shadow-sm'
-                                                : 'border-gray-300 hover:bg-gray-50'
-                                            }`}
                                         onClick={() => setEmissionFactorValueDropdownOpen(!emissionFactorValueDropdownOpen)}
+                                        className="w-full px-4 py-3 border border-gray-300 rounded-lg flex justify-between items-center cursor-pointer hover:bg-gray-50 text-xs"
                                     >
-                                        <span className={selectedEmissionFactorValue ? 'text-gray-800' : 'text-gray-500'}>
-                                            {selectedEmissionFactorValue || 'Select Value'}
+                                        <span className={selectedEmissionFactorValue ? 'text-gray-900' : 'text-gray-500'}>
+                                            {selectedEmissionFactorValue || 'Value'}
                                         </span>
-                                        {emissionFactorValueDropdownOpen ? <ChevronUp size={18} /> : <ChevronDown size={18} />}
+                                        {emissionFactorValueDropdownOpen ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
                                     </div>
-
                                     <AnimatePresence>
                                         {emissionFactorValueDropdownOpen && (
-                                            <motion.div
-                                                initial={{ opacity: 0, y: -10 }}
-                                                animate={{ opacity: 1, y: 0 }}
-                                                exit={{ opacity: 0, y: -10 }}
-                                                className="absolute top-full left-0 right-0 mt-1 bg-white border border-gray-200 rounded-lg shadow-lg z-20 overflow-hidden"
-                                            >
-                                                {emissionFactorValues.map((value) => (
+                                            <motion.div className="absolute z-30 w-full mt-1 bg-white border border-gray-200 rounded-lg shadow-lg">
+                                                {emissionFactorValues.map(v => (
                                                     <div
-                                                        key={value}
+                                                        key={v}
                                                         onClick={() => {
-                                                            setSelectedEmissionFactorValue(value);
+                                                            setSelectedEmissionFactorValue(v);
                                                             setEmissionFactorValueDropdownOpen(false);
                                                         }}
-                                                        className="px-4 py-2.5 text-xs hover:bg-gray-50 cursor-pointer text-gray-700"
+                                                        className="px-4 py-2 hover:bg-gray-50 cursor-pointer text-xs"
                                                     >
-                                                        {value}
+                                                        {v}
                                                     </div>
                                                 ))}
                                             </motion.div>
@@ -513,224 +528,95 @@ const KGFTAlignment = () => {
                                     </AnimatePresence>
                                 </div>
 
-                                {/* Add Button */}
                                 <button
                                     type="button"
+                                    onClick={addEmissionFactor}
                                     disabled={!selectedEmissionFactorType || !selectedEmissionFactorValue}
-                                    onClick={() => {
-                                        if (selectedEmissionFactorType && selectedEmissionFactorValue) {
-                                            setEmissionFactors(prev => [
-                                                ...prev,
-                                                { type: selectedEmissionFactorType, value: selectedEmissionFactorValue }
-                                            ]);
-                                            setSelectedEmissionFactorType(null);
-                                            setSelectedEmissionFactorValue(null);
-                                        }
-                                    }}
-                                    className={`w-full text-xs rounded-lg px-3 py-2 flex items-center justify-center gap-2 font-medium transition-all
-        ${selectedEmissionFactorType && selectedEmissionFactorValue
-                                            ? 'bg-green-600 text-white hover:bg-green-700 shadow-sm'
-                                            : 'bg-gray-100 text-gray-400 border border-gray-300 cursor-not-allowed'
-                                        }`}
+                                    className={`w-full py-3 rounded-lg font-medium text-xs flex items-center justify-center gap-2 transition ${
+                                        selectedEmissionFactorType && selectedEmissionFactorValue
+                                            ? 'bg-[#044D5E] text-white hover:bg-[#044D5E]/90'
+                                            : 'bg-gray-200 text-gray-400 cursor-not-allowed'
+                                    }`}
                                 >
                                     <Plus size={16} />
                                     Add Factor
                                 </button>
                             </div>
 
-                            {/* Display Added Emission Factors */}
                             {emissionFactors.length > 0 && (
-                                <div className="mt-4 space-y-2">
-                                    {emissionFactors.map((factor, index) => (
+                                <div className="mt-6 space-y-3">
+                                    {emissionFactors.map((f, i) => (
                                         <div
-                                            key={index}
+                                            key={i}
                                             className="flex items-center justify-between bg-gray-50 border border-gray-200 rounded-lg px-4 py-3 text-xs"
                                         >
-                                            <span className="text-gray-700 font-medium">
-                                                {factor.value} for {factor.type.toLowerCase()}
-                                            </span>
-                                            <div className="flex items-center gap-3">
-                                                <button
-                                                    type="button"
-                                                    onClick={() => {
-                                                        // Optional: Open edit mode (you can expand this later)
-                                                        setSelectedEmissionFactorType(factor.type);
-                                                        setSelectedEmissionFactorValue(factor.value);
-                                                        setEmissionFactors(prev => prev.filter((_, i) => i !== index));
-                                                    }}
-                                                    className="text-blue-600 hover:text-blue-800 transition"
-                                                >
-                                                    <Edit2 size={14} />
-                                                </button>
-                                                <button
-                                                    type="button"
-                                                    onClick={() => setEmissionFactors(prev => prev.filter((_, i) => i !== index))}
-                                                    className="text-red-600 hover:text-red-800 transition"
-                                                >
-                                                    <Trash2 size={14} />
-                                                </button>
-                                            </div>
+                                            <span>{f.value} ({f.type})</span>
+                                            <button
+                                                type="button"
+                                                onClick={() => removeEmissionFactor(i)}
+                                                className="text-red-600 hover:text-red-800 transition"
+                                            >
+                                                <Trash2 size={16} />
+                                            </button>
                                         </div>
                                     ))}
                                 </div>
                             )}
+                        </div>
 
-                            {/* Optional: Show message when none added */}
-                            {emissionFactors.length === 0 && (
-                                <p className="text-xs text-gray-500 italic mt-3">No emission factors added yet.</p>
-                            )}
-                        </div>
-                        <div className="mb-6">
-                            <p className="text-xs text-gray-700 mb-2 font-medium">Estimated Annual Emission Reduction (tCO2e)</p>
+                        {/* Annual Emission Reduction */}
+                        <div>
+                            <label className="block text-xs font-medium text-gray-700 mb-2">
+                                Estimated Annual Emission Reduction (tCO₂e/year) *
+                            </label>
                             <textarea
-                                className="w-full h-24 text-xs border border-gray-300 rounded-lg p-3 resize-none focus:outline-none focus:border-gray-400 transition"
-                                placeholder="Multiply the Estimated Annual Output with the appropriate emissions factor used"
-                                name="annualEmissionReduction"
-                                required
-                            ></textarea>
+                                value={annualEmissionReduction}
+                                onChange={(e) => setAnnualEmissionReduction(e.target.value)}
+                                rows={4}
+                                className="w-full px-4 py-3 border border-gray-300 rounded-lg resize-none focus:outline-none focus:border-gray-500 text-xs"
+                                placeholder="Show calculation: Activity Data × Emission Factor = Result"
+                            />
                         </div>
-                        <div className="mb-6">
-                            <p className="text-xs text-gray-700 mb-2 font-medium">Supporting Evidence Attached?* - Select Yes if documents are available (e.g., EIA, feasibility study, emissions model); No if not; Pending if in progress.</p>
-                            <div className="flex gap-3 mb-4">
-                                <button
-                                    type="button"
-                                    onClick={() => setSupportingEvidence(supportingEvidence === 'yes' ? null : 'yes')}
-                                    className={`px-4 py-2 rounded-lg border text-xs font-medium text-gray-500 ${supportingEvidence === 'yes'
-                                        ? 'bg-green-100 border-green-500'
-                                        : 'hover:bg-gray-50 border-gray-300'
-                                        } focus:outline-none focus:border-green-500`}
-                                >
-                                    Yes
-                                </button>
-                                <button
-                                    type="button"
-                                    onClick={() => setSupportingEvidence(supportingEvidence === 'no' ? null : 'no')}
-                                    className={`px-4 py-2 rounded-lg border text-xs font-medium text-gray-500 ${supportingEvidence === 'no'
-                                        ? 'bg-red-100 border-red-500'
-                                        : 'hover:bg-gray-50 border-gray-300'
-                                        } focus:outline-none focus:border-red-500`}
-                                >
-                                    No
-                                </button>
-                                <button
-                                    type="button"
-                                    onClick={() => setSupportingEvidence(supportingEvidence === 'pending' ? null : 'pending')}
-                                    className={`px-4 py-2 rounded-lg border text-xs font-medium text-gray-500 ${supportingEvidence === 'pending'
-                                        ? 'bg-orange-100 border-orange-500'
-                                        : 'hover:bg-gray-50 border-gray-300'
-                                        } focus:outline-none focus:border-orange-500`}
-                                >
-                                    Pending
-                                </button>
+
+                        {/* Final Status Questions */}
+                        {[
+                            { key: 'supportingEvidence', label: 'Supporting Evidence Attached?', setter: setSupportingEvidence },
+                            { key: 'dnshMet', label: 'DNSH (Do No Significant Harm) Met?', setter: setDnshMet },
+                            { key: 'socialSafeguard', label: 'Social Safeguard Met?', setter: setSocialSafeguard },
+                            { key: 'alignmentStatus', label: 'Final KGFT Alignment Status?', setter: setAlignmentStatus },
+                        ].map(({ label, setter }) => (
+                            <div key={label}>
+                                <p className="text-xs font-medium text-gray-700 mb-3">{label} *</p>
+                                <div className="flex flex-wrap gap-3">
+                                    {(['yes', 'no', 'pending'] as const).map(val => {
+                                        const currentValue = label.includes('Evidence') ? supportingEvidence :
+                                                            label.includes('DNSH') ? dnshMet :
+                                                            label.includes('Social') ? socialSafeguard : alignmentStatus;
+
+                                        return (
+                                            <button
+                                                key={val}
+                                                type="button"
+                                                onClick={() => setter(val)}
+                                                className={`px-5 py-2.5 rounded-lg border text-xs font-medium capitalize transition ${
+                                                    currentValue === val
+                                                        ? val === 'yes'
+                                                            ? 'bg-green-100 border-green-500 text-green-700'
+                                                            : val === 'no'
+                                                                ? 'bg-red-100 border-red-500 text-red-700'
+                                                                : 'bg-orange-100 border-orange-500 text-orange-700'
+                                                        : 'border-gray-300 hover:bg-gray-50 text-gray-600'
+                                                }`}
+                                            >
+                                                {val === 'pending' ? 'Pending' : val === 'yes' ? 'Yes' : 'No'}
+                                            </button>
+                                        );
+                                    })}
+                                </div>
                             </div>
-                        </div>
-                        <div className="mb-6">
-                            <p className="text-xs text-gray-700 mb-2 font-medium">DNSH Met?* - “Do No Significant Harm” — select Yes if activity does not harm other environmental objectives, No if it does, Pending if under review. Requires EIA or screening tool.</p>
-                            <div className="flex gap-3 mb-4">
-                                <button
-                                    type="button"
-                                    onClick={() => setDnshMet(dnshMet === 'yes' ? null : 'yes')}
-                                    className={`px-4 py-2 rounded-lg border text-xs font-medium text-gray-500 ${dnshMet === 'yes'
-                                        ? 'bg-green-100 border-green-500'
-                                        : 'hover:bg-gray-50 border-gray-300'
-                                        } focus:outline-none focus:border-green-500`}
-                                >
-                                    Yes
-                                </button>
-                                <button
-                                    type="button"
-                                    onClick={() => setDnshMet(dnshMet === 'no' ? null : 'no')}
-                                    className={`px-4 py-2 rounded-lg border text-xs font-medium text-gray-500 ${dnshMet === 'no'
-                                        ? 'bg-red-100 border-red-500'
-                                        : 'hover:bg-gray-50 border-gray-300'
-                                        } focus:outline-none focus:border-red-500`}
-                                >
-                                    No
-                                </button>
-                                <button
-                                    type="button"
-                                    onClick={() => setDnshMet(dnshMet === 'pending' ? null : 'pending')}
-                                    className={`px-4 py-2 rounded-lg border text-xs font-medium text-gray-500 ${dnshMet === 'pending'
-                                        ? 'bg-orange-100 border-orange-500'
-                                        : 'hover:bg-gray-50 border-gray-300'
-                                        } focus:outline-none focus:border-orange-500`}
-                                >
-                                    Pending
-                                </button>
-                            </div>
-                        </div>
-                        <div className="mb-6">
-                            <p className="text-xs text-gray-700 mb-2 font-medium">Social Safeguard Met?*</p>
-                            <div className="flex gap-3 mb-4">
-                                <button
-                                    type="button"
-                                    onClick={() => setSocialSafeguard(socialSafeguard === 'yes' ? null : 'yes')}
-                                    className={`px-4 py-2 rounded-lg border text-xs font-medium text-gray-500 ${socialSafeguard === 'yes'
-                                        ? 'bg-green-100 border-green-500'
-                                        : 'hover:bg-gray-50 border-gray-300'
-                                        } focus:outline-none focus:border-green-500`}
-                                >
-                                    Yes
-                                </button>
-                                <button
-                                    type="button"
-                                    onClick={() => setSocialSafeguard(socialSafeguard === 'no' ? null : 'no')}
-                                    className={`px-4 py-2 rounded-lg border text-xs font-medium text-gray-500 ${socialSafeguard === 'no'
-                                        ? 'bg-red-100 border-red-500'
-                                        : 'hover:bg-gray-50 border-gray-300'
-                                        } focus:outline-none focus:border-red-500`}
-                                >
-                                    No
-                                </button>
-                                <button
-                                    type="button"
-                                    onClick={() => setSocialSafeguard(socialSafeguard === 'pending' ? null : 'pending')}
-                                    className={`px-4 py-2 rounded-lg border text-xs font-medium text-gray-500 ${socialSafeguard === 'pending'
-                                        ? 'bg-orange-100 border-orange-500'
-                                        : 'hover:bg-gray-50 border-gray-300'
-                                        } focus:outline-none focus:border-orange-500`}
-                                >
-                                    Pending
-                                </button>
-                            </div>
-                        </div>
-                        <div className="mb-6">
-                            <p className="text-xs text-gray-700 mb-2 font-medium">Alignment Status?*</p>
-                            <div className="flex gap-3 mb-4">
-                                <button
-                                    type="button"
-                                    onClick={() => setAlignmentStatus(alignmentStatus === 'yes' ? null : 'yes')}
-                                    className={`px-4 py-2 rounded-lg border text-xs font-medium text-gray-500 ${alignmentStatus === 'yes'
-                                        ? 'bg-green-100 border-green-500'
-                                        : 'hover:bg-gray-50 border-gray-300'
-                                        } focus:outline-none focus:border-green-500`}
-                                >
-                                    Yes
-                                </button>
-                                <button
-                                    type="button"
-                                    onClick={() => setAlignmentStatus(alignmentStatus === 'no' ? null : 'no')}
-                                    className={`px-4 py-2 rounded-lg border text-xs font-medium text-gray-500 ${alignmentStatus === 'no'
-                                        ? 'bg-red-100 border-red-500'
-                                        : 'hover:bg-gray-50 border-gray-300'
-                                        } focus:outline-none focus:border-red-500`}
-                                >
-                                    No
-                                </button>
-                                <button
-                                    type="button"
-                                    onClick={() => setAlignmentStatus(alignmentStatus === 'pending' ? null : 'pending')}
-                                    className={`px-4 py-2 rounded-lg border text-xs font-medium text-gray-500 ${alignmentStatus === 'pending'
-                                        ? 'bg-orange-100 border-orange-500'
-                                        : 'hover:bg-gray-50 border-gray-300'
-                                        } focus:outline-none focus:border-orange-500`}
-                                >
-                                    Pending
-                                </button>
-                            </div>
-                        </div>
+                        ))}
                     </div>
-                </form>
+                </div>
             </div>
         </div>
     );
