@@ -23,6 +23,20 @@ import { useRouter } from "next/navigation";
 const Page = () => {
   const router = useRouter();
 
+  const [userName, setUserName] = useState("User");
+
+  useEffect(() => {
+    try {
+      const stored = localStorage.getItem("klimaUser");
+      if (stored) {
+        const user = JSON.parse(stored);
+        setUserName(user.name || "User");
+      }
+    } catch (err) {
+      setUserName("User");
+    }
+  }, []);
+
   // === Form States ===
   const [institutionApproach, setInstitutionApproach] = useState("");
   const [greenFinanceFile, setGreenFinanceFile] = useState<File | null>(null);
