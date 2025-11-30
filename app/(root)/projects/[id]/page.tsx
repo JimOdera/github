@@ -158,9 +158,10 @@ const dummyProjects = [
   },
 ];
 
-export default function ProjectDetail({ params }: { params: { id: string } }) {
-
-  const { id } = use(params);
+export default function ProjectDetail({ params }: { params: Promise<{ id: string }> }) {
+  // Properly unwrap the params promise
+  const resolvedParams = use(params);
+  const id = resolvedParams.id;
 
   const [isMounted, setIsMounted] = useState(false);
   const router = useRouter();
