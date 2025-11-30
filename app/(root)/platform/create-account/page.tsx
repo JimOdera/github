@@ -271,7 +271,8 @@ const Page = () => {
           <div className="relative z-10 px-4 py-2 text-white flex flex-col md:flex-row items-start md:items-end justify-between h-full md:px-6 md:py-10">
             <div>
               <h2 className="text-lg">
-                Hello {JSON.parse(localStorage.getItem("klimaUser") || "{}")?.name || "User"}
+                {/* Hello {JSON.parse(localStorage.getItem("klimaUser") || "{}")?.name || "User"} */}
+                <h2 className="text-lg">Hello {userName}</h2>
               </h2>
               <h1 className="text-xl lg:text-3xl font-semibold">Welcome to Klima Harvest</h1>
             </div>
