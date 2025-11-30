@@ -20,10 +20,26 @@ import { motion, AnimatePresence } from "framer-motion";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 
+// Add this helper at the top of your file (after imports)
+const getKlimaUser = (): any => {
+  if (typeof window === "undefined") return null;
+  try {
+    const item = localStorage.getItem("klimaUser");
+    return item ? JSON.parse(item) : null;
+  } catch {
+    return null;
+  }
+};
+
 const Page = () => {
   const router = useRouter();
 
   const [userName, setUserName] = useState("User");
+
+  useEffect(() => {
+    const user = getKlimaUser();
+    if (user?.name) setUserName(user.name);
+  }, []);
 
   useEffect(() => {
     try {
@@ -187,6 +203,12 @@ const Page = () => {
     setIsSubmitting(true);
 
     try {
+      const user = getKlimaUser();
+      if (!user) {
+        setIsSubmitting(false);
+        router.push("/sign-up");
+        return;
+      }
       const institutionData = {
         type: "Institution",
         registeredAt: new Date().toISOString(),
@@ -209,38 +231,28 @@ const Page = () => {
         desiredPartnerships: partnershipOpportunities ? selectedPartnerships : [],
       };
 
-      const stored = localStorage.getItem("klimaUser");
-      if (!stored) {
-        setIsSubmitting(false);
-        router.push("/sign-up");
-        return;
-      }
-
-      const user = JSON.parse(stored);
       const updatedUser = {
-        ...user,
-        institutionData,
-        hasCompletedOnboarding: true,
-      };
+      ...user,
+      institutionData,
+      hasCompletedOnboarding: true,
+    };
 
-      // Save to localStorage (fallback)
+    // Only save if we're in the browser
+    if (typeof window !== "undefined") {
       localStorage.setItem("klimaUser", JSON.stringify(updatedUser));
-
-      // CRITICAL: Set cookie via API route (server-side, reliable)
-      await fetch("/api/auth/set-user", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(updatedUser),
-      });
-
-      // NO ALERT() — IT KILLS NAVIGATION
-      // INSTANT REDIRECT — GUARANTEED
-      router.push("/dashboard");
-
-    } catch (error) {
-      console.error("Submit error:", error);
-      setIsSubmitting(false);
     }
+
+    await fetch("/api/auth/set-user", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(updatedUser),
+    });
+
+    router.push("/dashboard");
+  } catch (error) {
+    console.error("Submit error:", error);
+    setIsSubmitting(false);
+  }
   };
 
   const dashimg = "/images/dashimg.png";
