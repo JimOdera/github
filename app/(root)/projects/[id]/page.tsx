@@ -40,11 +40,11 @@ import {
 } from 'lucide-react';
 import Image from 'next/image';
 import Link from 'next/link';
-import { notFound } from 'next/navigation';
+import { notFound, useRouter } from 'next/navigation';
+import { useState, useEffect, useMemo } from 'react';
+import { use } from 'react';
 
-// ────────────────────────────────────────────────────────────────
-// 1. SAME DUMMY DATA AS PROJECTS LIST PAGE (updated to match exactly)
-// ────────────────────────────────────────────────────────────────
+// Dummy projects data (same as in projects page)
 const dummyProjects = [
   {
     id: 1,
@@ -106,7 +106,7 @@ const dummyProjects = [
     image: forest6,
     name: "Aberdare Range Cloud Forest Protection",
     title: "Aberdare Range Cloud Forest Protection",
-    location: "Nyandarua & Murang’a Counties",
+    location: "Nyandarua & Murang'a Counties",
     lastUpdated: "27th Nov, 2025",
     categories: ["Water Towers", "REDD+", "Indigenous Forest"],
     fundingProgress: 49,
@@ -158,12 +158,122 @@ const dummyProjects = [
   },
 ];
 
-// ────────────────────────────────────────────────────────────────
-// 2. COMPONENT – Dynamic Project Detail Page (Client Component)
-// ────────────────────────────────────────────────────────────────
 export default function ProjectDetail({ params }: { params: { id: string } }) {
-  const id = Number(params.id);
-  const project = dummyProjects.find((p) => p.id === id);
+
+  const { id } = use(params);
+
+  const [isMounted, setIsMounted] = useState(false);
+  const router = useRouter();
+  
+  // Load real projects data (similar to projects page)
+  const realProjects = useMemo(() => {
+    if (!isMounted) return [];
+
+    const projects: any[] = [];
+
+    // Load submitted projects
+    try {
+      const submittedStr = localStorage.getItem('submittedProjects');
+      if (submittedStr) {
+        const submitted = JSON.parse(submittedStr);
+        if (Array.isArray(submitted)) {
+          submitted.forEach((proj: any) => {
+            const overview = proj.overview || {};
+            const timestamp = proj.id.match(/_(\d+)_\w+/)?.[1];
+            const date = timestamp
+              ? new Date(Number(timestamp)).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })
+              : 'Recently';
+
+            projects.push({
+              id: proj.id,
+              name: overview.projectTitle || 'Submitted Project',
+              title: overview.projectTitle || 'Submitted Project',
+              location: overview.county ? `${overview.county} County` : 'Kenya',
+              lastUpdated: date,
+              categories: [overview.taxonomyCategory || 'Climate Action', overview.subCategory || ''].filter(Boolean),
+              fundingProgress: 100,
+              status: 'Completed',
+              image: null,
+              isSubmitted: true,
+            });
+          });
+        }
+      }
+    } catch (e) {
+      console.warn('Failed to load submittedProjects', e);
+    }
+
+    // Load drafts
+    Object.keys(localStorage).forEach(key => {
+      const match = key.match(/^projectDraft_(.+)_step1$/);
+      if (!match) return;
+      const projectId = match[1];
+      if (projects.some(p => p.id === projectId)) return;
+
+      try {
+        const step1Data = JSON.parse(localStorage.getItem(key) || '{}');
+        if (!step1Data.projectTitle) return;
+
+        let filledSteps = 0;
+        for (let i = 1; i <= 4; i++) {
+          if (localStorage.getItem(`projectDraft_${projectId}_step${i}`)) filledSteps++;
+        }
+        const progress = Math.round((filledSteps / 4) * 100);
+
+        projects.push({
+          id: projectId,
+          name: step1Data.projectTitle || 'Untitled Draft',
+          title: step1Data.projectTitle || 'Untitled Draft',
+          location: step1Data.county ? `${step1Data.county} County` : 'Location not set',
+          lastUpdated: 'In Progress',
+          categories: [step1Data.taxonomyCategory || 'Draft'],
+          fundingProgress: progress,
+          status: progress === 100 ? 'Active' : progress >= 50 ? 'Active' : 'Pending',
+          image: null,
+          isSubmitted: false,
+        });
+      } catch (e) {
+        console.warn('Failed to parse draft:', key);
+      }
+    });
+
+    return projects;
+  }, [isMounted]);
+
+  // Now you can safely use `id` instead of `params.id`
+  const allProjects = useMemo(() => {
+    const dummies = dummyProjects.map(p => ({
+      ...p,
+      id: p.id.toString(),
+      isDummy: true,
+    }));
+    return [...realProjects, ...dummies];
+  }, [realProjects]);
+
+  useEffect(() => {
+    setIsMounted(true);
+  }, []);
+
+  // Find the project using the resolved `id`
+  const project = allProjects.find(p =>
+    p.id.toString() === id ||
+    (p.isDummy && p.id === Number(id))
+  );
+
+  // Handle navigation for real projects
+  const handleEditProject = () => {
+    if (project && !project.isDummy) {
+      router.push(`/projects/forms?id=${project.id}`);
+    }
+  };
+
+  if (!isMounted) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-[#BFEFF8]/30 to-[#B1CA69]/30 flex items-center justify-center">
+        Loading project details...
+      </div>
+    );
+  }
 
   if (!project) {
     notFound();
@@ -171,13 +281,11 @@ export default function ProjectDetail({ params }: { params: { id: string } }) {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-[#BFEFF8]/30 to-[#B1CA69]/30 flex flex-col">
-      {/* Main Content Area */}
       <div className="flex-1 flex flex-col relative z-10">
-        {/* Top Navigation */}
         <Header />
 
         <div className="flex w-full md:w-[90vw] mx-auto pt-17 bg-[#FBFDFB] relative">
-          {/* Full Width Hero Section */}
+          {/* Hero Banner */}
           <section className="absolute inset-x-0 top-17 w-full h-52 md:h-64 bg-cover bg-center z-20">
             <Image src="/images/projects/summary.png" alt="Summary Banner" fill className="object-cover" />
             <div className="absolute inset-0 bg-gradient-to-br from-[#B1CA69]/30 via-transparent to-[#FBFDFB]/30 flex items-center p-6">
@@ -188,22 +296,33 @@ export default function ProjectDetail({ params }: { params: { id: string } }) {
                     alt="folder Icon"
                     className="block md:hidden w-4 h-4 mb-2 cursor-pointer"
                   />
-                  {/* DYNAMIC PROJECT NAME */}
                   <h2 className="text-lg md:text-3xl font-medium text-teal-900">
                     {project.name}
+                    {project.isSubmitted && (
+                      <span className="ml-2 text-xs text-emerald-600 font-bold">[Submitted]</span>
+                    )}
                   </h2>
-                  {/* DYNAMIC LOCATION */}
                   <div className="flex items-center gap-2 text-xs text-teal-700 mt-1">
                     <MapPin size={14} />
                     <span>{project.location}</span>
                   </div>
                 </div>
-                <Link
-                  href=""
-                  className="bg-[#044D5E] hover:bg-[#044D5E]/90 text-xs text-white border border-[#044D5E] px-5 py-2 rounded-md flex items-center gap-2"
-                >
-                  KGFT Alignment <Image src={badgeCheck} alt="badgeCheck" className="w-5 h-5" />
-                </Link>
+                <div className="flex gap-2">
+                  {!project.isDummy && (
+                    <button
+                      onClick={handleEditProject}
+                      className="bg-[#E2FFF2] hover:bg-[#E2FFF2]/90 text-xs text-[#044D5E] border border-[#044D5E] px-4 py-2 rounded-md flex items-center gap-2"
+                    >
+                      Edit Project
+                    </button>
+                  )}
+                  <Link
+                    href=""
+                    className="bg-[#044D5E] hover:bg-[#044D5E]/90 text-xs text-white border border-[#044D5E] px-5 py-2 rounded-md flex items-center gap-2"
+                  >
+                    KGFT Alignment <Image src={badgeCheck} alt="badgeCheck" className="w-5 h-5" />
+                  </Link>
+                </div>
               </div>
             </div>
           </section>
@@ -232,14 +351,13 @@ export default function ProjectDetail({ params }: { params: { id: string } }) {
               <hr className="border-t border-gray-200 my-6" />
 
               <div className="flex flex-col lg:flex-row gap-8">
-                {/* LEFT COLUMN – Project Details */}
+                {/* LEFT COLUMN - Project Details */}
                 <div className="flex-1 space-y-6">
                   {/* Image Grid Section */}
                   <div className="w-full grid grid-cols-1 md:grid-cols-3 gap-4 items-center">
-                    {/* Large Image on Left - Now uses real project image */}
                     <div className="md:col-span-2 relative">
                       <Image
-                        src={project.image}
+                        src={project.image || forest1}
                         alt={project.title}
                         width={800}
                         height={400}
@@ -247,7 +365,6 @@ export default function ProjectDetail({ params }: { params: { id: string } }) {
                       />
                     </div>
 
-                    {/* Two Smaller Images on Right */}
                     <div className="flex flex-col gap-4">
                       <div className="relative">
                         <Image
@@ -266,9 +383,7 @@ export default function ProjectDetail({ params }: { params: { id: string } }) {
                           height={200}
                           className="w-full h-32 md:h-40 object-cover rounded-xl"
                         />
-                        {/* Show Button Overlay */}
-                        <button className="absolute bottom-3 left-3 bg-white/20 backdrop-blur-md hover:bg-white/30 border border-white/20
-                        text-white text-sm font-medium px-3 py-1 rounded-md shadow-sm flex items-center gap-1 cursor-pointer transition-all duration-300">
+                        <button className="absolute bottom-3 left-3 bg-white/20 backdrop-blur-md hover:bg-white/30 border border-white/20 text-white text-sm font-medium px-3 py-1 rounded-md shadow-sm flex items-center gap-1 cursor-pointer transition-all duration-300">
                           <GalleryHorizontalEnd /> Show 12
                         </button>
                       </div>
@@ -277,9 +392,7 @@ export default function ProjectDetail({ params }: { params: { id: string } }) {
 
                   {/* Update Images Upload Section */}
                   <div className="mb-6">
-                    <p className="text-xs text-gray-700 mb-2 font-medium">
-                      Update Images**
-                    </p>
+                    <p className="text-xs text-gray-700 mb-2 font-medium">Update Images**</p>
                     <div className="flex items-center justify-center w-full">
                       <label className="flex flex-col items-center justify-center w-full h-24 border border-dashed border-gray-300 rounded-lg cursor-pointer hover:bg-gray-50 focus:outline-none focus:border-gray-400 transition">
                         <div className="flex flex-col items-center space-x-2">
@@ -302,14 +415,26 @@ export default function ProjectDetail({ params }: { params: { id: string } }) {
                   <div className="bg-white p-6 rounded-xl border border-gray-100">
                     <h3 className="text-lg font-semibold text-gray-800 mb-3">About the project</h3>
                     <p className="text-sm text-gray-600 leading-relaxed mb-4">
-                      Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed sit amet felis viverra, aliquet mi non, gravida risus.
-                      Suspendisse potenti. In hac habitasse platea dictumst. Proin sed finibus mauris. Aliquam erat volutpat.
-                      Aenean blandit magna at sem sagittis, sed pretium mauris tincidunt. Integer ac dolor a turpis cursus tempor nec vel magna.
+                      {project.isDummy ? (
+                        <>
+                          Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed sit amet felis viverra, aliquet mi non, gravida risus.
+                          Suspendisse potenti. In hac habitasse platea dictumst. Proin sed finibus mauris. Aliquam erat volutpat.
+                          Aenean blandit magna at sem sagittis, sed pretium mauris tincidunt. Integer ac dolor a turpis cursus tempor nec vel magna.
+                        </>
+                      ) : (
+                        `This ${project.categories[0]?.toLowerCase() || 'climate'} project located in ${project.location} focuses on sustainable environmental impact.`
+                      )}
                     </p>
                     <p className="text-sm text-gray-600 leading-relaxed">
-                      Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed sit amet felis viverra, aliquet mi non, gravida risus.
-                      Suspendisse potenti. In hac habitasse platea dictumst. Proin sed finibus mauris. Aliquam erat volutpat.
-                      Aenean blandit magna at sem sagittis, sed pretium mauris tincidunt.
+                      {project.isDummy ? (
+                        <>
+                          Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed sit amet felis viverra, aliquet mi non, gravida risus.
+                          Suspendisse potenti. In hac habitasse platea dictumst. Proin sed finibus mauris. Aliquam erat volutpat.
+                          Aenean blandit magna at sem sagittis, sed pretium mauris tincidunt.
+                        </>
+                      ) : (
+                        `Project status: ${project.status} with ${project.fundingProgress}% completion.`
+                      )}
                     </p>
                   </div>
 
@@ -528,9 +653,8 @@ export default function ProjectDetail({ params }: { params: { id: string } }) {
                   </div>
                 </div>
 
-                {/* RIGHT COLUMN – Financials Card */}
+                {/* RIGHT COLUMN - Financials Card */}
                 <div className="w-full lg:w-96 h-fit bg-white rounded-2xl shadow-sm overflow-hidden">
-                  {/* HEADER SECTION */}
                   <div className="w-full bg-gradient-to-br from-[#BFEFF8]/30 to-[#B1CA69]/30 flex flex-col gap-3 p-5">
                     <div className="flex items-center justify-between w-full">
                       <div className="bg-[#BDEBE7] px-3 py-4 rounded-lg">
@@ -551,10 +675,8 @@ export default function ProjectDetail({ params }: { params: { id: string } }) {
                     </div>
                   </div>
 
-                  {/* BODY SECTION */}
                   <div className="w-full p-6 space-y-6 bg-[#F8F9F8]">
                     <div className="space-y-5 w-full">
-                      {/* BANKING STAGE */}
                       <div className="flex items-center gap-3 w-full">
                         <div className="bg-green-500 p-1 rounded-full">
                           <svg className="w-4 h-4 text-[#044D5E]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -574,7 +696,6 @@ export default function ProjectDetail({ params }: { params: { id: string } }) {
                         </div>
                       </div>
 
-                      {/* PERCENTAGE DRAWN */}
                       <div className="flex items-start gap-3 w-full">
                         <Clock />
                         <div className="flex-1">
@@ -589,7 +710,6 @@ export default function ProjectDetail({ params }: { params: { id: string } }) {
                         </div>
                       </div>
 
-                      {/* ROADBLOCKS */}
                       <div className="flex items-start gap-3 w-full">
                         <Clock />
                         <div className="flex-1">
@@ -610,7 +730,6 @@ export default function ProjectDetail({ params }: { params: { id: string } }) {
                       </div>
                     </div>
 
-                    {/* SUBMIT BUTTON */}
                     <div className="pt-4 w-full">
                       <button className="w-full bg-[#E2EFD6] text-[#044D5E] font-medium py-3 rounded-full flex items-center justify-center gap-2">
                         Submit
