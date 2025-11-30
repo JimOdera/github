@@ -1,0 +1,358 @@
+'use client';
+
+import React, { useState, useEffect, useRef } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { ChevronDown, ChevronUp, Pencil, Leaf, MapPin } from 'lucide-react';
+import dynamic from 'next/dynamic';
+
+// Dynamically import LocationPicker (no SSR)
+const LocationPicker = dynamic(() => import('../../../../components/LocationPicker'), {
+    ssr: false,
+});
+
+const ProjectOverview = () => {
+    const [taxonomyDropdownOpen, setTaxonomyDropdownOpen] = useState(false);
+    const [subCategoryDropdownOpen, setSubCategoryDropdownOpen] = useState(false);
+    const [regionDropdownOpen, setRegionDropdownOpen] = useState(false);
+    const [classificationDropdownOpen, setClassificationDropdownOpen] = useState(false);
+    const [activeSection, setActiveSection] = useState<string>('Project Basics');
+
+    // NEW: Store picked coordinates
+    const [pickedCoords, setPickedCoords] = useState<{ lat: number; lng: number } | null>(null);
+
+    const sectionRefs = {
+        'Project Basics': useRef<HTMLDivElement>(null),
+        'Project Type': useRef<HTMLDivElement>(null),
+        'Location & Geotagging': useRef<HTMLDivElement>(null),
+    };
+
+    const taxonomyCategories = [
+        'Climate Change Mitigation',
+        'Sustainable Water and Wastewater Management',
+        'Transition to circular Economy',
+        'Pollution Prevention and control',
+        'Biodiversity and Ecosystem Protection',
+    ];
+
+    const projectSubCategories = [
+        'Climate Change Mitigation',
+        'Climate Change Adaptation',
+        'Sustainable Water and Wastewater Management',
+        'Transition to circular Economy',
+        'Pollution Prevention and control',
+        'Biodiversity and Ecosystem Protection',
+    ];
+
+    const regions = [
+        'East Africa',
+        'Central Africa',
+        'South Africa',
+        'Savannah Region',
+        'North Africa',
+        'West Africa',
+    ];
+
+    const classifications = [
+        'Rural(<5000 people)',
+        'Urban (upto 50,000 people)',
+    ];
+
+    const handleNavClick = (section: string) => {
+        setActiveSection(section);
+        const sectionRef = sectionRefs[section as keyof typeof sectionRefs].current;
+        if (sectionRef) {
+            sectionRef.scrollIntoView({ behavior: 'smooth' });
+        }
+    };
+
+    useEffect(() => {
+        const observer = new IntersectionObserver(
+            (entries) => {
+                entries.forEach((entry) => {
+                    if (entry.isIntersecting) {
+                        setActiveSection(entry.target.getAttribute('data-section')!);
+                    }
+                });
+            },
+            { threshold: 0.5 }
+        );
+
+        Object.values(sectionRefs).forEach((ref) => {
+            if (ref.current) {
+                observer.observe(ref.current);
+            }
+        });
+
+        return () => {
+            Object.values(sectionRefs).forEach((ref) => {
+                if (ref.current) {
+                    observer.unobserve(ref.current);
+                }
+            });
+        };
+    }, []);
+
+    return (
+        <div className="w-full mx-auto px-2 md:px-6 py-0 space-y-6">
+            <div className="flex gap-4">
+                {/* Sticky Sidebar Navigation */}
+                <div className="w-72 hidden md:flex flex-col gap-2 sticky top-38 self-start">
+                    <h1 className="text-lg font-semibold text-gray-600">Content</h1>
+                    <div className="flex flex-col gap-1">
+                        {[
+                            { name: 'Project Basics', icon: Pencil },
+                            { name: 'Project Type', icon: Leaf },
+                            { name: 'Location & Geotagging', icon: MapPin },
+                        ].map(({ name, icon: Icon }) => (
+                            <div
+                                key={name}
+                                onClick={() => handleNavClick(name)}
+                                className={`flex items-center gap-2 px-5 py-2 rounded-lg cursor-pointer transition-colors duration-300 ${
+                                    activeSection === name
+                                        ? 'bg-gray-100 text-[#044D5E]'
+                                        : 'hover:bg-gray-100 text-gray-500'
+                                }`}
+                            >
+                                <Icon size={16} />
+                                <p className="text-xs">{name}</p>
+                            </div>
+                        ))}
+                    </div>
+                </div>
+
+                {/* Form Content */}
+                <form className="w-full mx-auto px-4 md:px-6 py-0 flex-1 space-y-6">
+                    {/* Project Basics Section */}
+                    <div ref={sectionRefs['Project Basics']} data-section="Project Basics">
+                        <h1 className="text-lg font-medium text-gray-600 mb-6">Project Basics</h1>
+                        <div className="mb-6">
+                            <p className="text-xs text-gray-700 mb-2 font-medium">Project Title*</p>
+                            <input
+                                type="text"
+                                className="w-full text-xs border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:border-gray-400 transition"
+                                placeholder="Enter project title"
+                                name="projectTitle"
+                                required
+                            />
+                        </div>
+                        <div className="mb-6">
+                            <p className="text-xs text-gray-700 mb-2 font-medium">Institution/Organization*</p>
+                            <input
+                                type="text"
+                                className="w-full text-xs border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:border-gray-400 transition"
+                                placeholder="Enter institution or organization"
+                                name="institution"
+                                required
+                            />
+                        </div>
+                        <div className="relative mb-6">
+                            <p className="text-xs text-gray-700 mb-1 font-medium">Green Finance Taxonomy Category*</p>
+                            <div
+                                className={`
+                                    w-full text-xs rounded-lg px-4 py-2 flex justify-between items-center 
+                                    cursor-pointer transition-all duration-200
+                                    ${taxonomyDropdownOpen
+                                        ? 'border border-gray-400 bg-white shadow-sm'
+                                        : 'border border-gray-300 hover:bg-gray-50'
+                                    }`}
+                                onClick={() => setTaxonomyDropdownOpen(!taxonomyDropdownOpen)}
+                            >
+                                <span className="text-gray-600">Select Category</span>
+                                {taxonomyDropdownOpen ? (
+                                    <ChevronUp size={18} className="text-gray-400" />
+                                ) : (
+                                    <ChevronDown size={18} className="text-gray-400" />
+                                )}
+                            </div>
+                            <AnimatePresence>
+                                {taxonomyDropdownOpen && (
+                                    <motion.div
+                                        initial={{ opacity: 0, y: -10 }}
+                                        animate={{ opacity: 1, y: 0 }}
+                                        exit={{ opacity: 0, y: -10 }}
+                                        transition={{ duration: 0.2 }}
+                                        className="absolute top-full left-0 right-0 mt-1 border border-gray-200 rounded-lg bg-white shadow-md z-10"
+                                    >
+                                        {taxonomyCategories.map((category, i) => (
+                                            <div
+                                                key={i}
+                                                onClick={() => setTaxonomyDropdownOpen(false)}
+                                                className="px-4 py-2 text-xs text-gray-700 hover:bg-gray-50 cursor-pointer transition"
+                                            >
+                                                {category}
+                                            </div>
+                                        ))}
+                                    </motion.div>
+                                )}
+                            </AnimatePresence>
+                        </div>
+                    </div>
+
+                    <hr className="border-t border-gray-200 my-6" />
+
+                    {/* Project Type Section */}
+                    <div ref={sectionRefs['Project Type']} data-section="Project Type">
+                        <h1 className="text-lg font-medium text-gray-600 mb-6">Project Type</h1>
+                        <div className="relative mb-6">
+                            <p className="text-xs text-gray-700 mb-1 font-medium">Project Sub-Category (linked to taxonomy)*</p>
+                            <div
+                                className={`
+                                    w-full text-xs rounded-lg px-4 py-2 flex justify-between items-center 
+                                    cursor-pointer transition-all duration-200
+                                    ${subCategoryDropdownOpen
+                                        ? 'border border-gray-400 bg-white shadow-sm'
+                                        : 'border border-gray-300 hover:bg-gray-50'
+                                    }`}
+                                onClick={() => setSubCategoryDropdownOpen(!subCategoryDropdownOpen)}
+                            >
+                                <span className="text-gray-600">Select Sub-Category</span>
+                                {subCategoryDropdownOpen ? (
+                                    <ChevronUp size={18} className="text-gray-400" />
+                                ) : (
+                                    <ChevronDown size={18} className="text-gray-400" />
+                                )}
+                            </div>
+                            <AnimatePresence>
+                                {subCategoryDropdownOpen && (
+                                    <motion.div
+                                        initial={{ opacity: 0, y: -10 }}
+                                        animate={{ opacity: 1, y: 0 }}
+                                        exit={{ opacity: 0, y: -10 }}
+                                        transition={{ duration: 0.2 }}
+                                        className="absolute top-full left-0 right-0 mt-1 border border-gray-200 rounded-lg bg-white shadow-md z-10"
+                                    >
+                                        {projectSubCategories.map((subCategory, i) => (
+                                            <div
+                                                key={i}
+                                                onClick={() => setSubCategoryDropdownOpen(false)}
+                                                className="px-4 py-2 text-xs text-gray-700 hover:bg-gray-50 cursor-pointer transition"
+                                            >
+                                                {subCategory}
+                                            </div>
+                                        ))}
+                                    </motion.div>
+                                )}
+                            </AnimatePresence>
+                        </div>
+                    </div>
+
+                    <hr className="border-t border-gray-200 my-6" />
+
+                    {/* Location & Geotagging Section */}
+                    <div ref={sectionRefs['Location & Geotagging']} data-section="Location & Geotagging">
+                        <h1 className="text-lg font-medium text-gray-600 mb-6">Location & Geotagging</h1>
+                        <div className="relative mb-6">
+                            <p className="text-xs text-gray-700 mb-1 font-medium">Country/Region*</p>
+                            <div
+                                className={`
+                                    w-full text-xs rounded-lg px-4 py-2 flex justify-between items-center 
+                                    cursor-pointer transition-all duration-200
+                                    ${regionDropdownOpen
+                                        ? 'border border-gray-400 bg-white shadow-sm'
+                                        : 'border border-gray-300 hover:bg-gray-50'
+                                    }`}
+                                onClick={() => setRegionDropdownOpen(!regionDropdownOpen)}
+                            >
+                                <span className="text-gray-600">Select Region</span>
+                                {regionDropdownOpen ? (
+                                    <ChevronUp size={18} className="text-gray-400" />
+                                ) : (
+                                    <ChevronDown size={18} className="text-gray-400" />
+                                )}
+                            </div>
+                            <AnimatePresence>
+                                {regionDropdownOpen && (
+                                    <motion.div
+                                        initial={{ opacity: 0, y: -10 }}
+                                        animate={{ opacity: 1, y: 0 }}
+                                        exit={{ opacity: 0, y: -10 }}
+                                        transition={{ duration: 0.2 }}
+                                        className="absolute top-full left-0 right-0 mt-1 border border-gray-200 rounded-lg bg-white shadow-md z-10"
+                                    >
+                                        {regions.map((region, i) => (
+                                            <div
+                                                key={i}
+                                                onClick={() => setRegionDropdownOpen(false)}
+                                                className="px-4 py-2 text-xs text-gray-700 hover:bg-gray-50 cursor-pointer transition"
+                                            >
+                                                {region}
+                                            </div>
+                                        ))}
+                                    </motion.div>
+                                )}
+                            </AnimatePresence>
+                        </div>
+
+                        <div className="mb-6">
+                            <p className="text-xs text-gray-700 mb-2 font-medium">County/Subregion*</p>
+                            <input
+                                type="text"
+                                className="w-full text-xs border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:border-gray-400 transition"
+                                placeholder="Enter county or subregion"
+                                name="countySubregion"
+                                required
+                            />
+                        </div>
+
+                        {/* MAP + COORDINATES */}
+                        <div className="mb-6">
+                            <LocationPicker onCoordsChange={setPickedCoords} />
+                            <p className="mt-3 text-sm font-medium text-gray-800">
+                                <span className="text-gray-600">Coordinates:</span>{' '}
+                                <span className="font-mono text-green-700">
+                                    {pickedCoords
+                                        ? `${pickedCoords.lat.toFixed(6)}, ${pickedCoords.lng.toFixed(6)}`
+                                        : '— Move or click the map to select'}
+                                </span>
+                            </p>
+                        </div>
+
+                        <div className="relative mb-6">
+                            <p className="text-xs text-gray-700 mb-1 font-medium">Rural/Urban Classification*</p>
+                            <div
+                                className={`
+                                    w-full text-xs rounded-lg px-4 py-2 flex justify-between items-center 
+                                    cursor-pointer transition-all duration-200
+                                    ${classificationDropdownOpen
+                                        ? 'border border-gray-400 bg-white shadow-sm'
+                                        : 'border border-gray-300 hover:bg-gray-50'
+                                    }`}
+                                onClick={() => setClassificationDropdownOpen(!classificationDropdownOpen)}
+                            >
+                                <span className="text-gray-600">Select Classification</span>
+                                {classificationDropdownOpen ? (
+                                    <ChevronUp size={18} className="text-gray-400" />
+                                ) : (
+                                    <ChevronDown size={18} className="text-gray-400" />
+                                )}
+                            </div>
+                            <AnimatePresence>
+                                {classificationDropdownOpen && (
+                                    <motion.div
+                                        initial={{ opacity: 0, y: -10 }}
+                                        animate={{ opacity: 1, y: 0 }}
+                                        exit={{ opacity: 0, y: -10 }}
+                                        transition={{ duration: 0.2 }}
+                                        className="absolute top-full left-0 right-0 mt-1 border border-gray-200 rounded-lg bg-white shadow-md z-10"
+                                    >
+                                        {classifications.map((classification, i) => (
+                                            <div
+                                                key={i}
+                                                onClick={() => setClassificationDropdownOpen(false)}
+                                                className="px-4 py-2 text-xs text-gray-700 hover:bg-gray-50 cursor-pointer transition"
+                                            >
+                                                {classification}
+                                            </div>
+                                        ))}
+                                    </motion.div>
+                                )}
+                            </AnimatePresence>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+    );
+};
+
+export default ProjectOverview;

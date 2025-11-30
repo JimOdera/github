@@ -1,0 +1,525 @@
+'use client';
+
+import Header from '@/app/components/Header';
+import Sidebar from '@/app/components/Sidebar';
+import { frame1, frame2, folder, message_circle_more } from '@/public';
+import { BadgeCheck, ChevronDown, ChevronUp, ChevronsLeft, ChevronsRight, Plus } from 'lucide-react';
+import Image from 'next/image';
+import Link from 'next/link';
+import React, { useState, useEffect } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
+
+const dummyProjects = [
+    {
+        id: 'PR001',
+        name: 'Forest Conservation REDD++ Project',
+        location: 'Mau Forest Complex, Kenya',
+        lastUpdated: '4th June, 2025',
+        categories: ['Renewable Energy', 'Climate Action'],
+        fundingProgress: 60,
+        image: frame1,
+    },
+    {
+        id: 'PR002',
+        name: 'Coastal Restoration Initiative',
+        location: 'Diani Beach, Kwale County, Kenya',
+        lastUpdated: '10th July, 2025',
+        categories: ['Marine Conservation', 'Climate Action'],
+        fundingProgress: 30,
+        image: frame2,
+    },
+    {
+        id: 'PR003',
+        name: 'Solar Microgrid Deployment',
+        location: 'Kajiado County, Kenya',
+        lastUpdated: '15th August, 2025',
+        categories: ['Renewable Energy', 'Community Development'],
+        fundingProgress: 75,
+        image: frame1,
+    },
+    {
+        id: 'PR004',
+        name: 'Wetland Preservation Project',
+        location: 'Tana River Delta, Kenya',
+        lastUpdated: '20th September, 2025',
+        categories: ['Ecosystem Restoration', 'Climate Action'],
+        fundingProgress: 20,
+        image: frame2,
+    },
+    {
+        id: 'PR005',
+        name: 'Wind Farm Expansion',
+        location: 'Kiambu County, Kenya',
+        lastUpdated: '5th October, 2025',
+        categories: ['Renewable Energy', 'Sustainable Infrastructure'],
+        fundingProgress: 50,
+        image: frame1,
+    },
+    {
+        id: 'PR006',
+        name: 'Urban Farming Network',
+        location: 'Nairobi County, Kenya',
+        lastUpdated: '8th October, 2025',
+        categories: ['Sustainable Agriculture', 'Community Development'],
+        fundingProgress: 65,
+        image: frame2,
+    },
+];
+
+// Filter options data
+const locations = ['All', 'Africa', 'Asia', 'Europe', 'North America', 'South America', 'Oceania'];
+const locationCategories = ['All', 'Continent', 'Country', 'Region', 'City'];
+const carbonCreditStages = ['Stage', 'Planning', 'Validation', 'Implementation', 'Verification', 'Issuance'];
+const khExperts = ['All', 'John Smith', 'Jane Doe', 'Alex Johnson', 'Emily Brown', 'Sarah Wilson'];
+
+const Projects = () => {
+    // State for pagination
+    const [currentPage, setCurrentPage] = useState(1);
+    const projectsPerPage = 2;
+
+    // **PERSISTENT SIDEBAR STATE** - EXACT SAME AS FIRST CODE
+    const [isCollapsed, setIsCollapsed] = useState<boolean>(() => {
+        if (typeof window !== 'undefined') {
+            const saved = localStorage.getItem('sidebarCollapsed');
+            return saved ? (JSON.parse(saved) as boolean) : true; // Default to collapsed
+        }
+        return true; // Default on server
+    });
+
+    // **DROPDOWN STATES** - NEW
+    const [locationsDropdownOpen, setLocationsDropdownOpen] = useState(false);
+    const [locationCategoriesDropdownOpen, setLocationCategoriesDropdownOpen] = useState(false);
+    const [carbonCreditsDropdownOpen, setCarbonCreditsDropdownOpen] = useState(false);
+    const [khExpertsDropdownOpen, setKhExpertsDropdownOpen] = useState(false);
+
+    // **SIMPLIFIED STATE** - Just track which projects should be animated
+    const [animateProgress, setAnimateProgress] = useState<Set<string>>(new Set());
+
+    // Sidebar width based on collapsed state (only applies on md+ screens) - EXACT SAME
+    const contentMarginLeft = isCollapsed ? 'md:ml-28' : 'md:ml-58';
+
+    // Pagination calculations - EXACT SAME LOGIC
+    const indexOfLastProject = currentPage * projectsPerPage;
+    const indexOfFirstProject = indexOfLastProject - projectsPerPage;
+    const currentProjects = dummyProjects.slice(indexOfFirstProject, indexOfLastProject);
+    const totalProjectPages = Math.ceil(dummyProjects.length / projectsPerPage);
+
+    const handleProjectPageChange = (pageNumber: number): void => {
+        if (pageNumber >= 1 && pageNumber <= totalProjectPages) {
+            setCurrentPage(pageNumber);
+        }
+    };
+
+    // **TOGGLE FUNCTION** - EXACT SAME
+    const toggleSidebar = () => {
+        setIsCollapsed(prev => !prev);
+    };
+
+    // **SMOOTH ANIMATION WITH INTERSECTION OBSERVER**
+    useEffect(() => {
+        const observerOptions = {
+            threshold: 0.3, // Trigger when 30% of progress bar is visible
+            rootMargin: '0px 0px -100px 0px' // Trigger earlier
+        };
+
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    const projectId = entry.target.getAttribute('data-project-id');
+                    if (projectId) {
+                        setAnimateProgress(prev => new Set([...prev, projectId]));
+                    }
+                    observer.unobserve(entry.target);
+                }
+            });
+        }, observerOptions);
+
+        // Observe all progress bars after DOM is ready
+        const timer = setTimeout(() => {
+            const progressBars = document.querySelectorAll('.progress-bar');
+            progressBars.forEach(bar => observer.observe(bar));
+        }, 100);
+
+        return () => {
+            clearTimeout(timer);
+            observer.disconnect();
+        };
+    }, [currentPage]); // Re-run when page changes
+
+    const getProjectPageNumbers = () => {
+        const pageNumbers = [];
+        const maxPagesToShow = 5;
+        let startPage = Math.max(1, currentPage - Math.floor(maxPagesToShow / 2));
+        const endPage = Math.min(totalProjectPages, startPage + maxPagesToShow - 1);
+
+        if (endPage - startPage + 1 < maxPagesToShow) {
+            startPage = Math.max(1, endPage - maxPagesToShow + 1);
+        }
+
+        for (let i = startPage; i <= endPage; i++) {
+            pageNumbers.push(i);
+        }
+        return pageNumbers;
+    };
+
+    // Animation classes for text - EXACT SAME
+    const sectionTextContainerClass = `space-y-4 transition-all duration-300 ease-in-out ${isCollapsed ? 'scale-x-110' : 'scale-x-100'}`;
+
+    return (
+        <div className="min-h-screen bg-gradient-to-br from-[#BFEFF8]/30 to-[#B1CA69]/30 flex">
+            {/* Main Content Area - Starts after sidebar */}
+            <div className="flex-1 flex flex-col relative z-10">
+                {/* Top Navigation */}
+                <Header />
+
+                <div className="flex w-full md:w-[90vw] mx-auto pt-17 bg-[#FBFDFB] relative">
+
+                    {/* Full Width Hero Section - Behind everything */}
+                    <section className="absolute inset-x-0 top-17 w-full h-52 md:h-64 bg-cover bg-center z-20 transition-all duration-300 ease-in-out">
+                        <Image
+                            src="/images/projects/summary.png"
+                            alt="Summary Banner"
+                            fill
+                        />
+                        <div className="absolute inset-0 bg-gradient-to-br from-[#B1CA69]/30 via-transparent to-[#FBFDFB]/30 flex items-center p-6">
+                            {/* Content starts after dynamic sidebar width with smooth animation */}
+                            <div className="flex items-end justify-between w-full">
+                                <div className={`flex flex-col items-start ${contentMarginLeft} ${sectionTextContainerClass}`}>
+                                    <Image src={folder} alt="folder Icon" className="block md:hidden w-4 h-4 mb-2 cursor-pointer" />
+                                    <h2 className="text-lg md:text-3xl font-medium text-teal-900 transition-transform duration-300 ease-in-out origin-left">
+                                        My Projects
+                                    </h2>
+                                    <span className="text-xs text-teal-700 transition-transform duration-300 ease-in-out origin-left">
+                                        Projects / Listed Items
+                                    </span>
+                                </div>
+                                <Link
+                                    href="/projects/forms"
+                                    className="bg-[#E2FFF2] hover:bg-[#E2FFF2]/90 text-xs text-[#044D5E] border border-[#044D5E] px-5 py-2 rounded-md flex items-center gap-2"
+                                >
+                                    <Plus size={16} /> New Project
+                                </Link>
+                            </div>
+                        </div>
+                    </section>
+
+                    {/* Reusable Sidebar Component - EXACT SAME */}
+                    <Sidebar isCollapsed={isCollapsed} toggleSidebar={toggleSidebar} />
+
+                    <main className="w-full space-y-6 bg-[#FBFDFB] relative z-10 pt-64 md:pt-72">
+                        <div className="w-full mx-auto px-2 py-4 md:px-8 md:py-6 space-y-8">
+                            {/* Filters - WITH FULL DROPDOWN IMPLEMENTATION */}
+                            <div className={`grid grid-cols-1 md:grid-cols-4 items-center justify-between gap-4`}>
+
+                                {/* Locations Dropdown */}
+                                <div className="relative">
+                                    <div
+                                        className="w-full bg-white border border-gray-200 rounded-md px-3 py-2 flex justify-between items-center cursor-pointer transition hover:bg-gray-50"
+                                        onClick={() => setLocationsDropdownOpen(!locationsDropdownOpen)}
+                                    >
+                                        <div className="text-left">
+                                            <p className="text-xs text-gray-500 font-medium">Locations</p>
+                                            <p className="text-xs font-semibold text-gray-900">All</p>
+                                        </div>
+                                        {locationsDropdownOpen ? (
+                                            <ChevronUp className="w-4 h-4 text-gray-600" />
+                                        ) : (
+                                            <ChevronDown className="w-4 h-4 text-gray-600" />
+                                        )}
+                                    </div>
+                                    <AnimatePresence>
+                                        {locationsDropdownOpen && (
+                                            <motion.div
+                                                initial={{ opacity: 0, y: -10 }}
+                                                animate={{ opacity: 1, y: 0 }}
+                                                exit={{ opacity: 0, y: -10 }}
+                                                transition={{ duration: 0.2 }}
+                                                className="absolute top-full left-0 right-0 mt-1 border border-gray-200 rounded-md bg-white shadow-xs z-10"
+                                            >
+                                                {locations.map((location, i) => (
+                                                    <div
+                                                        key={i}
+                                                        onClick={() => setLocationsDropdownOpen(false)}
+                                                        className="px-3 py-2 text-xs text-gray-700 hover:bg-green-50 cursor-pointer transition"
+                                                    >
+                                                        {location}
+                                                    </div>
+                                                ))}
+                                            </motion.div>
+                                        )}
+                                    </AnimatePresence>
+                                </div>
+
+                                {/* Location Category Dropdown */}
+                                <div className="relative">
+                                    <div
+                                        className="w-full bg-white border border-gray-200 rounded-md px-3 py-2 flex justify-between items-center cursor-pointer transition hover:bg-gray-50"
+                                        onClick={() => setLocationCategoriesDropdownOpen(!locationCategoriesDropdownOpen)}
+                                    >
+                                        <div className="text-left">
+                                            <p className="text-xs text-gray-500 font-medium">Location Category</p>
+                                            <p className="text-xs font-semibold text-gray-900">All</p>
+                                        </div>
+                                        {locationCategoriesDropdownOpen ? (
+                                            <ChevronUp className="w-4 h-4 text-gray-600" />
+                                        ) : (
+                                            <ChevronDown className="w-4 h-4 text-gray-600" />
+                                        )}
+                                    </div>
+                                    <AnimatePresence>
+                                        {locationCategoriesDropdownOpen && (
+                                            <motion.div
+                                                initial={{ opacity: 0, y: -10 }}
+                                                animate={{ opacity: 1, y: 0 }}
+                                                exit={{ opacity: 0, y: -10 }}
+                                                transition={{ duration: 0.2 }}
+                                                className="absolute top-full left-0 right-0 mt-1 border border-gray-200 rounded-md bg-white shadow-xs z-10"
+                                            >
+                                                {locationCategories.map((category, i) => (
+                                                    <div
+                                                        key={i}
+                                                        onClick={() => setLocationCategoriesDropdownOpen(false)}
+                                                        className="px-3 py-2 text-xs text-gray-700 hover:bg-green-50 cursor-pointer transition"
+                                                    >
+                                                        {category}
+                                                    </div>
+                                                ))}
+                                            </motion.div>
+                                        )}
+                                    </AnimatePresence>
+                                </div>
+
+                                {/* Carbon Credits Dropdown */}
+                                <div className="relative">
+                                    <div
+                                        className="w-full bg-white border border-gray-200 rounded-md px-3 py-2 flex justify-between items-center cursor-pointer transition hover:bg-gray-50"
+                                        onClick={() => setCarbonCreditsDropdownOpen(!carbonCreditsDropdownOpen)}
+                                    >
+                                        <div className="text-left">
+                                            <p className="text-xs text-gray-500 font-medium">Carbon Credits</p>
+                                            <p className="text-xs font-semibold text-gray-900">Stage</p>
+                                        </div>
+                                        {carbonCreditsDropdownOpen ? (
+                                            <ChevronUp className="w-4 h-4 text-gray-600" />
+                                        ) : (
+                                            <ChevronDown className="w-4 h-4 text-gray-600" />
+                                        )}
+                                    </div>
+                                    <AnimatePresence>
+                                        {carbonCreditsDropdownOpen && (
+                                            <motion.div
+                                                initial={{ opacity: 0, y: -10 }}
+                                                animate={{ opacity: 1, y: 0 }}
+                                                exit={{ opacity: 0, y: -10 }}
+                                                transition={{ duration: 0.2 }}
+                                                className="absolute top-full left-0 right-0 mt-1 border border-gray-200 rounded-md bg-white shadow-xs z-10"
+                                            >
+                                                {carbonCreditStages.map((stage, i) => (
+                                                    <div
+                                                        key={i}
+                                                        onClick={() => setCarbonCreditsDropdownOpen(false)}
+                                                        className="px-3 py-2 text-xs text-gray-700 hover:bg-green-50 cursor-pointer transition"
+                                                    >
+                                                        {stage}
+                                                    </div>
+                                                ))}
+                                            </motion.div>
+                                        )}
+                                    </AnimatePresence>
+                                </div>
+
+                                {/* KH Experts Dropdown */}
+                                <div className="relative">
+                                    <div
+                                        className="w-full bg-white border border-gray-200 rounded-md px-3 py-2 flex justify-between items-center cursor-pointer transition hover:bg-gray-50"
+                                        onClick={() => setKhExpertsDropdownOpen(!khExpertsDropdownOpen)}
+                                    >
+                                        <div className="text-left">
+                                            <p className="text-xs text-gray-500 font-medium">KH Experts</p>
+                                            <p className="text-xs font-semibold text-gray-900">All</p>
+                                        </div>
+                                        {khExpertsDropdownOpen ? (
+                                            <ChevronUp className="w-4 h-4 text-gray-600" />
+                                        ) : (
+                                            <ChevronDown className="w-4 h-4 text-gray-600" />
+                                        )}
+                                    </div>
+                                    <AnimatePresence>
+                                        {khExpertsDropdownOpen && (
+                                            <motion.div
+                                                initial={{ opacity: 0, y: -10 }}
+                                                animate={{ opacity: 1, y: 0 }}
+                                                exit={{ opacity: 0, y: -10 }}
+                                                transition={{ duration: 0.2 }}
+                                                className="absolute top-full left-0 right-0 mt-1 border border-gray-200 rounded-md bg-white shadow-xs z-10"
+                                            >
+                                                {khExperts.map((expert, i) => (
+                                                    <div
+                                                        key={i}
+                                                        onClick={() => setKhExpertsDropdownOpen(false)}
+                                                        className="px-3 py-2 text-xs text-gray-700 hover:bg-green-50 cursor-pointer transition"
+                                                    >
+                                                        {expert}
+                                                    </div>
+                                                ))}
+                                            </motion.div>
+                                        )}
+                                    </AnimatePresence>
+                                </div>
+
+                            </div>
+
+                            <div className={`flex flex-col gap-6 `}>
+                                {currentProjects.map((project) => {
+                                    const isAnimating = animateProgress.has(project.id);
+                                    const displayProgress = isAnimating ? project.fundingProgress : 0;
+
+                                    return (
+                                        <Link
+                                            href={`/projects/${project.id}`}
+                                            key={project.id}
+                                            className="flex flex-col md:flex-row bg-white rounded-xl shadow-sm hover:shadow-md transition-all duration-300 overflow-hidden block hover:bg-gray-50/50"
+                                        >
+                                            {/* Image Section */}
+                                            <div className="relative w-full md:w-auto md:flex-[0.4]">
+                                                <Image
+                                                    src={project.image}
+                                                    alt={project.name}
+                                                    className="w-full h-full object-cover"
+                                                />
+                                                <div className="absolute inset-x-0 bottom-2 right-0 flex justify-center pointer-events-none">
+                                                    <div className="bg-white/20 backdrop-blur-md border border-white/30 text-white text-sm font-medium px-4 py-2 rounded-full shadow-lg">
+                                                        {project.location || 'Global Project'} {/* Replace with actual location if available in data */}
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            {/* Middle Content */}
+                                            <div className="flex flex-col flex-1 p-6 space-y-6">
+                                                <div className="flex flex-col gap-2">
+                                                    <h1 className="text-[#044D5E] text-sm md:text-xl font-semibold leading-tight">
+                                                        {project.name}
+                                                    </h1>
+                                                    <p className="text-gray-600 text-xs">
+                                                        <span className="font-medium text-[#044D5E]">Last Updated:</span> {project.lastUpdated}
+                                                    </p>
+                                                </div>
+                                                <div>
+                                                    <p className="text-[#044D5E] text-xs font-medium mb-2">Categories</p>
+                                                    <div className="flex flex-wrap gap-2">
+                                                        {project.categories.map((category, index) => (
+                                                            <span
+                                                                key={index}
+                                                                className="bg-[#4ABEA6]/10 text-[#4ABEA6] text-xs font-medium px-3 py-1 rounded-full transition-colors duration-200 hover:bg-[#4ABEA6]/20"
+                                                            >
+                                                                {category}
+                                                            </span>
+                                                        ))}
+                                                    </div>
+                                                </div>
+                                                {/* **SMOOTH CSS ANIMATED PROGRESS BAR** */}
+                                                <div>
+                                                    <div className="flex justify-between items-center mb-2">
+                                                        <p className="text-[#044D5E] text-xs font-medium">Funding Progress</p>
+                                                        <p className="text-[#044D5E] text-xs font-semibold transition-all duration-800 ease-out">
+                                                            {displayProgress}%
+                                                        </p>
+                                                    </div>
+                                                    <div className="w-full bg-[#EDF1FD] rounded-full h-3 relative overflow-hidden">
+                                                        <div
+                                                            className="progress-bar bg-[#044D5E] h-3 rounded-full absolute left-0 top-0 transition-all duration-800 ease-out"
+                                                            data-project-id={project.id}
+                                                            style={{
+                                                                width: `${displayProgress}%`
+                                                            }}
+                                                        />
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            {/* Right Side */}
+                                            <div className="flex flex-col justify-between p-6 gap-2">
+                                                <div className="flex items-center space-x-2">
+                                                    <BadgeCheck color="#044D5E" size={18} />
+                                                    <h1 className="text-[#044D5E] text-xs font-medium">KGFT Alignment</h1>
+                                                </div>
+                                                <div className="flex flex-col md:flex-row gap-3">
+                                                    <button className="bg-[#E2FFF2] hover:bg-[#E2FFF2]/90 text-[#044D5E] text-xs border border-[#044D5E]/50 font-medium px-5 py-2.5 rounded-lg transition-all duration-300">
+                                                        View Details
+                                                    </button>
+                                                    <button className="bg-[#044D5E] hover:bg-[#044D5E]/90 text-[#E4F3D1] text-xs font-medium px-5 py-2.5 rounded-lg transition-all duration-300">
+                                                        Publish
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        </Link>
+                                    );
+                                })}
+
+                                {/* Pagination Controls - EXACT SAME */}
+                                <div className="flex flex-col sm:flex-row justify-between items-center w-full px-6 py-4">
+                                    <div className="text-xs text-gray-600 mb-4 sm:mb-0">
+                                        {dummyProjects.length > 0
+                                            ? `Showing ${indexOfFirstProject + 1}-${Math.min(indexOfLastProject, dummyProjects.length)} of ${dummyProjects.length}`
+                                            : 'No results found'}
+                                    </div>
+                                    <div className="flex items-center gap-2">
+                                        <button
+                                            onClick={() => handleProjectPageChange(currentPage - 1)}
+                                            disabled={currentPage === 1}
+                                            className={`p-1 rounded-md border ${currentPage === 1
+                                                ? 'text-gray-300 border-gray-200 cursor-not-allowed'
+                                                : 'text-[#044D5E] border-[#044D5E]/20 hover:bg-[#044D5E]/10'
+                                                } transition-all duration-200`}
+                                            aria-label="Previous page"
+                                        >
+                                            <ChevronsLeft size={20} />
+                                        </button>
+                                        {getProjectPageNumbers().map((page) => (
+                                            <button
+                                                key={page}
+                                                onClick={() => handleProjectPageChange(page)}
+                                                className={`px-3 py-1 text-xs rounded-md border ${page === currentPage
+                                                    ? 'bg-[#E4F3D1] text-[#044D5E] border-[#E4F3D1]'
+                                                    : 'text-[#044D5E] border-[#044D5E]/20 hover:bg-[#044D5E]/10'
+                                                    } transition-all duration-200`}
+                                                aria-label={`Page ${page}`}
+                                            >
+                                                {page}
+                                            </button>
+                                        ))}
+                                        <button
+                                            onClick={() => handleProjectPageChange(currentPage + 1)}
+                                            disabled={currentPage === totalProjectPages}
+                                            className={`p-1 rounded-md border ${currentPage === totalProjectPages
+                                                ? 'text-gray-300 border-gray-200 cursor-not-allowed'
+                                                : 'text-[#044D5E] border-[#044D5E]/20 hover:bg-[#044D5E]/10'
+                                                } transition-all duration-200`}
+                                            aria-label="Next page"
+                                        >
+                                            <ChevronsRight size={20} />
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </main>
+                </div>
+            </div>
+
+            {/* Floating Help Button - EXACT SAME */}
+            <div className="fixed bottom-5 right-5 flex flex-col items-center">
+                <div className="bg-white text-xs text-gray-700 px-3 py-1 rounded-lg shadow-md mb-2 relative cursor-pointer">
+                    need help?
+                    <span
+                        className="absolute bottom-[-4px] left-1/2 transform -translate-x-1/2 w-2 h-2 bg-white rotate-45"
+                        aria-hidden="true"
+                    ></span>
+                </div>
+                <button className="bg-white shadow-md border border-gray-200 bg-gray-200/50 p-2 rounded-md rounded-full p-3 flex items-center justify-center cursor-pointer transition-all duration-300">
+                    <Image src={message_circle_more} alt="Help" className="w-6 h-6" />
+                </button>
+            </div>
+        </div>
+    );
+};
+
+export default Projects;

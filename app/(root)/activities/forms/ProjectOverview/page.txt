@@ -1,0 +1,535 @@
+'use client';
+
+import React, { useState, useEffect, useRef } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { ChevronDown, ChevronUp, Pencil, Leaf, Check } from 'lucide-react';
+import Image from 'next/image';
+
+// Type Definitions
+interface DropdownProps {
+    label: string;
+    options: string[];
+    selected: string;
+    onChange: (value: string) => void;
+}
+
+interface SDG {
+    id: number;
+    title: string;
+    image: string;
+}
+
+// Reusable Dropdown Component (styled like first form)
+const CustomDropdown = ({ label, options, selected, onChange }: DropdownProps) => {
+    const [isOpen, setIsOpen] = useState(false);
+
+    return (
+        <div className="relative mb-6">
+            <p className="text-xs text-gray-700 mb-1 font-medium">{label} <span className="text-red-500">*</span></p>
+            <div
+                onClick={() => setIsOpen(!isOpen)}
+                className={`
+                    w-full text-xs rounded-lg px-4 py-2 flex justify-between items-center 
+                    cursor-pointer transition-all duration-200
+                    ${isOpen
+                        ? 'border border-gray-400 bg-white shadow-sm'
+                        : 'border border-gray-300 hover:bg-gray-50'
+                    }`}
+            >
+                <span className="text-gray-600">{selected || "Please Select"}</span>
+                {isOpen ? (
+                    <ChevronUp size={18} className="text-gray-400" />
+                ) : (
+                    <ChevronDown size={18} className="text-gray-400" />
+                )}
+            </div>
+            <AnimatePresence>
+                {isOpen && (
+                    <motion.div
+                        initial={{ opacity: 0, y: -10 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        exit={{ opacity: 0, y: -10 }}
+                        transition={{ duration: 0.2 }}
+                        className="absolute top-full left-0 right-0 mt-1 border border-gray-200 rounded-lg bg-white shadow-md z-30"
+                    >
+                        {options.map((option) => (
+                            <div
+                                key={option}
+                                onClick={() => {
+                                    onChange(option);
+                                    setIsOpen(false);
+                                }}
+                                className="px-4 py-2 text-xs text-gray-700 hover:bg-gray-50 cursor-pointer transition"
+                            >
+                                {option}
+                            </div>
+                        ))}
+                    </motion.div>
+                )}
+            </AnimatePresence>
+        </div>
+    );
+};
+
+// SDG Data
+const sdgs: SDG[] = [
+    { id: 1, title: "No Poverty", image: "/images/sdg/sdg1.png" },
+    { id: 2, title: "Zero Hunger", image: "/images/sdg/sdg2.png" },
+    { id: 3, title: "Good Health and Well-Being", image: "/images/sdg/sdg3.png" },
+    { id: 4, title: "Quality Education", image: "/images/sdg/sdg4.png" },
+    // Add more up to 17 in /public/images
+];
+
+const countries = [
+    "Afghanistan", "Albania", "Algeria", "Andorra", "Angola", "Antigua and Barbuda", "Argentina", "Armenia", "Australia", "Austria",
+    "Azerbaijan", "Bahamas", "Bahrain", "Bangladesh", "Barbados", "Belarus", "Belgium", "Belize", "Benin", "Bhutan",
+    "Bolivia", "Bosnia and Herzegovina", "Botswana", "Brazil", "Brunei", "Bulgaria", "Burkina Faso", "Burundi", "Cabo Verde", "Cambodia",
+    "Cameroon", "Canada", "Central African Republic", "Chad", "Chile", "China", "Colombia", "Comoros", "Congo (Congo-Brazzaville)", "Costa Rica",
+    "Croatia", "Cuba", "Cyprus", "Czechia (Czech Republic)", "Denmark", "Djibouti", "Dominica", "Dominican Republic", "Ecuador", "Egypt",
+    "El Salvador", "Equatorial Guinea", "Eritrea", "Estonia", "Eswatini (fmr. Swaziland)", "Ethiopia", "Fiji", "Finland", "France", "Gabon",
+    "Gambia", "Georgia", "Germany", "Ghana", "Greece", "Grenada", "Guatemala", "Guinea", "Guinea-Bissau", "Guyana",
+    "Haiti", "Honduras", "Hungary", "Iceland", "India", "Indonesia", "Iran", "Iraq", "Ireland", "Israel",
+    "Italy", "Jamaica", "Japan", "Jordan", "Kazakhstan", "Kenya", "Kiribati", "Kuwait", "Kyrgyzstan", "Laos",
+    "Latvia", "Lebanon", "Lesotho", "Liberia", "Libya", "Liechtenstein", "Lithuania", "Luxembourg", "Madagascar", "Malawi",
+    "Malaysia", "Maldives", "Mali", "Malta", "Marshall Islands", "Mauritania", "Mauritius", "Mexico", "Micronesia", "Moldova",
+    "Monaco", "Mongolia", "Montenegro", "Morocco", "Mozambique", "Myanmar (formerly Burma)", "Namibia", "Nauru", "Nepal", "Netherlands",
+    "New Zealand", "Nicaragua", "Niger", "Nigeria", "North Korea", "North Macedonia", "Norway", "Oman", "Pakistan", "Palau",
+    "Palestine State", "Panama", "Papua New Guinea", "Paraguay", "Peru", "Philippines", "Poland", "Portugal", "Qatar", "Romania",
+    "Russia", "Rwanda", "Saint Kitts and Nevis", "Saint Lucia", "Saint Vincent and the Grenadines", "Samoa", "San Marino", "Sao Tome and Principe", "Saudi Arabia", "Senegal",
+    "Serbia", "Seychelles", "Sierra Leone", "Singapore", "Slovakia", "Slovenia", "Solomon Islands", "Somalia", "South Africa", "South Korea",
+    "South Sudan", "Spain", "Sri Lanka", "Sudan", "Suriname", "Sweden", "Switzerland", "Syria", "Tajikistan", "Tanzania",
+    "Thailand", "Timor-Leste", "Togo", "Tonga", "Trinidad and Tobago", "Tunisia", "Turkey", "Turkmenistan", "Tuvalu", "Uganda",
+    "Ukraine", "United Arab Emirates", "United Kingdom", "United States of America", "Uruguay", "Uzbekistan", "Vanuatu", "Vatican City", "Venezuela", "Vietnam",
+    "Yemen", "Zambia", "Zimbabwe"
+];
+
+const ProjectOverview = () => {
+    const [activeSection, setActiveSection] = useState<string>('Basic Details');
+
+    const [selectedCountry, setSelectedCountry] = useState("");
+    const [countryDropdownOpen, setCountryDropdownOpen] = useState(false);
+
+    const sectionRefs = {
+        'Basic Details': useRef<HTMLDivElement>(null),
+        'Material Topics': useRef<HTMLDivElement>(null),
+    };
+
+    // Form States
+    const [entityName, setEntityName] = useState("");
+    const [businessUnit, setBusinessUnit] = useState("");
+    const [reportingPeriod, setReportingPeriod] = useState("");
+    const [stakeholderView, setStakeholderView] = useState("");
+    const [customStakeholder, setCustomStakeholder] = useState("");
+    const [selectedSDGs, setSelectedSDGs] = useState<number[]>([]);
+    const [visibleCount, setVisibleCount] = useState(4);
+    const [indicators, setIndicators] = useState({
+        targetContribution: "",
+        dataSource: "",
+        sdgNo: "",
+        indicatorDescription: "",
+    });
+
+    const stakeholderOptions = [
+        "Internal Management",
+        "Investor Reporting",
+        "Regulator (e.g., CBK, CMA, NSE)",
+        "Lender (DFI/Bank)",
+        "Community/Beneficiary",
+        "Custom",
+    ];
+
+    const handleNavClick = (section: string) => {
+        setActiveSection(section);
+        const sectionRef = sectionRefs[section as keyof typeof sectionRefs].current;
+        if (sectionRef) {
+            sectionRef.scrollIntoView({ behavior: 'smooth' });
+        }
+    };
+
+    useEffect(() => {
+        const observer = new IntersectionObserver(
+            (entries) => {
+                entries.forEach((entry) => {
+                    if (entry.isIntersecting) {
+                        setActiveSection(entry.target.getAttribute('data-section')!);
+                    }
+                });
+            },
+            { threshold: 0.5 }
+        );
+
+        Object.values(sectionRefs).forEach((ref) => {
+            if (ref.current) {
+                observer.observe(ref.current);
+            }
+        });
+
+        return () => {
+            Object.values(sectionRefs).forEach((ref) => {
+                if (ref.current) {
+                    observer.unobserve(ref.current);
+                }
+            });
+        };
+    }, []);
+
+    const toggleSDG = (id: number) => {
+        setSelectedSDGs((prev) =>
+            prev.includes(id) ? prev.filter((s) => s !== id) : [...prev, id]
+        );
+    };
+
+    const handleIndicatorChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const { name, value } = e.target;
+        setIndicators((prev) => ({ ...prev, [name]: value }));
+    };
+
+    const handleSubmit = (e: React.FormEvent) => {
+        e.preventDefault();
+        console.log({
+            entityName,
+            businessUnit,
+            reportingPeriod,
+            stakeholderView,
+            customStakeholder,
+            selectedSDGs,
+            indicators,
+        });
+    };
+
+    return (
+        <div className="w-full mx-auto px-2 md:px-6 py-0 space-y-6">
+            <div className="flex gap-4">
+                {/* Sticky Sidebar Navigation */}
+                <div className="w-72 hidden md:flex flex-col gap-2 sticky top-36 self-start">
+                    <h1 className="text-lg font-semibold text-gray-600">Content</h1>
+                    <div className="flex flex-col gap-1">
+                        {[
+                            { name: 'Basic Details', icon: Pencil },
+                            { name: 'Material Topics', icon: Leaf },
+                        ].map(({ name, icon: Icon }) => (
+                            <div
+                                key={name}
+                                onClick={() => handleNavClick(name)}
+                                className={`flex items-center gap-2 px-5 py-2 rounded-lg cursor-pointer transition-colors duration-300 ${activeSection === name
+                                    ? 'bg-[#F2F2F2] text-[#044D5E]'
+                                    : 'hover:bg-gray-50 text-gray-500'
+                                    }`}
+                            >
+                                <Icon size={16} />
+                                <p className="text-xs">{name}</p>
+                            </div>
+                        ))}
+                    </div>
+                </div>
+
+                {/* Form Content */}
+                <form onSubmit={handleSubmit} className="w-full mx-auto px-0 md:px-6 py-0 flex-1 space-y-6">
+                    {/* Basic Details Section */}
+                    <div ref={sectionRefs['Basic Details']} data-section="Basic Details">
+                        <h1 className="text-lg font-medium text-gray-600 mb-6">Basic Details</h1>
+
+                        {/* Entity/Project Name */}
+                        <div className="mb-6">
+                            <p className="text-xs text-gray-700 mb-2 font-medium">
+                                Entity/Project name <span className="text-red-500">*</span>
+                            </p>
+                            <input
+                                type="text"
+                                value={entityName}
+                                onChange={(e) => setEntityName(e.target.value)}
+                                placeholder="Enter the project title"
+                                className="w-full text-xs border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:border-gray-400 transition"
+                            />
+                        </div>
+
+                        {/* Business Unit/Division */}
+                        <CustomDropdown
+                            label="Business Unit/Division"
+                            options={["Unit 1", "Unit 2", "Unit 3"]}
+                            selected={businessUnit}
+                            onChange={setBusinessUnit}
+                        />
+
+                        {/* ESG Reporting Period - Start & End on same line */}
+                        <div className="mb-6">
+                            <p className="text-xs text-gray-700 mb-2 font-medium">
+                                ESG Reporting Period <span className="text-red-500">*</span>
+                            </p>
+                            <div className="flex gap-3 items-center">
+                                <input
+                                    type="date"
+                                    value={reportingPeriod.split(' to ')[0] || ''}
+                                    onChange={(e) => {
+                                        const start = e.target.value;
+                                        const end = reportingPeriod.split(' to ')[1] || '';
+                                        setReportingPeriod(`${start} to ${end}`);
+                                    }}
+                                    className="flex-1 text-xs border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:border-gray-400 transition"
+                                />
+                                <span className="text-gray-500 text-xs">–</span>
+                                <input
+                                    type="date"
+                                    value={reportingPeriod.split(' to ')[1] || ''}
+                                    onChange={(e) => {
+                                        const end = e.target.value;
+                                        const start = reportingPeriod.split(' to ')[0] || '';
+                                        setReportingPeriod(`${start} to ${end}`);
+                                    }}
+                                    className="flex-1 text-xs border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:border-gray-400 transition"
+                                />
+                            </div>
+                        </div>
+
+                        {/* Stakeholder View */}
+                        <CustomDropdown
+                            label="Stakeholder View"
+                            options={stakeholderOptions}
+                            selected={stakeholderView}
+                            onChange={setStakeholderView}
+                        />
+                        {stakeholderView === "Custom" && (
+                            <div className="mb-6">
+                                <p className="text-xs text-gray-700 mb-2 font-medium">Custom Stakeholder</p>
+                                <input
+                                    type="text"
+                                    value={customStakeholder}
+                                    onChange={(e) => setCustomStakeholder(e.target.value)}
+                                    placeholder="Custom stakeholder"
+                                    className="w-full text-xs border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:border-gray-400 transition"
+                                />
+                            </div>
+                        )}
+
+                        {/* Entity/Activity */}
+                        <div className="mb-6">
+                            <p className="text-xs text-gray-700 mb-2 font-medium">
+                                Entity/Activity name <span className="text-red-500">*</span>
+                            </p>
+                            <input
+                                type="text"
+                                value={entityName}
+                                onChange={(e) => setEntityName(e.target.value)}
+                                placeholder="Enter the entity or activity name"
+                                className="w-full text-xs border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:border-gray-400 transition"
+                            />
+                        </div>
+
+                        <hr className="border-t border-gray-200 my-6" />
+
+                        <h1 className="text-lg font-medium text-gray-600 mb-6">Your organisation</h1>
+
+                        {/* Name of your organisation */}
+                        <div className="mb-6">
+                            <p className="text-xs text-gray-700 mb-2 font-medium">
+                                Name of your organisation <span className="text-red-500">*</span>
+                            </p>
+                            <input
+                                type="text"
+                                placeholder="Enter organisation name"
+                                className="w-full text-xs border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:border-gray-400 transition"
+                            />
+                        </div>
+
+                        {/* Country of your organisation (Scrollable Dropdown) */}
+                        {/* Country of your organisation (Scrollable Dropdown) */}
+                        <div className="relative mb-6">
+                            <p className="text-xs text-gray-700 mb-1 font-medium">
+                                Country of your organisation <span className="text-red-500">*</span>
+                            </p>
+                            <div
+                                onClick={() => setCountryDropdownOpen(!countryDropdownOpen)}
+                                className={`
+                                    w-full text-xs rounded-lg px-4 py-2 flex justify-between items-center 
+                                    cursor-pointer transition-all duration-200
+                                    ${countryDropdownOpen
+                                        ? 'border border-gray-400 bg-white shadow-sm'
+                                        : 'border border-gray-300 hover:bg-gray-50'
+                                    }`}
+                            >
+                                <span className="text-gray-600">{selectedCountry || "Select Country"}</span>
+                                {countryDropdownOpen ? (
+                                    <ChevronUp size={18} className="text-gray-400" />
+                                ) : (
+                                    <ChevronDown size={18} className="text-gray-400" />
+                                )}
+                            </div>
+                            <AnimatePresence>
+                                {countryDropdownOpen && (
+                                    <motion.div
+                                        initial={{ opacity: 0, y: -10 }}
+                                        animate={{ opacity: 1, y: 0 }}
+                                        exit={{ opacity: 0, y: -10 }}
+                                        transition={{ duration: 0.2 }}
+                                        className="absolute top-full left-0 right-0 mt-1 border border-gray-200 rounded-lg bg-white shadow-md z-30 max-h-60 overflow-y-auto"
+                                    >
+                                        {countries.map((country) => (
+                                            <div
+                                                key={country}
+                                                onClick={() => {
+                                                    setSelectedCountry(country);
+                                                    setCountryDropdownOpen(false);
+                                                }}
+                                                className="px-4 py-2 text-xs text-gray-700 hover:bg-gray-50 cursor-pointer transition"
+                                            >
+                                                {country}
+                                            </div>
+                                        ))}
+                                    </motion.div>
+                                )}
+                            </AnimatePresence>
+                        </div>
+
+                        {/* City of your organisation */}
+                        <div className="mb-6">
+                            <p className="text-xs text-gray-700 mb-2 font-medium">
+                                City of your organisation <span className="text-red-500">*</span>
+                            </p>
+                            <input
+                                type="text"
+                                placeholder="Enter city"
+                                className="w-full text-xs border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:border-gray-400 transition"
+                            />
+                        </div>
+
+                        {/* Reporting period (Start – End on same line) */}
+                        <div className="mb-6">
+                            <p className="text-xs text-gray-700 mb-2 font-medium">
+                                Reporting period <span className="text-red-500">*</span>
+                            </p>
+                            <div className="flex gap-3 items-center">
+                                <input
+                                    type="date"
+                                    placeholder="Start Date"
+                                    className="flex-1 text-xs border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:border-gray-400 transition"
+                                />
+                                <span className="text-gray-500 text-xs whitespace-nowrap">to</span>
+                                <input
+                                    type="date"
+                                    placeholder="End Date"
+                                    className="flex-1 text-xs border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:border-gray-400 transition"
+                                />
+                            </div>
+                        </div>
+
+                        {/* Number of Employees */}
+                        <div className="mb-6">
+                            <p className="text-xs text-gray-700 mb-2 font-medium">
+                                Number of Employees <span className="text-red-500">*</span>
+                            </p>
+                            <input
+                                type="number"
+                                placeholder="e.g. 150"
+                                min="1"
+                                className="w-full text-xs border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:border-gray-400 transition [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                            />
+                        </div>
+
+                        <hr className="border-t border-gray-200 my-6" />
+
+                        {/* Aligned SDGs */}
+                        <div className="mb-6">
+                            <p className="text-xs text-gray-700 mb-2 font-medium">
+                                Aligned SDGs <span className="text-red-500">*</span>
+                            </p>
+                            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                                {sdgs.slice(0, visibleCount).map((sdg) => (
+                                    <div
+                                        key={sdg.id}
+                                        onClick={() => toggleSDG(sdg.id)}
+                                        className="relative cursor-pointer w-full h-62 rounded-md overflow-hidden shadow hover:shadow-md transition group"
+                                    >
+                                        <Image
+                                            src={sdg.image}
+                                            alt={sdg.title}
+                                            fill
+                                            className="transition-transform duration-300 group-hover:scale-105"
+                                        />
+
+                                        <div
+                                            className={`absolute inset-0 bg-black/40 transition-opacity duration-300 ${selectedSDGs.includes(sdg.id) ? "opacity-100" : "opacity-0"
+                                                }`}
+                                        />
+
+                                        <div
+                                            className={`absolute bottom-2 right-2 w-7 h-7 rounded-lg flex items-center justify-center border-2 border-white shadow-lg transition-all duration-300 ${selectedSDGs.includes(sdg.id)
+                                                ? "bg-[#1ECEC9] scale-100"
+                                                : "bg-white/70 scale-90"
+                                                }`}
+                                        >
+                                            {selectedSDGs.includes(sdg.id) && (
+                                                <Check className="w-5 h-5 text-white" />
+                                            )}
+                                        </div>
+
+                                        <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/60 to-transparent p-2 text-white opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                                            <p className="text-xs font-medium truncate">{sdg.title}</p>
+                                        </div>
+                                    </div>
+                                ))}
+                            </div>
+
+                            {visibleCount < sdgs.length && (
+                                <button
+                                    type="button"
+                                    onClick={() => setVisibleCount(prev => prev + 4)}
+                                    className="mt-4 text-xs text-[#1ECEC9] hover:underline"
+                                >
+                                    Load More
+                                </button>
+                            )}
+                        </div>
+
+                        {/* Indicators & Evidence per SDG */}
+                        <div className="mb-6">
+                            <p className="text-xs text-gray-700 mb-2 font-medium">
+                                Indicators & Evidence per SDG <span className="text-red-500">*</span>
+                            </p>
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <input
+                                    type="text"
+                                    name="targetContribution"
+                                    value={indicators.targetContribution}
+                                    onChange={handleIndicatorChange}
+                                    placeholder="Target Contribution"
+                                    className="text-xs border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:border-gray-400 transition"
+                                />
+                                <input
+                                    type="text"
+                                    name="dataSource"
+                                    value={indicators.dataSource}
+                                    onChange={handleIndicatorChange}
+                                    placeholder="Data Source"
+                                    className="text-xs border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:border-gray-400 transition"
+                                />
+                                <input
+                                    type="text"
+                                    name="sdgNo"
+                                    value={indicators.sdgNo}
+                                    onChange={handleIndicatorChange}
+                                    placeholder="SDG No"
+                                    className="text-xs border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:border-gray-400 transition"
+                                />
+                                <input
+                                    type="text"
+                                    name="indicatorDescription"
+                                    value={indicators.indicatorDescription}
+                                    onChange={handleIndicatorChange}
+                                    placeholder="Indicator Description"
+                                    className="text-xs border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:border-gray-400 transition"
+                                />
+                            </div>
+                        </div>
+                    </div>
+
+                    <hr className="border-t border-gray-200 my-6" />
+
+                    <hr className="border-t border-gray-200 my-6" />
+
+                </form>
+            </div>
+        </div>
+    );
+};
+
+export default ProjectOverview;
