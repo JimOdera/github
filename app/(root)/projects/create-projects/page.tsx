@@ -6,25 +6,39 @@ import { folder, message_circle_more } from '@/public';
 import { ChevronsLeft, ChevronsRight, Plus, Edit } from 'lucide-react';
 import Image from 'next/image';
 import Link from 'next/link';
-import React, { useState, useMemo } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 
 const Page = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const projectsPerPage = 5;
 
-  // Persistent sidebar state
-  const [isCollapsed, setIsCollapsed] = useState<boolean>(() => {
-    if (typeof window !== 'undefined') {
-      const saved = localStorage.getItem('sidebarCollapsed');
-      return saved ? JSON.parse(saved) as boolean : true;
+  // Sidebar state — safe for SSR
+  const [isCollapsed, setIsCollapsed] = useState(true);
+  const [isMounted, setIsMounted] = useState(false);
+
+  // Only access localStorage after component mounts
+  useEffect(() => {
+    setIsMounted(true);
+    const saved = localStorage.getItem('sidebarCollapsed');
+    if (saved !== null) {
+      setIsCollapsed(JSON.parse(saved));
     }
-    return true;
-  });
+  }, []);
+
+  const toggleSidebar = () => {
+    const newState = !isCollapsed;
+    setIsCollapsed(newState);
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('sidebarCollapsed', JSON.stringify(newState));
+    }
+  };
 
   const contentMarginLeft = isCollapsed ? 'md:ml-28' : 'md:ml-58';
 
-  // === REAL DRAFT PROJECTS FROM localStorage ===
+  // === REAL DRAFTS — only computed client-side ===
   const draftProjects = useMemo(() => {
+    if (!isMounted) return [];
+
     const drafts: Array<{
       id: string;
       name: string;
@@ -33,54 +47,58 @@ const Page = () => {
       status: 'Draft' | 'Published';
     }> = [];
 
-    Object.keys(localStorage).forEach(key => {
-      const match = key.match(/^projectDraft_(.+)_step1$/);
-      if (match) {
-        const projectId = match[1];
-        try {
-          const step1Data = JSON.parse(localStorage.getItem(key) || '{}');
-          if (step1Data.projectTitle) {
-            let filledSteps = 0;
-            for (let i = 1; i <= 4; i++) {
-              if (localStorage.getItem(`projectDraft_${projectId}_step${i}`)) filledSteps++;
+    try {
+      Object.keys(localStorage).forEach(key => {
+        const match = key.match(/^projectDraft_(.+)_step1$/);
+        if (match) {
+          const projectId = match[1];
+          try {
+            const step1Data = JSON.parse(localStorage.getItem(key) || '{}');
+            if (step1Data.projectTitle) {
+              let filledSteps = 0;
+              for (let i = 1; i <= 4; i++) {
+                if (localStorage.getItem(`projectDraft_${projectId}_step${i}`)) filledSteps++;
+              }
+              const progress = Math.round((filledSteps / 4) * 100);
+
+              const lastModified = localStorage.getItem(`projectDraft_${projectId}_lastModified`);
+              const date = lastModified
+                ? new Date(Number(lastModified)).toLocaleDateString('en-GB', {
+                    day: 'numeric',
+                    month: 'short',
+                    year: 'numeric',
+                  })
+                : 'Today';
+
+              drafts.push({
+                id: projectId,
+                name: step1Data.projectTitle || 'Untitled Project',
+                lastEdited: date,
+                progress,
+                status: 'Draft' as const,
+              });
             }
-            const progress = Math.round((filledSteps / 4) * 100);
-
-            // Get last modified time
-            const lastModified = localStorage.getItem(`projectDraft_${projectId}_lastModified`);
-            const date = lastModified
-              ? new Date(Number(lastModified)).toLocaleDateString('en-GB', {
-                  day: 'numeric', month: 'short', year: 'numeric'
-                })
-              : 'Today';
-
-            drafts.push({
-              id: projectId,
-              name: step1Data.projectTitle || 'Untitled Project',
-              lastEdited: date,
-              progress,
-              status: 'Draft' as const
-            });
+          } catch (e) {
+            console.warn('Failed to parse draft:', key);
           }
-        } catch (e) {
-          console.warn('Failed to parse draft:', key);
         }
-      }
-    });
+      });
+    } catch (err) {
+      console.error('Error reading localStorage:', err);
+    }
 
     return drafts;
-  }, []);
+  }, [isMounted]);
 
-  // === Fallback dummy projects (only if no real drafts) ===
+  // Fallback dummy data
   const dummyProjects = [
-    { id: 'dummy-1', name: 'Forest Restoration', lastEdited: '15 Oct, 2025', progress: 75, status: 'Draft' },
-    { id: 'dummy-2', name: 'Urban Greening', lastEdited: '14 Oct, 2025', progress: 60, status: 'Published' },
-    { id: 'dummy-3', name: 'Coastal Cleanup', lastEdited: '13 Oct, 2025', progress: 90, status: 'Draft' },
-    { id: 'dummy-4', name: 'Solar Farm', lastEdited: '12 Oct, 2025', progress: 45, status: 'Published' },
-    { id: 'dummy-5', name: 'Wind Energy', lastEdited: '11 Oct, 2025', progress: 30, status: 'Draft' },
+    { id: 'dummy-1', name: 'Forest Restoration', lastEdited: '15 Oct, 2025', progress: 75, status: 'Draft' as const },
+    { id: 'dummy-2', name: 'Urban Greening', lastEdited: '14 Oct, 2025', progress: 60, status: 'Published' as const },
+    { id: 'dummy-3', name: 'Coastal Cleanup', lastEdited: '13 Oct, 2025', progress: 90, status: 'Draft' as const },
+    { id: 'dummy-4', name: 'Solar Farm', lastEdited: '12 Oct, 2025', progress: 45, status: 'Published' as const },
+    { id: 'dummy-5', name: 'Wind Energy', lastEdited: '11 Oct, 2025', progress: 30, status: 'Draft' as const },
   ];
 
-  // Use real drafts if exist, otherwise fall back to dummy
   const allProjects = draftProjects.length > 0 ? draftProjects : dummyProjects;
 
   // Pagination
@@ -95,12 +113,6 @@ const Page = () => {
     }
   };
 
-  const toggleSidebar = () => {
-    const newState = !isCollapsed;
-    setIsCollapsed(newState);
-    localStorage.setItem('sidebarCollapsed', JSON.stringify(newState));
-  };
-
   const getProjectPageNumbers = () => {
     const pageNumbers = [];
     const maxPagesToShow = 5;
@@ -113,7 +125,14 @@ const Page = () => {
     return pageNumbers;
   };
 
-  const sectionTextContainerClass = `space-y-4 transition-all duration-300 ease-in-out ${isCollapsed ? 'scale-x-110' : 'scale-x-100'}`;
+  const sectionTextContainerClass = `space-y-4 transition-all duration-300 ease-in-out ${
+    isCollapsed ? 'scale-x-110' : 'scale-x-100'
+  }`;
+
+  // Show nothing or skeleton until mounted (prevents hydration mismatch)
+  if (!isMounted) {
+    return null; // or a simple skeleton loader
+  }
 
   return (
     <div className="min-h-screen bg-gradient-to-r from-[#BFEFF8]/30 to-[#B1CA69]/30 flex">
@@ -180,10 +199,13 @@ const Page = () => {
                               </span>
                             </td>
                             <td className="py-3 px-4">
-                              <span className={`inline-flex items-center gap-1 px-3 py-1 rounded-md text-xs ${project.status === 'Published'
-                                ? 'bg-[#E4F3D1] text-[#044D5E]'
-                                : 'bg-gray-100 text-gray-600'
-                                }`}>
+                              <span
+                                className={`inline-flex items-center gap-1 px-3 py-1 rounded-md text-xs ${
+                                  project.status === 'Published'
+                                    ? 'bg-[#E4F3D1] text-[#044D5E]'
+                                    : 'bg-gray-100 text-gray-600'
+                                }`}
+                              >
                                 {project.status}
                                 {project.status === 'Draft' && <Edit size={14} className="text-gray-500" />}
                               </span>
@@ -219,10 +241,11 @@ const Page = () => {
                       <button
                         onClick={() => handleProjectPageChange(currentPage - 1)}
                         disabled={currentPage === 1}
-                        className={`p-1 rounded-md border ${currentPage === 1
-                          ? 'text-gray-300 border-gray-200 cursor-not-allowed'
-                          : 'text-[#044D5E] border-[#044D5E]/20 hover:bg-[#044D5E]/10'
-                          } transition-all duration-200`}
+                        className={`p-1 rounded-md border ${
+                          currentPage === 1
+                            ? 'text-gray-300 border-gray-200 cursor-not-allowed'
+                            : 'text-[#044D5E] border-[#044D5E]/20 hover:bg-[#044D5E]/10'
+                        } transition-all duration-200`}
                       >
                         <ChevronsLeft size={20} />
                       </button>
@@ -230,10 +253,11 @@ const Page = () => {
                         <button
                           key={page}
                           onClick={() => handleProjectPageChange(page)}
-                          className={`px-3 py-1 text-xs rounded-md border ${page === currentPage
-                            ? 'bg-[#E4F3D1] text-[#044D5E] border-[#E4F3D1]'
-                            : 'text-[#044D5E] border-[#044D5E]/20 hover:bg-[#044D5E]/10'
-                            } transition-all duration-200`}
+                          className={`px-3 py-1 text-xs rounded-md border ${
+                            page === currentPage
+                              ? 'bg-[#E4F3D1] text-[#044D5E] border-[#E4F3D1]'
+                              : 'text-[#044D5E] border-[#044D5E]/20 hover:bg-[#044D5E]/10'
+                          } transition-all duration-200`}
                         >
                           {page}
                         </button>
@@ -241,10 +265,11 @@ const Page = () => {
                       <button
                         onClick={() => handleProjectPageChange(currentPage + 1)}
                         disabled={currentPage === totalProjectPages}
-                        className={`p-1 rounded-md border ${currentPage === totalProjectPages
-                          ? 'text-gray-300 border-gray-200 cursor-not-allowed'
-                          : 'text-[#044D5E] border-[#044D5E]/20 hover:bg-[#044D5E]/10'
-                          } transition-all duration-200`}
+                        className={`p-1 rounded-md border ${
+                          currentPage === totalProjectPages
+                            ? 'text-gray-300 border-gray-200 cursor-not-allowed'
+                            : 'text-[#044D5E] border-[#044D5E]/20 hover:bg-[#044D5E]/10'
+                        } transition-all duration-200`}
                       >
                         <ChevronsRight size={20} />
                       </button>
@@ -258,7 +283,7 @@ const Page = () => {
       </div>
 
       {/* Floating Help */}
-      <div className="fixed bottom-5 right-1 flex flex-col items-center">
+      <div className="fixed bottom-5 right-1 flex flex-col items-center z-50">
         <div className="bg-white text-xs text-gray-700 px-3 py-1 rounded-md shadow-md mb-2 relative cursor-pointer">
           need help?
           <span className="absolute bottom-[-4px] left-1/2 transform -translate-x-1/2 w-2 h-2 bg-white rotate-45"></span>
