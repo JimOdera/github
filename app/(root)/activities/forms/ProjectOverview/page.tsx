@@ -52,7 +52,11 @@ interface Indicator {
     dataSource: string;
 }
 
-const ProjectOverview = () => {
+interface ProjectOverviewProps {
+    activityId: string;
+}
+
+const ProjectOverview = ({ activityId }: ProjectOverviewProps) => {
     // ──────────────────────────────────────────────────────────────
     // Form state
     // ──────────────────────────────────────────────────────────────
@@ -78,6 +82,79 @@ const ProjectOverview = () => {
     );
 
     const [indicators, setIndicators] = useState<Indicator[]>([]);
+
+    // ──────────────────────────────────────────────────────────────
+    // Storage key for this activity
+    // ──────────────────────────────────────────────────────────────
+    const storageKey = `activityDraft_${activityId}_step1`;
+
+    // Auto-save to localStorage
+    useEffect(() => {
+        const saveDraft = () => {
+            const draft = {
+                entityName,
+                businessUnit,
+                reportingStart,
+                reportingEnd,
+                stakeholderView,
+                customStakeholder,
+                showCustomStakeholder,
+                orgName,
+                orgCountry,
+                orgCity,
+                orgReportingPeriod,
+                numEmployees,
+                sdgs,
+                indicators,
+            };
+            localStorage.setItem(storageKey, JSON.stringify(draft));
+        };
+
+        const timeoutId = setTimeout(saveDraft, 600);
+        return () => clearTimeout(timeoutId);
+    }, [
+        entityName,
+        businessUnit,
+        reportingStart,
+        reportingEnd,
+        stakeholderView,
+        customStakeholder,
+        showCustomStakeholder,
+        orgName,
+        orgCountry,
+        orgCity,
+        orgReportingPeriod,
+        numEmployees,
+        sdgs,
+        indicators,
+        activityId,
+    ]);
+
+    // Load draft on mount
+    useEffect(() => {
+        const saved = localStorage.getItem(storageKey);
+        if (saved) {
+            try {
+                const draft = JSON.parse(saved);
+                setEntityName(draft.entityName || '');
+                setBusinessUnit(draft.businessUnit || '');
+                setReportingStart(draft.reportingStart || '');
+                setReportingEnd(draft.reportingEnd || '');
+                setStakeholderView(draft.stakeholderView || '');
+                setCustomStakeholder(draft.customStakeholder || '');
+                setShowCustomStakeholder(draft.showCustomStakeholder || false);
+                setOrgName(draft.orgName || '');
+                setOrgCountry(draft.orgCountry || '');
+                setOrgCity(draft.orgCity || '');
+                setOrgReportingPeriod(draft.orgReportingPeriod || '');
+                setNumEmployees(draft.numEmployees || '');
+                setSdgs(draft.sdgs || Array.from({ length: 17 }, (_, i) => ({ id: i + 1, selected: false })));
+                setIndicators(draft.indicators || []);
+            } catch (e) {
+                console.warn('Failed to load Step 1 draft for activity:', activityId);
+            }
+        }
+    }, [activityId, storageKey]);
 
     // ──────────────────────────────────────────────────────────────
     // Navigation & scroll handling
@@ -388,7 +465,7 @@ const ProjectOverview = () => {
                                     <span className={orgCountry ? 'text-gray-900' : 'text-gray-500'}>
                                         {orgCountry || 'Select country'}
                                     </span>
-                                    {dropdownOpen ? <ChevronUp size={18} /> : <ChevronDown size={18} />}
+                                    {countryDropdownOpen ? <ChevronUp size={18} /> : <ChevronDown size={18} />}
                                 </div>
 
                                 {/* Dropdown menu */}
@@ -461,7 +538,7 @@ const ProjectOverview = () => {
 
                 {/* ───── Aligned SDGs ───── */}
                 <section ref={sdgsRef} data-section="Aligned SDGs" className="space-y-6 scroll-mt-24">
-                    <h2 className="text-2xl font-semibold text-[#044D5E]">Aligned SDG’s</h2>
+                    <h2 className="text-2xl font-semibold text-[#044D5E]">Aligned SDG's</h2>
                     <p className="text-xs text-gray-600">
                         Select all Sustainable Development Goals this project/entity contributes to
                     </p>
@@ -580,7 +657,7 @@ const ProjectOverview = () => {
                                                 onChange={(e) =>
                                                     updateIndicator(ind.id, 'indicator', e.target.value)
                                                 }
-                                                className="px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:border-gray-500"
+                                                className="px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:border-gray-500 text-xs"
                                             />
                                             <input
                                                 placeholder="Target Contribution"
@@ -588,7 +665,7 @@ const ProjectOverview = () => {
                                                 onChange={(e) =>
                                                     updateIndicator(ind.id, 'target', e.target.value)
                                                 }
-                                                className="px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:border-gray-500"
+                                                className="px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:border-gray-500 text-xs"
                                             />
                                             <div className="flex gap-3">
                                                 <input
@@ -597,7 +674,7 @@ const ProjectOverview = () => {
                                                     onChange={(e) =>
                                                         updateIndicator(ind.id, 'dataSource', e.target.value)
                                                     }
-                                                    className="flex-1 px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:border-gray-500"
+                                                    className="flex-1 px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:border-gray-500 text-xs"
                                                 />
                                                 <button
                                                     onClick={() => removeIndicator(ind.id)}

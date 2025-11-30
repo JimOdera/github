@@ -4,7 +4,11 @@ import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ChevronDown, ChevronUp, Pencil, Leaf } from 'lucide-react';
 
-const EnergyUse = () => {
+interface EnergyUseProps {
+    activityId: string;
+}
+
+const EnergyUse = ({ activityId }: EnergyUseProps) => {
     const [activeSection, setActiveSection] = useState<string>('Emissions Methodology');
 
     // === State moved from EnvMetrics ===
@@ -18,7 +22,86 @@ const EnergyUse = () => {
     const [hazardousWasteDetails, setHazardousWasteDetails] = useState('');
     const [eprComplianceSelected, setEprComplianceSelected] = useState<boolean | null>(null);
 
+    // Additional form state for energy and waste inputs
+    const [totalEnergyKwh, setTotalEnergyKwh] = useState('');
+    const [renewablePercentage, setRenewablePercentage] = useState('');
+    const [totalWaste, setTotalWaste] = useState('');
+    const [recycledPercentage, setRecycledPercentage] = useState('');
+    const [landfilledPercentage, setLandfilledPercentage] = useState('');
+
     const methodologies = ['GHG Protocol', 'IPCC', 'Custom', 'Other'] as const;
+
+    // Storage key for this activity
+    const storageKey = `activityDraft_${activityId}_step3`;
+
+    // Auto-save to localStorage
+    useEffect(() => {
+        const saveDraft = () => {
+            const draft = {
+                activeSection,
+                selectedMethodology,
+                emissionTargetsSelected,
+                targetDescription,
+                baselineYear,
+                targetTimeline,
+                hazardousWasteSelected,
+                hazardousWasteDetails,
+                eprComplianceSelected,
+                totalEnergyKwh,
+                renewablePercentage,
+                totalWaste,
+                recycledPercentage,
+                landfilledPercentage,
+            };
+            localStorage.setItem(storageKey, JSON.stringify(draft));
+        };
+
+        const timeoutId = setTimeout(saveDraft, 600);
+        return () => clearTimeout(timeoutId);
+    }, [
+        activeSection,
+        selectedMethodology,
+        emissionTargetsSelected,
+        targetDescription,
+        baselineYear,
+        targetTimeline,
+        hazardousWasteSelected,
+        hazardousWasteDetails,
+        eprComplianceSelected,
+        totalEnergyKwh,
+        renewablePercentage,
+        totalWaste,
+        recycledPercentage,
+        landfilledPercentage,
+        activityId,
+        storageKey,
+    ]);
+
+    // Load draft on mount
+    useEffect(() => {
+        const saved = localStorage.getItem(storageKey);
+        if (saved) {
+            try {
+                const draft = JSON.parse(saved);
+                setActiveSection(draft.activeSection || 'Emissions Methodology');
+                setSelectedMethodology(draft.selectedMethodology || '');
+                setEmissionTargetsSelected(draft.emissionTargetsSelected ?? null);
+                setTargetDescription(draft.targetDescription || '');
+                setBaselineYear(draft.baselineYear || '');
+                setTargetTimeline(draft.targetTimeline || '');
+                setHazardousWasteSelected(draft.hazardousWasteSelected ?? null);
+                setHazardousWasteDetails(draft.hazardousWasteDetails || '');
+                setEprComplianceSelected(draft.eprComplianceSelected ?? null);
+                setTotalEnergyKwh(draft.totalEnergyKwh || '');
+                setRenewablePercentage(draft.renewablePercentage || '');
+                setTotalWaste(draft.totalWaste || '');
+                setRecycledPercentage(draft.recycledPercentage || '');
+                setLandfilledPercentage(draft.landfilledPercentage || '');
+            } catch (e) {
+                console.warn('Failed to load Step 3 draft for activity:', activityId);
+            }
+        }
+    }, [activityId, storageKey]);
 
     const sectionRefs = {
         'Emissions Methodology': useRef<HTMLDivElement>(null),
@@ -63,6 +146,11 @@ const EnergyUse = () => {
                 {/* Sticky Sidebar Navigation */}
                 <div className="w-72 hidden md:flex flex-col gap-2 sticky top-36 self-start">
                     <h1 className="text-lg font-semibold text-gray-600">Content</h1>
+                    {activityId && (
+                        <p className="text-xs text-gray-500 mb-2 px-5">
+                            Activity ID: <span className="font-mono">{activityId}</span>
+                        </p>
+                    )}
                     <div className="flex flex-col gap-1">
                         {[
                             { name: 'Emissions Methodology', icon: Leaf },
@@ -86,9 +174,6 @@ const EnergyUse = () => {
 
                 {/* Main Form Content */}
                 <form className="w-full mx-auto px-0 md:px-6 py-0 flex-1 space-y-12">
-
-                    {/* You can keep your existing Emissions Methodology & Material Topics here */}
-                    {/* ... */}
 
                     <hr className="border-t border-gray-200 my-8" />
 
@@ -160,9 +245,9 @@ const EnergyUse = () => {
                                     onClick={() => setEmissionTargetsSelected(true)}
                                     className={`px-4 py-2 rounded-lg border text-xs font-medium text-gray-500 ${
                                         emissionTargetsSelected === true
-                                            ? 'bg-green-100 border-green-500'
-                                            : 'hover:bg-gray-50 border-gray-300'
-                                    } focus:outline-none`}
+                                            ? 'bg-green-100 border-green-500 text-green-700'
+                                            : 'hover:bg-gray-50 border-gray-300 text-gray-600'
+                                    } focus:outline-none transition-colors`}
                                 >
                                     Yes
                                 </button>
@@ -171,9 +256,9 @@ const EnergyUse = () => {
                                     onClick={() => setEmissionTargetsSelected(false)}
                                     className={`px-4 py-2 rounded-lg border text-xs font-medium text-gray-500 ${
                                         emissionTargetsSelected === false
-                                            ? 'bg-red-100 border-red-500'
-                                            : 'hover:bg-gray-50 border-gray-300'
-                                    } focus:outline-none`}
+                                            ? 'bg-red-100 border-red-500 text-red-700'
+                                            : 'hover:bg-gray-50 border-gray-300 text-gray-600'
+                                    } focus:outline-none transition-colors`}
                                 >
                                     No
                                 </button>
@@ -244,7 +329,8 @@ const EnergyUse = () => {
                                     </p>
                                     <input
                                         type="number"
-                                        name="totalEnergyKwh"
+                                        value={totalEnergyKwh}
+                                        onChange={(e) => setTotalEnergyKwh(e.target.value)}
                                         className="w-full text-xs border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:border-gray-400 transition"
                                         placeholder="e.g., 450000"
                                     />
@@ -257,7 +343,8 @@ const EnergyUse = () => {
                                         type="number"
                                         min="0"
                                         max="100"
-                                        name="renewablePercentage"
+                                        value={renewablePercentage}
+                                        onChange={(e) => setRenewablePercentage(e.target.value)}
                                         className="w-full text-xs border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:border-gray-400 transition"
                                         placeholder="e.g., 35"
                                     />
@@ -276,7 +363,8 @@ const EnergyUse = () => {
                                 <input
                                     type="number"
                                     step="0.01"
-                                    name="totalWaste"
+                                    value={totalWaste}
+                                    onChange={(e) => setTotalWaste(e.target.value)}
                                     required
                                     className="w-full text-xs border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:border-gray-400 transition"
                                     placeholder="e.g., 12500 (kg) or 12.5 (tonnes)"
@@ -290,7 +378,8 @@ const EnergyUse = () => {
                                         type="number"
                                         min="0"
                                         max="100"
-                                        name="recycledPercentage"
+                                        value={recycledPercentage}
+                                        onChange={(e) => setRecycledPercentage(e.target.value)}
                                         className="w-full text-xs border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:border-gray-400 transition"
                                         placeholder="e.g., 62"
                                     />
@@ -301,7 +390,8 @@ const EnergyUse = () => {
                                         type="number"
                                         min="0"
                                         max="100"
-                                        name="landfilledPercentage"
+                                        value={landfilledPercentage}
+                                        onChange={(e) => setLandfilledPercentage(e.target.value)}
                                         className="w-full text-xs border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:border-gray-400 transition"
                                         placeholder="e.g., 38"
                                     />
@@ -319,9 +409,9 @@ const EnergyUse = () => {
                                         onClick={() => setHazardousWasteSelected(true)}
                                         className={`px-4 py-2 rounded-lg border text-xs font-medium text-gray-500 ${
                                             hazardousWasteSelected === true
-                                                ? 'bg-green-100 border-green-500'
-                                                : 'hover:bg-gray-50 border-gray-300'
-                                        } focus:outline-none`}
+                                                ? 'bg-green-100 border-green-500 text-green-700'
+                                                : 'hover:bg-gray-50 border-gray-300 text-gray-600'
+                                        } focus:outline-none transition-colors`}
                                     >
                                         Yes
                                     </button>
@@ -330,9 +420,9 @@ const EnergyUse = () => {
                                         onClick={() => setHazardousWasteSelected(false)}
                                         className={`px-4 py-2 rounded-lg border text-xs font-medium text-gray-500 ${
                                             hazardousWasteSelected === false
-                                                ? 'bg-red-100 border-red-500'
-                                                : 'hover:bg-gray-50 border-gray-300'
-                                        } focus:outline-none`}
+                                                ? 'bg-red-100 border-red-500 text-red-700'
+                                                : 'hover:bg-gray-50 border-gray-300 text-gray-600'
+                                        } focus:outline-none transition-colors`}
                                     >
                                         No
                                     </button>
@@ -369,9 +459,9 @@ const EnergyUse = () => {
                                         onClick={() => setEprComplianceSelected(true)}
                                         className={`px-4 py-2 rounded-lg border text-xs font-medium text-gray-500 ${
                                             eprComplianceSelected === true
-                                                ? 'bg-green-100 border-green-500'
-                                                : 'hover:bg-gray-50 border-gray-300'
-                                        } focus:outline-none`}
+                                                ? 'bg-green-100 border-green-500 text-green-700'
+                                                : 'hover:bg-gray-50 border-gray-300 text-gray-600'
+                                        } focus:outline-none transition-colors`}
                                     >
                                         Yes
                                     </button>
@@ -380,9 +470,9 @@ const EnergyUse = () => {
                                         onClick={() => setEprComplianceSelected(false)}
                                         className={`px-4 py-2 rounded-lg border text-xs font-medium text-gray-500 ${
                                             eprComplianceSelected === false
-                                                ? 'bg-red-100 border-red-500'
-                                                : 'hover:bg-gray-50 border-gray-300'
-                                        } focus:outline-none`}
+                                                ? 'bg-red-100 border-red-500 text-red-700'
+                                                : 'hover:bg-gray-50 border-gray-300 text-gray-600'
+                                        } focus:outline-none transition-colors`}
                                     >
                                         No
                                     </button>

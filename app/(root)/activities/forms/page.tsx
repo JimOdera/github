@@ -1,8 +1,9 @@
+// app/activities/form/page.tsx
 'use client';
 
 import Header from '@/app/components/Header';
 import { Check, ChevronLeft, ChevronRight } from 'lucide-react';
-import React, { useState, useRef, Suspense } from 'react';
+import React, { useState, useRef, Suspense, useEffect } from 'react';
 import Image from 'next/image';
 import { useSearchParams } from 'next/navigation';
 import { AnimatePresence } from 'framer-motion';
@@ -10,25 +11,122 @@ import { folder, message_circle_more } from '@/public';
 import ProjectOverview from './ProjectOverview/page';
 import EnergyUse from './EnergyUse/page';
 import ActivityDetails from './ActivityDetails/page';
+import toast from 'react-hot-toast';
+import { useRouter } from 'next/navigation';
+
+// Types for activity data
+interface ActivityData {
+  id: string;
+  overview: any;
+  activityDetails: any;
+  energyUse?: any;
+  submittedAt: string;
+  status: 'Draft' | 'Submitted' | 'Approved' | 'Rejected';
+  title?: string;
+  entityName?: string;
+  category?: string;
+}
 
 const FormContent = () => {
     const [step, setStep] = useState(1);
     const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
+    const [activityId, setActivityId] = useState<string>('');
+    const router = useRouter();
 
     const searchParams = useSearchParams();
     const formContentRef = useRef<HTMLDivElement>(null);
 
-    // Read category from URL
-    React.useEffect(() => {
+    // Initialize activity ID and load category
+    useEffect(() => {
+        // Generate or get activity ID
+        const urlParams = new URLSearchParams(window.location.search);
+        const draftId = urlParams.get('draft');
+        let newActivityId = '';
+
+        if (draftId) {
+            newActivityId = draftId;
+            setActivityId(draftId);
+        } else {
+            newActivityId = `activity_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+            setActivityId(newActivityId);
+            // Update URL without page reload
+            const newUrl = `${window.location.pathname}?draft=${newActivityId}`;
+            window.history.replaceState({}, '', newUrl);
+        }
+
+        // Load category from URL or localStorage
         const category = searchParams.get('category');
         if (category) {
-            setSelectedCategory(decodeURIComponent(category));
+            const decodedCategory = decodeURIComponent(category);
+            setSelectedCategory(decodedCategory);
+            
+            // Also save to localStorage for persistence
+            const draftKey = `activityDraft_${newActivityId}_step2`;
+            const existingDraft = localStorage.getItem(draftKey);
+            if (existingDraft) {
+                try {
+                    const draftData = JSON.parse(existingDraft);
+                    localStorage.setItem(draftKey, JSON.stringify({
+                        ...draftData,
+                        selectedCategory: decodedCategory
+                    }));
+                } catch (e) {
+                    // If parsing fails, create new draft
+                    localStorage.setItem(draftKey, JSON.stringify({
+                        selectedCategory: decodedCategory
+                    }));
+                }
+            } else {
+                // Create new draft with category
+                localStorage.setItem(draftKey, JSON.stringify({
+                    selectedCategory: decodedCategory
+                }));
+            }
+        } else if (newActivityId) {
+            // Try to load category from localStorage
+            const draftKey = `activityDraft_${newActivityId}_step2`;
+            const existingDraft = localStorage.getItem(draftKey);
+            if (existingDraft) {
+                try {
+                    const draftData = JSON.parse(existingDraft);
+                    if (draftData.selectedCategory) {
+                        setSelectedCategory(draftData.selectedCategory);
+                    }
+                } catch (e) {
+                    console.warn('Failed to load activity category from draft');
+                }
+            }
         }
     }, [searchParams]);
 
     // Determine flow
     const isEnvironmentalMetrics = selectedCategory === 'Environmental Metrics';
     const totalSteps = isEnvironmentalMetrics ? 3 : 2;
+
+    // Helper function to validate category-specific data
+    const validateCategoryData = (category: string | null, activityDetails: any): boolean => {
+        if (!category) return false;
+
+        // For now, return true for all categories since we don't have specific validation
+        // You can add specific validation logic for each category as needed
+        console.log(`Validating category: ${category}`, activityDetails);
+        
+        // Basic check: if we have any data in activityDetails beyond just selectedCategory
+        const hasData = Object.keys(activityDetails).some(key => 
+            key !== 'selectedCategory' && 
+            key !== 'activeSection' && 
+            activityDetails[key] !== undefined && 
+            activityDetails[key] !== '' &&
+            activityDetails[key] !== null
+        );
+
+        if (!hasData) {
+            console.warn(`No category-specific data found for ${category}`);
+            return false;
+        }
+
+        return true;
+    };
 
     // Dynamic steps for UI
     const steps = [
@@ -62,15 +160,157 @@ const FormContent = () => {
         }, 100);
     };
 
-    // Correctly map current step → component
+    // Validate all steps before submission - FIXED LOGIC
+    const validateAllSteps = (): boolean => {
+        if (!activityId) {
+            toast.error('Activity ID not found. Please refresh the page.');
+            return false;
+        }
+
+        const keys = {
+            step1: `activityDraft_${activityId}_step1`,
+            step2: `activityDraft_${activityId}_step2`,
+            step3: isEnvironmentalMetrics ? `activityDraft_${activityId}_step3` : null,
+        };
+
+        // Check if required steps have data - FIXED: Only check step3 for Environmental Metrics
+        const step1Data = localStorage.getItem(keys.step1);
+        const step2Data = localStorage.getItem(keys.step2);
+        const step3Data = isEnvironmentalMetrics ? localStorage.getItem(keys.step3!) : null;
+
+        console.log('Validation check:', {
+            step1: !!step1Data,
+            step2: !!step2Data,
+            step3: !!step3Data,
+            isEnvironmentalMetrics
+        });
+
+        // For non-Environmental Metrics, only check step1 and step2
+        if (!step1Data || !step2Data) {
+            toast.error('Please complete all steps before submitting.');
+            return false;
+        }
+
+        // For Environmental Metrics, also check step3
+        if (isEnvironmentalMetrics && !step3Data) {
+            toast.error('Please complete all steps before submitting.');
+            return false;
+        }
+
+        try {
+            // Basic validation for required fields in step1
+            const overview = JSON.parse(step1Data);
+            if (!overview.entityName || !overview.businessUnit || !overview.orgName) {
+                toast.error('Please complete all required fields in Project Basics');
+                return false;
+            }
+
+            // Basic validation for required fields in step2
+            const activityDetails = JSON.parse(step2Data);
+            if (!activityDetails.selectedCategory) {
+                toast.error('Please select an activity category');
+                return false;
+            }
+
+            // For non-Environmental Metrics categories, check if the category component has required data
+            if (!isEnvironmentalMetrics) {
+                // Check if the specific category has minimum required data
+                const hasCategoryData = validateCategoryData(selectedCategory, activityDetails);
+                if (!hasCategoryData) {
+                    toast.error(`Please complete all required fields in ${selectedCategory}`);
+                    return false;
+                }
+            }
+
+            return true;
+        } catch (error) {
+            console.error('Validation error:', error);
+            toast.error('Invalid form data. Please refresh and try again.');
+            return false;
+        }
+    };
+
+    const handleSubmit = async (e: React.FormEvent) => {
+        e.preventDefault();
+        
+        if (!validateAllSteps()) {
+            return;
+        }
+
+        try {
+            const keys = {
+                step1: `activityDraft_${activityId}_step1`,
+                step2: `activityDraft_${activityId}_step2`,
+                step3: isEnvironmentalMetrics ? `activityDraft_${activityId}_step3` : null,
+            };
+
+            // Get all step data
+            const overview = JSON.parse(localStorage.getItem(keys.step1)!);
+            const activityDetails = JSON.parse(localStorage.getItem(keys.step2)!);
+            const energyUse = isEnvironmentalMetrics 
+                ? JSON.parse(localStorage.getItem(keys.step3!)!) 
+                : undefined;
+
+            // Create complete activity object
+            const activityData: ActivityData = {
+                id: activityId,
+                overview,
+                activityDetails,
+                energyUse,
+                submittedAt: new Date().toISOString(),
+                status: 'Submitted',
+                title: overview.entityName,
+                entityName: overview.entityName,
+                category: activityDetails.selectedCategory,
+            };
+
+            console.log('Final Activity Submission:', activityData);
+
+            // Simulate API call
+            await new Promise(resolve => setTimeout(resolve, 1200));
+
+            // Save to submitted activities
+            const submittedActivities = JSON.parse(localStorage.getItem('submittedActivities') || '[]');
+            
+            // Check if activity already exists (update instead of adding new)
+            const existingIndex = submittedActivities.findIndex((a: ActivityData) => a.id === activityId);
+            if (existingIndex >= 0) {
+                submittedActivities[existingIndex] = activityData;
+            } else {
+                submittedActivities.push(activityData);
+            }
+            
+            localStorage.setItem('submittedActivities', JSON.stringify(submittedActivities));
+
+            // Clean up draft data
+            Object.values(keys).forEach(key => {
+                if (key) localStorage.removeItem(key);
+            });
+
+            toast.success('Activity submitted successfully!');
+            router.push('/activities');
+        } catch (error) {
+            console.error('Submission failed:', error);
+            toast.error('Failed to submit activity. Please try again.');
+        }
+    };
+
+    // Correctly map current step → component with activityId prop
     const renderStep = () => {
+        if (!activityId) {
+            return <div className="text-center py-12">Loading activity form...</div>;
+        }
+
+        const commonProps = { activityId };
+
         if (step === 1) {
-            return <ProjectOverview />;
+            return <ProjectOverview {...commonProps} />;
         }
 
         if (step === 2) {
             return (
                 <ActivityDetails
+                    {...commonProps}
                     selectedCategory={selectedCategory}
                     onCategorySelect={setSelectedCategory}
                 />
@@ -78,10 +318,10 @@ const FormContent = () => {
         }
 
         if (step === 3 && isEnvironmentalMetrics) {
-            return <EnergyUse />;
+            return <EnergyUse {...commonProps} />;
         }
 
-        return null; // Fallback (should never hit)
+        return null;
     };
 
     const isLastStep = step === totalSteps;
@@ -106,6 +346,14 @@ const FormContent = () => {
                                 <h2 className="text-lg md:text-3xl font-medium text-teal-900">ESG Tracker</h2>
                                 <span className="text-xs text-teal-700">Activities / Forms</span>
                             </div>
+                            {activityId && (
+                                <div className="hidden md:block text-right">
+                                    <p className="text-xs text-teal-100 opacity-80">Activity ID:</p>
+                                    <p className="text-xs font-mono text-white bg-teal-900/50 px-2 py-1 rounded">
+                                        {activityId}
+                                    </p>
+                                </div>
+                            )}
                         </div>
                     </div>
                 </section>
@@ -157,7 +405,7 @@ const FormContent = () => {
                         )}
 
                         {/* Form Content */}
-                        <form onSubmit={(e) => { e.preventDefault(); console.log('Form submitted!'); }}>
+                        <form onSubmit={handleSubmit}>
                             <div ref={formContentRef} className="space-y-6 pt-4 pb-32 scroll-mt-[92px]">
                                 <AnimatePresence mode="wait">
                                     {renderStep()}

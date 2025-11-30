@@ -35,6 +35,7 @@ interface SidebarItem {
 }
 
 interface ActivityDetailsProps {
+    activityId: string;
     selectedCategory: string | null;
     onCategorySelect: (category: string) => void;
 }
@@ -47,7 +48,10 @@ type EmissionEntry = {
 };
 
 // Proper component type that allows optional onEmissionsUpdate prop
-type CategoryComponent = React.FC<{ onEmissionsUpdate?: (entries: EmissionEntry[]) => void }>;
+type CategoryComponent = React.FC<{ 
+    activityId?: string;
+    onEmissionsUpdate?: (entries: EmissionEntry[]) => void 
+}>;
 
 // ──────────────────────────────────────────────────────────────
 // Sidebar configuration
@@ -104,12 +108,57 @@ const categoryComponents: Record<string, CategoryComponent> = {
 // ──────────────────────────────────────────────────────────────
 // Main Component
 // ──────────────────────────────────────────────────────────────
-const ActivityDetails: React.FC<ActivityDetailsProps> = ({ selectedCategory }) => {
+const ActivityDetails: React.FC<ActivityDetailsProps> = ({ 
+    activityId, 
+    selectedCategory, 
+    onCategorySelect 
+}) => {
     const [activeSection, setActiveSection] = useState<string>('Activity Type');
 
     // Live emissions tracking from EnvMetrics
     const [emissionEntries, setEmissionEntries] = useState<EmissionEntry[]>([]);
     const [emissionsByCategory, setEmissionsByCategory] = useState<Record<string, number>>({});
+
+    // Storage key for this activity
+    const storageKey = `activityDraft_${activityId}_step2`;
+
+    // Auto-save to localStorage
+    useEffect(() => {
+        const saveDraft = () => {
+            const draft = {
+                selectedCategory,
+                activeSection,
+                emissionEntries,
+            };
+            localStorage.setItem(storageKey, JSON.stringify(draft));
+        };
+
+        const timeoutId = setTimeout(saveDraft, 600);
+        return () => clearTimeout(timeoutId);
+    }, [
+        selectedCategory,
+        activeSection,
+        emissionEntries,
+        activityId,
+        storageKey,
+    ]);
+
+    // Load draft on mount
+    useEffect(() => {
+        const saved = localStorage.getItem(storageKey);
+        if (saved) {
+            try {
+                const draft = JSON.parse(saved);
+                if (draft.selectedCategory && draft.selectedCategory !== selectedCategory) {
+                    onCategorySelect(draft.selectedCategory);
+                }
+                setActiveSection(draft.activeSection || 'Activity Type');
+                setEmissionEntries(draft.emissionEntries || []);
+            } catch (e) {
+                console.warn('Failed to load Step 2 draft for activity:', activityId);
+            }
+        }
+    }, [activityId, storageKey, onCategorySelect, selectedCategory]);
 
     // Update totals when entries change
     useEffect(() => {
@@ -165,7 +214,14 @@ const ActivityDetails: React.FC<ActivityDetailsProps> = ({ selectedCategory }) =
         });
 
         return () => observer.disconnect();
-    }, [selectedCategory, sectionRefs]); // ← Fixed: sectionRefs added
+    }, [selectedCategory, sectionRefs]);
+
+    // Handle category selection from child components if needed
+    const handleCategoryUpdate = (category: string) => {
+        if (category !== selectedCategory) {
+            onCategorySelect(category);
+        }
+    };
 
     return (
         <div className="w-full mx-auto px-4 md:px-6 py-0 space-y-6">
@@ -252,7 +308,7 @@ const ActivityDetails: React.FC<ActivityDetailsProps> = ({ selectedCategory }) =
                         {/* Placeholder when no emissions yet */}
                         {selectedCategory === 'Environmental Metrics' && emissionEntries.length === 0 && (
                             <div className="w-full px-0 py-8 text-center text-gray-400">
-                                <Leaf size={32} className="mx-auto mb-2  opacity-30" />
+                                <Leaf size={32} className="mx-auto mb-2 opacity-30" />
                                 <p className="text-xs">
                                     Emissions will appear here
                                     <br />
@@ -278,6 +334,11 @@ const ActivityDetails: React.FC<ActivityDetailsProps> = ({ selectedCategory }) =
                                 <p className="text-lg font-semibold text-[#044D5E]">
                                     {selectedCategory || 'No category selected'}
                                 </p>
+                                {activityId && (
+                                    <p className="text-xs text-gray-500 mt-1">
+                                        Activity ID: <span className="font-mono">{activityId}</span>
+                                    </p>
+                                )}
                             </div>
                             <Link
                                 href="/activities/create-activities"
@@ -301,11 +362,16 @@ const ActivityDetails: React.FC<ActivityDetailsProps> = ({ selectedCategory }) =
                                     return <p className="text-red-600">Component not found for: {selectedCategory}</p>;
                                 }
 
-                                return selectedCategory === 'Environmental Metrics' ? (
-                                    <Component onEmissionsUpdate={setEmissionEntries} />
-                                ) : (
-                                    <Component />
-                                );
+                                // Pass activityId to all components for their own localStorage management
+                                const componentProps = {
+                                    ...(selectedCategory === 'Environmental Metrics' 
+                                        ? { onEmissionsUpdate: setEmissionEntries }
+                                        : {}
+                                    ),
+                                    activityId: activityId
+                                };
+
+                                return <Component {...componentProps} />;
                             })()
                         ) : (
                             <div className="text-center py-12">
