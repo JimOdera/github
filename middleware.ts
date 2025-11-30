@@ -1,62 +1,56 @@
-// middleware.ts  (project root)
+// middleware.ts
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
 
 export function middleware(request: NextRequest) {
-  const user = request.cookies.get('klimaUser')?.value;
-  const pathname = request.nextUrl.pathname;
+  const cookie = request.cookies.get("klimaUser")?.value;
+  let user = null;
 
-  // 1. Root path handling
-  if (pathname === '/' || pathname === '/index') {
-    if (user) {
-      // Already logged in → go straight to /platform
-      return NextResponse.redirect(new URL('/platform', request.url));
-    } else {
-      // Not logged in → go to sign-up
-      return NextResponse.redirect(new URL('/sign-up', request.url));
+  if (cookie) {
+    try {
+      user = JSON.parse(cookie);
+    } catch (e) {
+      // invalid cookie
     }
   }
 
-  // 2. Protected routes (all your app pages)
-  const protectedBases = [
-    '/dashboard',
-    '/projects',
-    '/activities',
-    '/coordinates',
-    '/platform',
-    '/experts',
-    '/reports',
-    '/components',
-    '/profile',
-    '/settings',
+  const pathname = request.nextUrl.pathname;
+
+  if (pathname === "/" || pathname === "/index") {
+    return user
+      ? NextResponse.redirect(new URL("/platform", request.url))
+      : NextResponse.redirect(new URL("/sign-up", request.url));
+  }
+
+  const protectedRoutes = [
+    "/dashboard",
+    "/platform",
+    "/projects",
+    "/activities",
+    "/coordinates",
+    "/experts",
+    "/reports",
+    "/profile",
+    "/settings",
   ];
 
-  const isProtected = protectedBases.some(base =>
-    pathname.startsWith(base)
-  );
+  const isProtected = protectedRoutes.some(route => pathname.startsWith(route));
 
   if (isProtected && !user) {
-    const url = new URL('/sign-up', request.url);
-    url.searchParams.set('redirect', pathname); // optional: remember where they were
+    const url = new URL("/sign-up", request.url);
+    url.searchParams.set("redirect", pathname);
     return NextResponse.redirect(url);
   }
 
-  // Everything else → allow (assets, /sign-up, etc.)
   return NextResponse.next();
 }
 
 export const config = {
   matcher: [
-    '/',
-    '/dashboard/:path*',
-    '/projects/:path*',
-    '/activities/:path*',
-    '/coordinates/:path*',
-    '/platform/:path*',
-    '/experts/:path*',
-    '/reports/:path*',
-    '/components/:path*',
-    '/profile',
-    '/settings',
+    "/",
+    "/dashboard/:path*",
+    "/platform/:path*",
+    "/projects/:path*",
+    "/(activities|coordinates|experts|reports|profile|settings)/:path*",
   ],
 };

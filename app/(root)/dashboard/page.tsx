@@ -21,7 +21,6 @@ import {
   Zap,
 } from "lucide-react";
 import Image from "next/image";
-import React from "react";
 import dynamic from "next/dynamic";
 const MapPins = dynamic(() => import("@/app/components/MapPins"), {
   ssr: false,

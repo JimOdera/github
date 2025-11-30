@@ -1,3 +1,4 @@
+// platform/page.tsx
 "use client";
 
 import { message_circle_more } from "@/public";
