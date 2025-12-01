@@ -41,7 +41,7 @@ interface ProjectOverviewProps {
     projectId: string;
 }
 
-const ProjectOverview = ({ projectId }: OverviewProps) => {
+const ProjectOverview = ({ projectId }: ProjectOverviewProps) => {
     // Form States
     const [projectTitle, setProjectTitle] = useState('');
     const [institution, setInstitution] = useState('');
