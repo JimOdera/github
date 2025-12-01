@@ -1,10 +1,11 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Image from 'next/image';
 import { Mail, Building2, ChevronLeft } from 'lucide-react';
 import { klima_logo_short } from '@/public';
 import { useRouter } from 'next/navigation';
+import { signIn, useSession, getSession } from 'next-auth/react';
 
 export default function Auth() {
   const [screen, setScreen] = useState<'initial' | 'email' | 'otp'>('initial');
@@ -12,14 +13,132 @@ export default function Auth() {
   const [otp, setOtp] = useState('');
   const [generatedCode, setGeneratedCode] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const [googleLoading, setGoogleLoading] = useState(false);
   const [message, setMessage] = useState('');
   const router = useRouter();
+  const { data: session, status } = useSession();
 
   const SERVICE_ID = 'service_dbq6s6g';
   const TEMPLATE_ID = 'template_67y2qxr';
   const PUBLIC_KEY = '5c2zkYqEglp1_6mPp';
 
   const generateCode = () => Math.floor(100000 + Math.random() * 900000).toString();
+
+  const saveUserToStorage = (userData: any) => {
+    const data = {
+      ...userData,
+      isLoggedIn: true,
+      loginTime: new Date().toISOString(),
+    };
+    const json = JSON.stringify(data);
+    localStorage.setItem('klimaUser', json);
+    document.cookie = `klimaUser=${json}; path=/; max-age=31536000; SameSite=Lax`;
+  };
+
+  // Clear all Auth.js related cookies
+  const clearAuthCookies = () => {
+    const cookies = document.cookie.split(';');
+    cookies.forEach(cookie => {
+      const cookieName = cookie.split('=')[0].trim();
+      // Clear all auth-related cookies
+      if (cookieName.includes('authjs') || 
+          cookieName.includes('next-auth') || 
+          cookieName.includes('session')) {
+        document.cookie = `${cookieName}=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT`;
+      }
+    });
+  };
+
+  const handleGoogleSignIn = async () => {
+    try {
+      setGoogleLoading(true);
+      setMessage('');
+      clearAuthCookies();
+      
+      // Clear localStorage just to be safe
+      localStorage.removeItem('klimaUser');
+      
+      // Sign in with Google - let it redirect normally
+      // The callbackUrl will handle the redirect after successful login
+      await signIn('google', {
+        callbackUrl: '/platform',
+        redirect: true, // Changed to true for OAuth providers
+      });
+      
+      // Note: After signIn with redirect: true, the page will redirect to Google
+      // and then back to your callback handler
+    } catch (error) {
+      console.error('Google sign-in error:', error);
+      setMessage('Failed to sign in with Google');
+      setGoogleLoading(false);
+    }
+  };
+
+  // Handle session changes
+  useEffect(() => {
+    const handleAuth = async () => {
+      if (status === 'loading') return;
+      
+      if (status === 'authenticated' && session?.user) {
+        const userEmail = session.user.email;
+        if (!userEmail) return;
+        
+        // Check if already logged in with this provider
+        const existing = localStorage.getItem('klimaUser');
+        if (existing) {
+          try {
+            const parsed = JSON.parse(existing);
+            if (parsed.email === userEmail && parsed.provider === 'google') {
+              router.push('/platform');
+              return;
+            }
+          } catch (e) {
+            // If parsing fails, continue with new login
+          }
+        }
+        
+        // Save new Google user
+        saveUserToStorage({
+          email: userEmail,
+          name: session.user.name || userEmail.split('@')[0],
+          image: session.user.image || null,
+          provider: 'google',
+        });
+        
+        // Optional: Force a small delay to ensure storage is written
+        setTimeout(() => {
+          router.push('/platform');
+        }, 100);
+      }
+    };
+    
+    handleAuth();
+  }, [session, status, router]);
+
+  // Check for existing session on component mount
+  useEffect(() => {
+    const checkExistingSession = async () => {
+      try {
+        const session = await getSession();
+        if (session?.user) {
+          // If we have a session but no localStorage entry, create one
+          const existing = localStorage.getItem('klimaUser');
+          if (!existing && session.user.email) {
+            saveUserToStorage({
+              email: session.user.email,
+              name: session.user.name || session.user.email.split('@')[0],
+              image: session.user.image || null,
+              provider: 'google',
+            });
+          }
+        }
+      } catch (error) {
+        console.error('Error checking session:', error);
+      }
+    };
+    
+    checkExistingSession();
+  }, []);
 
   const handleSendCode = async () => {
     if (!email.trim() || !email.includes('@')) {
@@ -34,57 +153,33 @@ export default function Auth() {
 
     try {
       const emailjs = (await import('@emailjs/browser')).default;
-
-      console.log('Sending email with:', { to_email: email, reply_to: email, code });
-
-      const result = await emailjs.send(
-        SERVICE_ID,
-        TEMPLATE_ID,
-        {
-          to_email: email,
-          reply_to: email,
-          user_email: email,
-          email: email,
-          code: code,
-        },
-        PUBLIC_KEY
-      );
-
-      console.log('Email sent successfully:', result);
+      await emailjs.send(SERVICE_ID, TEMPLATE_ID, { to_email: email, code }, PUBLIC_KEY);
       setScreen('otp');
       setMessage('Code sent! Check your inbox');
-    } catch (error: any) {
+    } catch (error) {
       console.error('EmailJS failed:', error);
-      setMessage('Failed: ' + (error?.text || 'Try again'));
+      setMessage('Failed to send code');
     } finally {
       setIsLoading(false);
     }
   };
 
   const handleVerifyCode = () => {
-    if (otp === generatedCode) {
-      const userData = {
-        email,
-        name: email.split('@')[0],
-        isLoggedIn: true,
-        loginTime: new Date().toISOString(),
-      };
-
-      // Save to localStorage (for your app to use on the client)
-      localStorage.setItem('klimaUser', JSON.stringify(userData));
-
-      // Save to cookie (so middleware can protect all routes)
-      document.cookie = `klimaUser=${JSON.stringify(userData)}; path=/; max-age=31536000; SameSite=Lax`;
-
-      setMessage('Welcome! Redirecting...');
-
-      setTimeout(() => {
-        router.push('/platform');
-      }, 800);
-    } else {
+    if (otp !== generatedCode) {
       setMessage('Wrong code. Try again.');
       setOtp('');
+      return;
     }
+
+    saveUserToStorage({
+      email,
+      name: email.split('@')[0],
+      image: null,
+      provider: 'email',
+    });
+
+    setMessage('Welcome! Redirecting...');
+    setTimeout(() => router.push('/platform'), 800);
   };
 
   const handleBack = () => {
@@ -104,10 +199,7 @@ export default function Auth() {
 
       <div className="relative z-10 bg-white rounded-3xl shadow-2xl p-8 w-full max-w-md mx-4">
         {screen !== 'initial' && (
-          <button
-            onClick={handleBack}
-            className="mb-6 flex items-center text-gray-600 hover:text-gray-900 transition"
-          >
+          <button onClick={handleBack} className="mb-6 flex items-center text-gray-600 hover:text-gray-900 transition">
             <ChevronLeft className="w-5 h-5" /> Back
           </button>
         )}
@@ -126,19 +218,29 @@ export default function Auth() {
 
         {screen === 'initial' && (
           <>
-            <button className="w-full flex items-center justify-center gap-3 py-3 px-4 border rounded-xl hover:bg-gray-50 mb-3">
-              <div className="w-5 h-5 bg-[url('https://www.google.com/favicon.ico')] bg-cover" />
-              Continue with Google
+            <button
+              onClick={handleGoogleSignIn}
+              disabled={googleLoading}
+              className="w-full flex items-center justify-center gap-3 py-3 px-4 border rounded-xl hover:bg-gray-50 mb-3 transition-colors font-medium disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              {googleLoading ? (
+                'Connecting to Google...'
+              ) : (
+                <>
+                  <Image src="https://authjs.dev/img/providers/google.svg" alt="Google" width={20} height={20} />
+                  Continue with Google
+                </>
+              )}
             </button>
 
             <button
               onClick={() => setScreen('email')}
-              className="w-full flex items-center justify-center gap-3 py-3 px-4 border rounded-xl hover:bg-gray-50 mb-6"
+              className="w-full flex items-center justify-center gap-3 py-3 px-4 border rounded-xl hover:bg-gray-50 mb-6 transition-colors font-medium"
             >
               <Mail className="w-5 h-5" /> Continue with email
             </button>
 
-            <button className="w-full flex items-center justify-center gap-3 py-3 px-4 border rounded-xl hover:bg-gray-50">
+            <button className="w-full flex items-center justify-center gap-3 py-3 px-4 border rounded-xl hover:bg-gray-50 transition-colors font-medium">
               <Building2 className="w-5 h-5" /> Sign up with work email
             </button>
           </>
@@ -154,11 +256,10 @@ export default function Auth() {
               className="w-full px-4 py-3 border rounded-xl focus:outline-none focus:border-teal-500"
               autoFocus
             />
-
             <button
               onClick={handleSendCode}
               disabled={isLoading || !email.includes('@')}
-              className="w-full py-3 bg-[#E3FCEF] text-gray-800 font-medium rounded-xl hover:bg-[#d0fce8] disabled:opacity-50 disabled:cursor-not-allowed transition"
+              className="w-full py-3 bg-[#E3FCEF] text-gray-800 font-medium rounded-xl hover:bg-[#d0f8e4] disabled:opacity-50 disabled:cursor-not-allowed transition"
             >
               {isLoading ? 'Sending...' : 'Send code'}
             </button>
@@ -170,7 +271,6 @@ export default function Auth() {
             <p className="text-sm text-center text-gray-600">
               We sent a code to <strong>{email}</strong>
             </p>
-
             <input
               type="text"
               maxLength={6}
@@ -180,32 +280,25 @@ export default function Auth() {
               className="w-full text-center text-3xl font-bold tracking-widest border rounded-xl py-4 focus:outline-none focus:border-teal-500"
               autoFocus
             />
-
             <button
               onClick={handleVerifyCode}
               disabled={otp.length !== 6}
-              className="w-full py-3 bg-[#E3FCEF] text-gray-800 font-medium rounded-xl hover:bg-[#d0fce8] disabled:opacity-50 transition"
+              className="w-full py-3 bg-[#E3FCEF] text-gray-800 font-medium rounded-xl hover:bg-[#d0f8e4] disabled:opacity-50 transition"
             >
               Confirm & Log in
             </button>
-
             <button
               onClick={handleSendCode}
+              disabled={isLoading}
               className="text-teal-600 text-sm hover:underline block mx-auto"
             >
-              Resend code
+              {isLoading ? 'Resending...' : 'Resend code'}
             </button>
           </div>
         )}
 
         {message && (
-          <p
-            className={`text-center text-sm mt-4 font-medium ${
-              message.includes('sent') || message.includes('Welcome')
-                ? 'text-green-600'
-                : 'text-red-600'
-            }`}
-          >
+          <p className={`text-center text-sm mt-4 font-medium ${message.includes('sent') || message.includes('Welcome') ? 'text-green-600' : 'text-red-600'}`}>
             {message}
           </p>
         )}
@@ -213,14 +306,8 @@ export default function Auth() {
         {screen === 'initial' && (
           <p className="text-xs text-center text-gray-500 mt-8">
             By continuing, you agree to Klima’s{' '}
-            <a href="#" className="text-teal-600 hover:underline">
-              Terms
-            </a>{' '}
-            and{' '}
-            <a href="#" className="text-teal-600 hover:underline">
-              Privacy Policy
-            </a>
-            .
+            <a href="#" className="text-teal-600 hover:underline">Terms</a> and{' '}
+            <a href="#" className="text-teal-600 hover:underline">Privacy Policy</a>.
           </p>
         )}
       </div>

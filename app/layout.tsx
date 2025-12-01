@@ -3,6 +3,7 @@ import type { Metadata } from "next";
 import { Montserrat_Alternates } from "next/font/google";
 import "./globals.css";
 import { Toaster } from 'react-hot-toast';
+import { Providers } from "./providers";
 
 const montserratAlternates = Montserrat_Alternates({
   variable: "--font-montserrat-alternates",
@@ -49,8 +50,10 @@ export default function RootLayout({
         className={`${montserratAlternates.variable} antialiased`}
         suppressHydrationWarning={true}
       >
+        <Providers>
         {children}
         <Toaster position="top-center" />
+        </Providers>
       </body>
     </html>
   );
