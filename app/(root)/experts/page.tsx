@@ -1,101 +1,49 @@
 'use client';
 
 import Header from '@/app/components/Header';
-// import Sidebar from '@/app/components/Sidebar';
-import { folder, message_circle_more, user1, user2, user3, user4, user5, user6 } from '@/public';
+import { folder, message_circle_more } from '@/public';
 import { ChevronDown, ChevronUp, Plus } from 'lucide-react';
 import Image from 'next/image';
 import Link from 'next/link';
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 
 // Filter options
 const locations = ['All', 'Africa', 'Asia', 'Europe', 'North America', 'South America', 'Oceania'];
 const locationCategories = ['All', 'Continent', 'Country', 'Region', 'City'];
 const carbonCreditStages = ['All', 'Planning', 'Validation', 'Implementation', 'Verification', 'Issuance'];
-const khExperts = ['All', 'Iris West', 'John Doe', 'Alex Johnson', 'Emily Brown', 'Sarah Wilson', 'Michael Glen'];
+const khExperts = ['All']; // Could expand if needed, but real experts loaded from localStorage
 
-// Enhanced Expert Data with category & stage
-const expertsData = [
-  {
-    id: 1,
-    name: 'Iris West',
-    title: 'Environmental Consultant',
-    company: 'Eco Solutions',
-    location: 'East Africa',
-    continent: 'Africa',
-    category: 'Region',
-    stage: 'Implementation',
-    experience: '5 Years Experience',
-    image: user1,
-    description: 'Specialist in carbon credit project development across East Africa with focus on reforestation.',
-  },
-  {
-    id: 2,
-    name: 'John Doe',
-    title: 'Carbon Project Lead',
-    company: 'GreenFuture Ltd',
-    location: 'West Africa',
-    continent: 'Africa',
-    category: 'Region',
-    stage: 'Verification',
-    experience: '8 Years Experience',
-    image: user2,
-    description: 'Expert in mangrove restoration and blue carbon projects. Led 12 successful VERRA registrations.',
-  },
-  {
-    id: 3,
-    name: 'Alex Johnson',
-    title: 'Renewable Energy Specialist',
-    company: 'SolarPeak',
-    location: 'United States',
-    continent: 'North America',
-    category: 'Country',
-    stage: 'Issuance',
-    experience: '10 Years Experience',
-    image: user3,
-    description: 'Focuses on community-based solar and wind projects with integrated carbon offset programs.',
-  },
-  {
-    id: 4,
-    name: 'Emily Brown',
-    title: 'Sustainability Director',
-    company: 'EarthWorks',
-    location: 'Indonesia',
-    continent: 'Asia',
-    category: 'Country',
-    stage: 'Validation',
-    experience: '7 Years Experience',
-    image: user4,
-    description: 'Leads large-scale afforestation initiatives in Southeast Asia. Gold Standard certified expert.',
-  },
-  {
-    id: 5,
-    name: 'Sarah Wilson',
-    title: 'Climate Policy Advisor',
-    company: 'ClimateAction NGO',
-    location: 'Germany',
-    continent: 'Europe',
-    category: 'Country',
-    stage: 'Planning',
-    experience: '12 Years Experience',
-    image: user5,
-    description: 'Advises governments and corporations on Article 6 compliance and voluntary carbon markets.',
-  },
-  {
-    id: 6,
-    name: 'Michael Glen',
-    title: 'Regenerative Agriculture Expert',
-    company: 'SoilHealth Co',
-    location: 'Brazil',
-    continent: 'South America',
-    category: 'Country',
-    stage: 'Implementation',
-    experience: '6 Years Experience',
-    image: user6,
-    description: 'Pioneer in soil carbon sequestration through regenerative farming practices in Brazil and Argentina.',
-  },
-];
+const getLocalStorageExperts = () => {
+  if (typeof window !== 'undefined') {
+    try {
+      const submission = window.localStorage.getItem('form_full_submission');
+      if (submission) {
+        const { basicDetails, certificatesAffiliations, verificationDeclaration } = JSON.parse(submission);
+        // Compose expert data from all three sections
+        if (basicDetails && basicDetails.fullName) {
+          // Basic merging, expand for more fields if available
+          return [{
+            id: 1,
+            name: basicDetails.fullName,
+            title: basicDetails.role,
+            company: basicDetails.organization,
+            location: basicDetails.geographicScope || '',
+            continent: '', // Could be parsed from location
+            category: '', // Could be set if structure supports
+            stage: '', // Could add from step2/step1 fields
+            experience: basicDetails.yearsExperience ? `${basicDetails.yearsExperience} Years Experience` : '',
+            image: basicDetails.portfolioPreview || '/images/placeholder-user.png',
+            description: basicDetails.description || '',
+          }];
+        }
+      }
+    } catch (e) {
+      return [];
+    }
+  }
+  return [];
+};
 
 const Experts = () => {
   // Sidebar state
@@ -120,39 +68,38 @@ const Experts = () => {
   const [khExpertsDropdownOpen, setKhExpertsDropdownOpen] = useState(false);
 
   const contentMarginLeft = isCollapsed ? 'md:ml-8' : 'md:ml-8';
-  // const contentMarginLeft = isCollapsed ? 'md:ml-28' : 'md:ml-58';
   const sectionTextContainerClass = `space-y-4 transition-all duration-300 ease-in-out ${isCollapsed ? 'scale-x-110' : 'scale-x-100'}`;
 
-  // const toggleSidebar = () => {
-  //   const newState = !isCollapsed;
-  //   setIsCollapsed(newState);
-  //   localStorage.setItem('sidebarCollapsed', JSON.stringify(newState));
-  // };
+  // Load experts from localStorage
+  const [expertsData, setExpertsData] = useState<Array<any>>([]);
+  useEffect(() => {
+    setExpertsData(getLocalStorageExperts());
+  }, []);
 
-  // Comprehensive filtering logic
+  // Filtering logic (for future expandability, but currently only one expert)
   const filteredExperts = useMemo(() => {
     return expertsData.filter((expert) => {
       // Location filter (continent level)
       const matchesLocation =
         selectedLocation === 'All' ||
         expert.continent === selectedLocation ||
-        expert.location.includes(selectedLocation);
+        (expert.location && expert.location.includes(selectedLocation));
 
       // Location Category filter
       const matchesCategory =
-        selectedCategory === 'All' || expert.category === selectedCategory;
+        selectedCategory === 'All' || (expert.category && expert.category === selectedCategory);
 
       // Carbon Credit Stage filter
       const matchesStage =
-        selectedStage === 'All' || expert.stage === selectedStage;
+        selectedStage === 'All' || (expert.stage && expert.stage === selectedStage);
 
       // Expert name filter
       const matchesExpert =
-        selectedExpert === 'All' || expert.name === selectedExpert;
+        selectedExpert === 'All' || (expert.name && expert.name === selectedExpert);
 
       return matchesLocation && matchesCategory && matchesStage && matchesExpert;
     });
-  }, [selectedLocation, selectedCategory, selectedStage, selectedExpert]);
+  }, [expertsData, selectedLocation, selectedCategory, selectedStage, selectedExpert]);
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-[#BFEFF8]/30 to-[#B1CA69]/30 flex">
@@ -174,25 +121,16 @@ const Experts = () => {
                   href="/experts/forms"
                   className="bg-[#E2FFF2] hover:bg-[#E2FFF2]/90 text-xs text-[#044D5E] border border-[#044D5E] px-5 py-2 rounded-md flex items-center gap-2"
                 >
-                  <Plus size={16} /> Register as an Experts
+                  <Plus size={16} /> Register as an Expert
                 </Link>
                 </div>
-                {/* <Link
-                  href="/projects/forms"
-                  className="bg-[#E2FFF2] hover:bg-[#E2FFF2]/90 text-xs text-[#044D5E] border border-[#044D5E] px-5 py-2 rounded-md flex items-center gap-2"
-                >
-                  <Plus size={16} /> Register as an Experts
-                </Link> */}
               </div>
             </div>
           </section>
 
-          {/* <Sidebar isCollapsed={isCollapsed} toggleSidebar={toggleSidebar} /> */}
-
           <main className="w-full space-y-6 bg-[#FBFDFB] relative z-10 pt-64 md:pt-72">
             <div className="w-full mx-auto px-2 py-4 md:px-8 md:py-6 space-y-8">
-
-              {/* Filters - All Now Fully Functional */}
+              {/* Filters */}
               <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
 
                 {/* Locations Filter */}
@@ -360,15 +298,21 @@ const Experts = () => {
                         className="rounded-full object-cover border-4 border-white shadow-md"
                       />
                       <div className="flex flex-wrap gap-2 justify-center">
-                        <span className="bg-green-100 text-green-700 text-[10px] py-1 px-2 rounded-full">
-                          {expert.location}
-                        </span>
-                        <span className="bg-green-100 text-green-700 text-[10px] py-1 px-2 rounded-full">
-                          {expert.experience}
-                        </span>
-                        <span className="bg-blue-100 text-blue-700 text-[10px] py-1 px-2 rounded-full">
-                          {expert.stage}
-                        </span>
+                        {expert.location && (
+                          <span className="bg-green-100 text-green-700 text-[10px] py-1 px-2 rounded-full">
+                            {expert.location}
+                          </span>
+                        )}
+                        {expert.experience && (
+                          <span className="bg-green-100 text-green-700 text-[10px] py-1 px-2 rounded-full">
+                            {expert.experience}
+                          </span>
+                        )}
+                        {expert.stage && (
+                          <span className="bg-blue-100 text-blue-700 text-[10px] py-1 px-2 rounded-full">
+                            {expert.stage}
+                          </span>
+                        )}
                       </div>
                     </div>
 
@@ -397,7 +341,7 @@ const Experts = () => {
 
               {filteredExperts.length === 0 && (
                 <div className="text-center py-12 text-gray-500">
-                  No experts found matching your filters.
+                  No experts found. Page is empty.
                 </div>
               )}
             </div>

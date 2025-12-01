@@ -8,8 +8,10 @@ import { motion, AnimatePresence } from 'framer-motion';
 const assuranceStandards = ['ISAE 3000', 'AA1000AS', 'ISO 14064-3', 'Other'];
 const carbonCertifications = ['Vera', 'Gold Standard', 'ART-TREES', 'Other'];
 
+const LS_KEY = 'form_certificates_affiliations';
+
 const CertificatesAffiliations = () => {
-  // === All your existing state (unchanged) ===
+  // === All your existing state ===
   const [isNemaCertified, setIsNemaCertified] = useState<'yes' | 'no' | null>(null);
   const [nemaLicenseNumber, setNemaLicenseNumber] = useState('');
   const [nemaExpiryDate, setNemaExpiryDate] = useState('');
@@ -35,7 +37,7 @@ const CertificatesAffiliations = () => {
   const [diversityProofFile, setDiversityProofFile] = useState<File | null>(null);
   const [diversityProofPreview, setDiversityProofPreview] = useState<string | null>(null);
 
-  // File handlers (unchanged)
+  // File handlers
   const handleFileUpload = (
     file: File | null,
     setFile: React.Dispatch<React.SetStateAction<File | null>>,
@@ -111,6 +113,75 @@ const CertificatesAffiliations = () => {
       });
     };
   }, [sectionRefs]);
+
+  // --- Local Storage logic ---
+
+  // Load from local storage on mount
+  useEffect(() => {
+    const ls = typeof window !== 'undefined' && window.localStorage.getItem(LS_KEY);
+    if (ls) {
+      try {
+        const data = JSON.parse(ls);
+        setIsNemaCertified(data.isNemaCertified ?? null);
+        setNemaLicenseNumber(data.nemaLicenseNumber ?? '');
+        setNemaExpiryDate(data.nemaExpiryDate ?? '');
+        setNemaCertificatePreview(data.nemaCertificatePreview ?? null);
+
+        setIsAssuranceProvider(data.isAssuranceProvider ?? null);
+        setAssuranceStandard(data.assuranceStandard ?? '');
+        setAssuranceStandardOther(data.assuranceStandardOther ?? '');
+        setShowAssuranceOther(!!data.assuranceStandardOther);
+        setAssuranceCredentialPreview(data.assuranceCredentialPreview ?? null);
+
+        setCarbonCertification(data.carbonCertification ?? '');
+        setCarbonOther(data.carbonOther ?? '');
+        setShowCarbonOther(!!data.carbonOther);
+        setCarbonCertificatePreview(data.carbonCertificatePreview ?? null);
+
+        setDiversityOwnership(data.diversityOwnership ?? '');
+        setIsDiversityRegistered(data.isDiversityRegistered ?? null);
+        setDiversityProgramName(data.diversityProgramName ?? '');
+        setDiversityProofPreview(data.diversityProofPreview ?? null);
+        // All files will remain null as we cannot restore File instances
+      } catch (e) {
+        window.localStorage.removeItem(LS_KEY);
+      }
+    }
+  }, []);
+
+  // Save to local storage when any field changes
+  useEffect(() => {
+    const formData = {
+      isNemaCertified,
+      nemaLicenseNumber,
+      nemaExpiryDate,
+      nemaCertificatePreview,
+      isAssuranceProvider,
+      assuranceStandard,
+      assuranceStandardOther,
+      assuranceCredentialPreview,
+      carbonCertification,
+      carbonOther,
+      carbonCertificatePreview,
+      showCarbonOther,
+      showAssuranceOther,
+      diversityOwnership,
+      isDiversityRegistered,
+      diversityProgramName,
+      diversityProofPreview,
+    };
+    if (typeof window !== 'undefined') {
+      window.localStorage.setItem(LS_KEY, JSON.stringify(formData));
+    }
+  }, [
+    isNemaCertified, nemaLicenseNumber, nemaExpiryDate, nemaCertificatePreview,
+    isAssuranceProvider, assuranceStandard, assuranceStandardOther, assuranceCredentialPreview,
+    carbonCertification, carbonOther, carbonCertificatePreview,
+    diversityOwnership, isDiversityRegistered, diversityProgramName, diversityProofPreview,
+    showAssuranceOther, showCarbonOther
+  ]);
+
+  // --- End local storage logic ---
 
   return (
     <div className="flex gap-8 max-w-7xl mx-auto">
@@ -249,7 +320,6 @@ const CertificatesAffiliations = () => {
         {/* Certified Assurance Provider */}
         <section ref={assuranceRef} data-section="Certified Assurance Provider" className="space-y-6 scroll-mt-24">
           <h2 className="text-2xl font-semibold text-[#044D5E]">Certified Assurance Provider</h2>
-          {/* ... rest of your existing code unchanged ... */}
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-4">
               Are you a Certified Assurance Provider? <span className="text-red-500">*</span>
@@ -355,7 +425,6 @@ const CertificatesAffiliations = () => {
         {/* Carbon Expertise Certification */}
         <section ref={carbonRef} data-section="Carbon Expertise Certification" className="space-y-6 scroll-mt-24">
           <h2 className="text-2xl font-semibold text-[#044D5E]">Carbon Expertise Certification (If Applicable)</h2>
-          {/* ... your existing code ... */}
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-4">Certification Body</label>
             <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
@@ -430,7 +499,6 @@ const CertificatesAffiliations = () => {
         {/* Diversity & Inclusion */}
         <section ref={diversityRef} data-section="Diversity & Inclusion" className="space-y-6 scroll-mt-24">
           <h2 className="text-2xl font-semibold text-[#044D5E]">Diversity & Inclusion</h2>
-          {/* ... your existing code ... */}
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
               % Ownership by diverse groups (women, youth, PWDs, etc.) <span className="text-red-500">*</span>

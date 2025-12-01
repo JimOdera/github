@@ -35,6 +35,14 @@ interface Project {
   description: string;
 }
 
+interface Reference {
+  id: string;
+  name: string;
+  contact: string;
+}
+
+const LS_KEY = 'form_basic_details';
+
 const BasicDetails = () => {
   // Form States
   const [fullName, setFullName] = useState('');
@@ -56,11 +64,12 @@ const BasicDetails = () => {
     { id: '1', projectName: '', client: '', year: '', role: '', description: '' },
   ]);
 
-  const [references, setReferences] = useState([
+  const [references, setReferences] = useState<Reference[]>([
     { id: '1', name: '', contact: '' },
   ]);
 
   const [portfolioFile, setPortfolioFile] = useState<File | null>(null);
+  // Store base64 for preview, and for storage
   const [portfolioPreview, setPortfolioPreview] = useState<string | null>(null);
 
   // Navigation & Scroll Logic
@@ -169,10 +178,69 @@ const BasicDetails = () => {
     if (file) {
       setPortfolioFile(file);
       const reader = new FileReader();
-      reader.onloadend = () => setPortfolioPreview(reader.result as string);
+      reader.onloadend = () => {
+        setPortfolioPreview(reader.result as string);
+      };
       reader.readAsDataURL(file);
     }
   };
+
+  // ---- Local Storage logic ----
+
+  // Load from local storage on mount
+  useEffect(() => {
+    const ls = typeof window !== 'undefined' && window.localStorage.getItem(LS_KEY);
+    if (ls) {
+      try {
+        const data = JSON.parse(ls);
+        setFullName(data.fullName ?? '');
+        setOrganization(data.organization ?? '');
+        setRole(data.role ?? '');
+        setEmail(data.email ?? '');
+        setPhone(data.phone ?? '');
+        setLinkedin(data.linkedin ?? '');
+        setDescription(data.description ?? '');
+        setYearsExperience(data.yearsExperience ?? '');
+        setGeographicScope(data.geographicScope ?? '');
+        setSelectedExpertise(data.selectedExpertise ?? []);
+        setOtherExpertise(data.otherExpertise ?? '');
+        setShowOtherInput(typeof data.otherExpertise === 'string' && data.otherExpertise.length > 0);
+        setProjects(data.projects ?? [{ id: '1', projectName: '', client: '', year: '', role: '', description: '' }]);
+        setReferences(data.references ?? [{ id: '1', name: '', contact: '' }]);
+        if (data.portfolioPreview) setPortfolioPreview(data.portfolioPreview);
+        // If portfolio preview, leave file as null (can't restore File instance)
+      } catch (e) {
+        // Clear corrupted storage
+        window.localStorage.removeItem(LS_KEY);
+      }
+    }
+  }, []);
+
+  // Save to local storage when any field changes
+  useEffect(() => {
+    const formData = {
+      fullName,
+      organization,
+      role,
+      email,
+      phone,
+      linkedin,
+      description,
+      yearsExperience,
+      geographicScope,
+      selectedExpertise,
+      otherExpertise,
+      projects,
+      references,
+      portfolioPreview, // (optional, base64 string)
+    };
+    if (typeof window !== 'undefined') {
+      window.localStorage.setItem(LS_KEY, JSON.stringify(formData));
+    }
+  }, [
+    fullName, organization, role, email, phone, linkedin, description, yearsExperience,
+    geographicScope, selectedExpertise, otherExpertise, projects, references, portfolioPreview
+  ]);
 
   return (
     <div className="flex gap-8 max-w-7xl mx-auto">

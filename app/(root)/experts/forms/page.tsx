@@ -4,6 +4,7 @@ import Header from '@/app/components/Header';
 import { Check, ChevronLeft, ChevronRight } from 'lucide-react';
 import React, { useState, useRef } from 'react';
 import Image from 'next/image';
+import { useRouter } from 'next/navigation';
 import { AnimatePresence } from 'framer-motion';
 import { folder, message_circle_more } from '@/public';
 import BasicDetails from './BasicDetails/page';
@@ -12,11 +13,8 @@ import VerificationDeclaration from './VerificationDeclaration/page';
 
 const Page = () => {
     const [step, setStep] = useState(1);
-
-
     const formContentRef = useRef<HTMLDivElement>(null);
-
-
+    const router = useRouter();
 
     const handleNextStep = () => {
         if (step < 3) {
@@ -38,11 +36,27 @@ const Page = () => {
         }, 100);
     };
 
+    // Helper to aggregate all localStorage data
+    const getFullFormData = () => {
+        const basic = typeof window !== 'undefined' ? window.localStorage.getItem('form_basic_details') : null;
+        const certs = typeof window !== 'undefined' ? window.localStorage.getItem('form_certificates_affiliations') : null;
+        const verify = typeof window !== 'undefined' ? window.localStorage.getItem('form_verification_declaration') : null;
+        let data: Record<string, any> = {};
+        if (basic) data.basicDetails = JSON.parse(basic);
+        if (certs) data.certificatesAffiliations = JSON.parse(certs);
+        if (verify) data.verificationDeclaration = JSON.parse(verify);
+        return data;
+    };
+
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
         if (step === 3) {
-            console.log('Form submitted:');
-            // Add submission logic here
+            const aggregatedData = getFullFormData();
+            if (typeof window !== 'undefined') {
+                window.localStorage.setItem('form_full_submission', JSON.stringify(aggregatedData));
+            }
+            // Redirect to /experts after saving
+            router.push('/experts');
         }
     };
 

@@ -14,6 +14,8 @@ const diverseOwnershipTypes = [
   'Other',
 ];
 
+const LS_KEY = 'form_verification_declaration';
+
 const VerificationDeclaration = () => {
   // State
   const [isDiverseSupplier, setIsDiverseSupplier] = useState<'yes' | 'no' | null>(null);
@@ -91,6 +93,42 @@ const VerificationDeclaration = () => {
       prev.includes(type) ? prev.filter((t) => t !== type) : [...prev, type]
     );
   };
+
+  // --- Local Storage logic ---
+  // Load from local storage on mount
+  useEffect(() => {
+    const ls = typeof window !== 'undefined' && window.localStorage.getItem(LS_KEY);
+    if (ls) {
+      try {
+        const data = JSON.parse(ls);
+        setIsDiverseSupplier(data.isDiverseSupplier ?? null);
+        setDiverseOwnershipType(data.diverseOwnershipType ?? []);
+        setOtherOwnershipType(data.otherOwnershipType ?? '');
+        setHasBeenSanctioned(data.hasBeenSanctioned ?? null);
+        setDeclarationAccepted(data.declarationAccepted ?? false);
+      } catch (e) {
+        window.localStorage.removeItem(LS_KEY);
+      }
+    }
+  }, []);
+
+  // Save to local storage when any field changes
+  useEffect(() => {
+    const formData = {
+      isDiverseSupplier,
+      diverseOwnershipType,
+      otherOwnershipType,
+      hasBeenSanctioned,
+      declarationAccepted,
+    };
+    if (typeof window !== 'undefined') {
+      window.localStorage.setItem(LS_KEY, JSON.stringify(formData));
+    }
+  }, [
+    isDiverseSupplier, diverseOwnershipType, otherOwnershipType,
+    hasBeenSanctioned, declarationAccepted
+  ]);
+  // --- End local storage logic ---
 
   return (
     <div className="flex gap-8 max-w-7xl mx-auto">
