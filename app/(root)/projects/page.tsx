@@ -154,7 +154,7 @@ const Projects = () => {
               <div className="flex items-end justify-between w-full">
                 <div className={`flex flex-col items-start ${contentMarginLeft}`}>
                   <h2 className="text-lg md:text-3xl font-medium text-teal-900">
-                    My Submitted Projects ({submittedProjects.length})
+                    My Projects ({submittedProjects.length})
                   </h2>
                   <span className="text-xs text-teal-700">Projects / Submitted</span>
                 </div>

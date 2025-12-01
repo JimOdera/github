@@ -37,8 +37,8 @@ const FinancialImpacts = ({ projectId }: FinancialImpactsProps) => {
 
     const bankingStages = [
         'Under Review',
-        'Approved-Pending drawdown',
-        'In Progress- %drawn down',
+        'Approved - Pending drawdown',
+        'In Progress - % drawn down',
         'Completed',
     ];
 

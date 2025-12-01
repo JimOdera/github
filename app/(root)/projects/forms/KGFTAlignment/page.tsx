@@ -275,7 +275,7 @@ const KGFTAlignment = ({ projectId }: KGFTAlignmentProps) => {
                                     key={name}
                                     onClick={() => handleNavClick(name)}
                                     className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg text-left transition-all ${activeSection === name
-                                        ? 'bg-[#F2F2F2] text-[#044D5E] font-medium shadow-sm'
+                                        ? 'bg-[#F2F2F2] text-[#044D5E]'
                                         : 'text-gray-600 hover:bg-gray-50'
                                         }`}
                                 >
@@ -295,7 +295,7 @@ const KGFTAlignment = ({ projectId }: KGFTAlignmentProps) => {
 
                         {/* Project Owner */}
                         <div>
-                            <label className="block text-xs font-medium text-gray-700 mb-2">
+                            <label className="block text-xs text-gray-700 mb-2">
                                 Indicate who owns or controls the Project* <br />
                                 <span className="text-xs text-gray-500">(e.g., mixed gender ownership, Women-owned, Not women-owned, Unknown)</span>
                             </label>
@@ -310,7 +310,7 @@ const KGFTAlignment = ({ projectId }: KGFTAlignmentProps) => {
 
                         {/* Green Classification Reason */}
                         <div>
-                            <label className="block text-xs font-medium text-gray-700 mb-2">
+                            <label className="block text-xs text-gray-700 mb-2">
                                 Briefly explain why the Project is being considered for green classification* <br />
                                 <span className="text-xs text-gray-500">(e.g., The solar mini-grid reduces emissions)</span>
                             </label>
@@ -325,7 +325,7 @@ const KGFTAlignment = ({ projectId }: KGFTAlignmentProps) => {
 
                         {/* Gender Equity */}
                         <div>
-                            <p className="text-xs font-medium text-gray-700 mb-3">
+                            <p className="text-xs text-gray-700 mb-3">
                                 Does the project contribute to gender equity? (e.g., operated by women)
                             </p>
                             <div className="flex gap-3">
@@ -334,10 +334,10 @@ const KGFTAlignment = ({ projectId }: KGFTAlignmentProps) => {
                                         key={val}
                                         type="button"
                                         onClick={() => setGenderEquity(val)}
-                                        className={`px-6 py-3 rounded-lg border-2 text-xs font-medium transition-all ${genderEquity === val
+                                        className={`px-4 py-2 rounded-lg border text-xs transition-all ${genderEquity === val
                                             ? val === 'yes'
-                                                ? 'bg-green-100 border-green-500 text-green-700 shadow-sm'
-                                                : 'bg-red-100 border-red-500 text-red-700 shadow-sm'
+                                                ? 'bg-green-100 border-green-500 text-green-700'
+                                                : 'bg-red-100 border-red-500 text-red-700'
                                             : 'border-gray-300 hover:bg-gray-50 hover:border-gray-400'
                                             }`}
                                     >
@@ -349,7 +349,7 @@ const KGFTAlignment = ({ projectId }: KGFTAlignmentProps) => {
 
                         {/* Use of Proceeds Dropdown */}
                         <div className="relative">
-                            <label className="block text-xs font-medium text-gray-700 mb-2">Use of Proceeds (sub-sector) *</label>
+                            <label className="block text-xs text-gray-700 mb-2">Use of Proceeds (sub-sector) *</label>
                             <div
                                 onClick={() => setUseOfProceedsDropdownOpen(!useOfProceedsDropdownOpen)}
                                 className="w-full px-4 py-3 border border-gray-300 rounded-lg flex justify-between items-center cursor-pointer hover:bg-gray-50 text-xs transition"
@@ -386,7 +386,7 @@ const KGFTAlignment = ({ projectId }: KGFTAlignmentProps) => {
 
                         {/* Financing Use */}
                         <div>
-                            <label className="block text-xs font-medium text-gray-700 mb-2">
+                            <label className="block text-xs text-gray-700 mb-2">
                                 Describe what the financing is being used for i.e what/how/why and scale* <br />
                                 <span className="text-xs text-gray-500">(e.g., Adoption of regenerative agriculture practices on 500 hectares of degraded cropland in Narok County, focused on soil carbon sequestration and reduced fertiliser use.)</span>
                             </label>
@@ -402,7 +402,7 @@ const KGFTAlignment = ({ projectId }: KGFTAlignmentProps) => {
                         {/* Physical Location */}
                         {/* Physical Location - County Dropdown */}
                         <div className="relative">
-                            <label className="block text-xs font-medium text-gray-700 mb-2">
+                            <label className="block text-xs text-gray-700 mb-2">
                                 Enter the physical location of the Project that is specific to the use of proceeds* <br />
                                 <span className="text-xs text-gray-500">(Select County)</span>
                             </label>
@@ -443,19 +443,19 @@ const KGFTAlignment = ({ projectId }: KGFTAlignmentProps) => {
 
                         {/* Listed in KGFT */}
                         <div>
-                            <p className="text-xs font-medium text-gray-700 mb-3">Is Activity listed in KGFT Mitigation Categories? *</p>
+                            <p className="text-xs text-gray-700 mb-3">Is Activity listed in KGFT Mitigation Categories? *</p>
                             <div className="flex flex-wrap gap-3">
                                 {(['yes', 'no', 'pending'] as const).map(val => (
                                     <button
                                         key={val}
                                         type="button"
                                         onClick={() => setListedInKGFT(val)}
-                                        className={`px-6 py-3 rounded-lg border-2 text-xs font-medium capitalize transition-all ${listedInKGFT === val
+                                        className={`px-4 py-2 rounded-lg border text-xs capitalize transition-all ${listedInKGFT === val
                                             ? val === 'yes'
-                                                ? 'bg-green-100 border-green-500 text-green-700 shadow-sm'
+                                                ? 'bg-green-100 border-green-500 text-green-700'
                                                 : val === 'no'
-                                                    ? 'bg-red-100 border-red-500 text-red-700 shadow-sm'
-                                                    : 'bg-orange-100 border-orange-500 text-orange-700 shadow-sm'
+                                                    ? 'bg-red-100 border-red-500 text-red-700'
+                                                    : 'bg-orange-100 border-orange-500 text-orange-700'
                                             : 'border-gray-300 hover:bg-gray-50 hover:border-gray-400'
                                             }`}
                                     >
@@ -467,15 +467,15 @@ const KGFTAlignment = ({ projectId }: KGFTAlignmentProps) => {
 
                         {/* Mitigation Categories */}
                         <div>
-                            <p className="text-xs font-medium text-gray-700 mb-3">KGFT Mitigation Category *</p>
-                            <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                            <p className="text-xs text-gray-700 mb-3">KGFT Mitigation Category *</p>
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                                 {mitigationCategories.map(cat => (
                                     <button
                                         key={cat}
                                         type="button"
                                         onClick={() => toggleMitigationCategory(cat)}
-                                        className={`px-4 py-3 rounded-lg border-2 text-xs font-medium transition-all ${mitigationCategorySelected.includes(cat)
-                                            ? 'bg-green-100 border-green-500 text-green-700 shadow-sm'
+                                        className={`px-4 py-2 rounded-lg border text-xs transition-all ${mitigationCategorySelected.includes(cat)
+                                            ? 'bg-green-100 border-green-500 text-green-700'
                                             : 'border-gray-300 hover:bg-gray-50 hover:border-gray-400'
                                             }`}
                                     >
@@ -487,10 +487,10 @@ const KGFTAlignment = ({ projectId }: KGFTAlignmentProps) => {
 
                         {/* Project Type */}
                         <div className="relative">
-                            <label className="block text-xs font-medium text-gray-700 mb-2">Project Type *</label>
+                            <label className="block text-xs text-gray-700 mb-2">Project Type *</label>
                             <div
                                 onClick={() => setActivityTypeDropdownOpen(!activityTypeDropdownOpen)}
-                                className="w-full px-4 py-3 border border-gray-300 rounded-lg flex justify-between items-center cursor-pointer hover:bg-gray-50 text-xs transition"
+                                className="w-full px-4 py-2 border border-gray-300 rounded-lg flex justify-between items-center cursor-pointer hover:bg-gray-50 text-xs transition"
                             >
                                 <span className={selectedActivityType ? 'text-gray-900' : 'text-gray-500'}>
                                     {selectedActivityType || 'Select type'}
@@ -512,7 +512,7 @@ const KGFTAlignment = ({ projectId }: KGFTAlignmentProps) => {
                                                     setSelectedActivityType(type);
                                                     setActivityTypeDropdownOpen(false);
                                                 }}
-                                                className="px-4 py-3 hover:bg-gray-50 cursor-pointer text-xs border-b border-gray-100 last:border-b-0"
+                                                className="px-4 py-2 hover:bg-gray-50 cursor-pointer text-xs border-b border-gray-100 last:border-b-0"
                                             >
                                                 {type}
                                             </div>
@@ -531,7 +531,7 @@ const KGFTAlignment = ({ projectId }: KGFTAlignmentProps) => {
 
                         {/* GHG Reduction Description */}
                         <div>
-                            <label className="block text-xs font-medium text-gray-700 mb-2">
+                            <label className="block text-xs text-gray-700 mb-2">
                                 GHG Reduction* <br />
                                 <span className="text-xs text-gray-500">Briefly state if the project results in GHG reduction</span>
                             </label>
@@ -539,20 +539,20 @@ const KGFTAlignment = ({ projectId }: KGFTAlignmentProps) => {
                                 value={ghgReduction}
                                 onChange={(e) => setGhgReduction(e.target.value)}
                                 rows={4}
-                                className="w-full px-4 py-3 border border-gray-300 rounded-lg resize-none focus:outline-none focus:border-gray-500 text-xs"
+                                className="w-full px-4 py-2 border border-gray-300 rounded-lg resize-none focus:outline-none focus:border-gray-500 text-xs"
                                 placeholder="e.g., This project reduces GHG emissions by displacing fossil fuel-based electricity generation..."
                             />
                         </div>
 
                         {/* GHG Emission Reduction Mechanism */}
                         <div className="relative">
-                            <label className="block text-xs font-medium text-gray-700 mb-2">
+                            <label className="block text-xs text-gray-700 mb-2">
                                 GHG Emission Reduction Mechanism* <br />
                                 <span className="text-xs text-gray-500">Select from available mechanisms</span>
                             </label>
                             <div
                                 onClick={() => setGhcMechanismDropdownOpen(!ghcMechanismDropdownOpen)}
-                                className="w-full px-4 py-3 border border-gray-300 rounded-lg flex justify-between items-center cursor-pointer hover:bg-gray-50 text-xs transition"
+                                className="w-full px-4 py-2 border border-gray-300 rounded-lg flex justify-between items-center cursor-pointer hover:bg-gray-50 text-xs transition"
                             >
                                 <span className={selectedGhcMechanism ? 'text-gray-900' : 'text-gray-500'}>
                                     {selectedGhcMechanism || 'Select mechanism'}
@@ -574,7 +574,7 @@ const KGFTAlignment = ({ projectId }: KGFTAlignmentProps) => {
                                                     setSelectedGhcMechanism(mechanism);
                                                     setGhcMechanismDropdownOpen(false);
                                                 }}
-                                                className="px-4 py-3 hover:bg-gray-50 cursor-pointer text-xs border-b border-gray-100 last:border-b-0"
+                                                className="px-4 py-2 hover:bg-gray-50 cursor-pointer text-xs border-b border-gray-100 last:border-b-0"
                                             >
                                                 {mechanism}
                                             </div>
@@ -588,7 +588,7 @@ const KGFTAlignment = ({ projectId }: KGFTAlignmentProps) => {
                         <div className="grid md:grid-cols-1 gap-6 mb-6">
                             {/* Activity Scale */}
                             <div>
-                                <label className="block text-xs font-medium text-gray-700 mb-2">
+                                <label className="block text-xs text-gray-700 mb-2">
                                     Quantify the scale of the activity* <br />
                                     <span className="text-xs text-gray-500">(e.g., "20,000 MWh/year", "500 hectares")</span>
                                 </label>
@@ -596,7 +596,7 @@ const KGFTAlignment = ({ projectId }: KGFTAlignmentProps) => {
                                     type="text"
                                     value={activityScale}
                                     onChange={(e) => setActivityScale(e.target.value)}
-                                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:border-gray-500 text-xs"
+                                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-gray-500 text-xs"
                                     placeholder="e.g., 20,000 MWh/year"
                                 />
                             </div>
@@ -604,12 +604,12 @@ const KGFTAlignment = ({ projectId }: KGFTAlignmentProps) => {
                             {/* Emission Factor */}
                             {/* Emission Factor Dropdown + Auto Result */}
                             <div>
-                                <label className="block text-xs font-medium text-gray-700 mb-2">
+                                <label className="block text-xs text-gray-700 mb-2">
                                     Select Emission Factor*
                                 </label>
                                 <div
                                     onClick={() => setEmissionFactorDropdownOpen(!emissionFactorDropdownOpen)}
-                                    className="w-full px-4 py-3 border border-gray-300 rounded-lg flex justify-between items-center cursor-pointer hover:bg-gray-50 text-xs transition"
+                                    className="w-full px-4 py-2 border border-gray-300 rounded-lg flex justify-between items-center cursor-pointer hover:bg-gray-50 text-xs transition"
                                 >
                                     <span className={selectedEmissionFactor ? 'text-gray-900' : 'text-gray-500'}>
                                         {selectedEmissionFactor || 'Select emission factor'}
@@ -645,7 +645,7 @@ const KGFTAlignment = ({ projectId }: KGFTAlignmentProps) => {
 
                                 {/* Simple, clean result below — left-aligned, text-xs */}
                                 {calculatedReduction ? (
-                                    <p className="mt-0 text-xs font-medium text-green-700">
+                                    <p className="mt-0 text-xs text-green-700">
                                         Estimated Annual Reduction: <span className="font-bold">{calculatedReduction} tCO₂e/year</span>
                                     </p>
                                 ) : activityScale && selectedEmissionFactor ? (
@@ -665,7 +665,7 @@ const KGFTAlignment = ({ projectId }: KGFTAlignmentProps) => {
 
                         {/* Supporting Evidence */}
                         <div>
-                            <p className="text-xs font-medium text-gray-700 mb-3">
+                            <p className="text-xs text-gray-700 mb-3">
                                 Supporting Evidence Attached?* <br />
                                 <span className="text-xs text-gray-500">Select Yes if documents are available (e.g., EIA, feasibility study, emissions model); No if not; Pending if in progress.</span>
                             </p>
@@ -675,12 +675,12 @@ const KGFTAlignment = ({ projectId }: KGFTAlignmentProps) => {
                                         key={val}
                                         type="button"
                                         onClick={() => setSupportingEvidence(val)}
-                                        className={`px-6 py-3 rounded-lg border-2 text-xs font-medium capitalize transition-all ${supportingEvidence === val
+                                        className={`px-4 py-2 rounded-lg border text-xs capitalize transition-all ${supportingEvidence === val
                                             ? val === 'yes'
-                                                ? 'bg-green-100 border-green-500 text-green-700 shadow-sm'
+                                                ? 'bg-green-100 border-green-500 text-green-700'
                                                 : val === 'no'
-                                                    ? 'bg-red-100 border-red-500 text-red-700 shadow-sm'
-                                                    : 'bg-orange-100 border-orange-500 text-orange-700 shadow-sm'
+                                                    ? 'bg-red-100 border-red-500 text-red-700'
+                                                    : 'bg-orange-100 border-orange-500 text-orange-700'
                                             : 'border-gray-300 hover:bg-gray-50 hover:border-gray-400'
                                             }`}
                                     >
@@ -692,7 +692,7 @@ const KGFTAlignment = ({ projectId }: KGFTAlignmentProps) => {
 
                         {/* DNSH Met */}
                         <div>
-                            <p className="text-xs font-medium text-gray-700 mb-3">
+                            <p className="text-xs text-gray-700 mb-3">
                                 DNSH Met?* <br />
                                 <span className="text-xs text-gray-500">"Do No Significant Harm" — select Yes if activity does not harm other environmental objectives, No if it does, Pending if under review. Requires EIA or screening tool.</span>
                             </p>
@@ -702,12 +702,12 @@ const KGFTAlignment = ({ projectId }: KGFTAlignmentProps) => {
                                         key={val}
                                         type="button"
                                         onClick={() => setDnshMet(val)}
-                                        className={`px-6 py-3 rounded-lg border-2 text-xs font-medium capitalize transition-all ${dnshMet === val
+                                        className={`px-4 py-2 rounded-lg border text-xs capitalize transition-all ${dnshMet === val
                                             ? val === 'yes'
-                                                ? 'bg-green-100 border-green-500 text-green-700 shadow-sm'
+                                                ? 'bg-green-100 border-green-500 text-green-700'
                                                 : val === 'no'
-                                                    ? 'bg-red-100 border-red-500 text-red-700 shadow-sm'
-                                                    : 'bg-orange-100 border-orange-500 text-orange-700 shadow-sm'
+                                                    ? 'bg-red-100 border-red-500 text-red-700'
+                                                    : 'bg-orange-100 border-orange-500 text-orange-700'
                                             : 'border-gray-300 hover:bg-gray-50 hover:border-gray-400'
                                             }`}
                                     >
@@ -719,7 +719,7 @@ const KGFTAlignment = ({ projectId }: KGFTAlignmentProps) => {
 
                         {/* Social Safeguard */}
                         <div>
-                            <p className="text-xs font-medium text-gray-700 mb-3">
+                            <p className="text-xs text-gray-700 mb-3">
                                 Social Safeguard Met?* <br />
                                 <span className="text-xs text-gray-500">Select Yes if the project complies with labor laws, ILO conventions, and human rights standards; No or Pending if unclear.</span>
                             </p>
@@ -729,12 +729,12 @@ const KGFTAlignment = ({ projectId }: KGFTAlignmentProps) => {
                                         key={val}
                                         type="button"
                                         onClick={() => setSocialSafeguard(val)}
-                                        className={`px-6 py-3 rounded-lg border-2 text-xs font-medium capitalize transition-all ${socialSafeguard === val
+                                        className={`px-4 py-2 rounded-lg border text-xs capitalize transition-all ${socialSafeguard === val
                                             ? val === 'yes'
-                                                ? 'bg-green-100 border-green-500 text-green-700 shadow-sm'
+                                                ? 'bg-green-100 border-green-500 text-green-700'
                                                 : val === 'no'
-                                                    ? 'bg-red-100 border-red-500 text-red-700 shadow-sm'
-                                                    : 'bg-orange-100 border-orange-500 text-orange-700 shadow-sm'
+                                                    ? 'bg-red-100 border-red-500 text-red-700'
+                                                    : 'bg-orange-100 border-orange-500 text-orange-700'
                                             : 'border-gray-300 hover:bg-gray-50 hover:border-gray-400'
                                             }`}
                                     >
@@ -746,7 +746,7 @@ const KGFTAlignment = ({ projectId }: KGFTAlignmentProps) => {
 
                         {/* Alignment Status */}
                         <div>
-                            <p className="text-xs font-medium text-gray-700 mb-3">
+                            <p className="text-xs text-gray-700 mb-3">
                                 Alignment Status?* <br />
                                 <span className="text-xs text-gray-500">Final status based on the full evaluation: Aligned if all criteria are met, Pending Further Review if incomplete, Not Aligned if any criterion fails.</span>
                             </p>
@@ -756,12 +756,12 @@ const KGFTAlignment = ({ projectId }: KGFTAlignmentProps) => {
                                         key={val}
                                         type="button"
                                         onClick={() => setAlignmentStatus(val)}
-                                        className={`px-6 py-3 rounded-lg border-2 text-xs font-medium capitalize transition-all ${alignmentStatus === val
+                                        className={`px-4 py-2 rounded-lg border text-xs capitalize transition-all ${alignmentStatus === val
                                             ? val === 'yes'
-                                                ? 'bg-green-100 border-green-500 text-green-700 shadow-sm'
+                                                ? 'bg-green-100 border-green-500 text-green-700'
                                                 : val === 'no'
-                                                    ? 'bg-red-100 border-red-500 text-red-700 shadow-sm'
-                                                    : 'bg-orange-100 border-orange-500 text-orange-700 shadow-sm'
+                                                    ? 'bg-red-100 border-red-500 text-red-700'
+                                                    : 'bg-orange-100 border-orange-500 text-orange-700'
                                             : 'border-gray-300 hover:bg-gray-50 hover:border-gray-400'
                                             }`}
                                     >
