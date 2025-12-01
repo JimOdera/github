@@ -2,18 +2,15 @@
 
 import Header from "@/app/components/Header";
 import {
+  acticon1,
   calendar,
   flag,
   folder,
   message_circle_more,
-  projectIcon,
   projectIcon2,
-  projectIcon3,
-  projectIcon4,
   upfield,
 } from "@/public";
 import {
-  BadgeCheck,
   ChevronRight,
   Leaf,
   Link,
@@ -34,20 +31,12 @@ const GHGIntensityLineChart = dynamic(
   () => import("@/app/components/charts/GHGIntensityLineChart"),
   { ssr: false }
 );
-const ResourceConservationCharts = dynamic(
-  () => import("@/app/components/charts/ResourceConservationCharts"),
-  { ssr: false }
-);
 const JobCreationRadialChart = dynamic(
   () => import("@/app/components/charts/JobCreationRadialChart"),
   { ssr: false }
 );
 const GreenFinanceChart = dynamic(
   () => import("@/app/components/charts/GreenFinanceChart"),
-  { ssr: false }
-);
-const FinancialPerformanceChart = dynamic(
-  () => import("@/app/components/charts/FinancialPerformanceChart"),
   { ssr: false }
 );
 
@@ -189,42 +178,42 @@ const Dashboard = () => {
                       bg: "bg-[#F6FDFA]",
                       icon: Leaf,
                       color: "#00C587",
-                      title: "Carbon Offset Projects",
+                      title: "Renewable Energy- Wind",
                       desc: "Total emissions: 24 tonnes",
                     },
                     {
                       bg: "bg-[#F6FDFA]",
                       icon: Zap,
                       color: "#00C587",
-                      title: "Climate Resilience Projects",
+                      title: "Renewable Energy- Hydrot",
                       desc: "Total emissions: 315 tonnes",
                     },
                     {
                       bg: "bg-[#F7F9FE]",
                       icon: RefreshCw,
                       color: "#2370FE",
-                      title: "Sustainable Agriculture & Forestry",
+                      title: "Energy transmissions  & Distribution",
                       desc: "Total emissions: 25 tonnes",
                     },
                     {
                       bg: "bg-[#FAF8FE]",
                       icon: Link,
                       color: "#A441FE",
-                      title: "Clean Technology Innovation",
+                      title: "Efficient Lighting or Appliances",
                       desc: "Total emissions: 245 MWh",
                     },
                     {
                       bg: "bg-[#F6FDFA]",
                       icon: Leaf,
                       color: "#00C587",
-                      title: "Circular Economy Initiatives",
+                      title: "Grid Infrastructure",
                       desc: "Total emissions: 24 tonnes",
                     },
                     {
                       bg: "bg-[#F6FDFA]",
                       icon: Zap,
                       color: "#00C587",
-                      title: "Social Impact Investments",
+                      title: "Regenerative Agriculture",
                       desc: "Total Offset: 34,000",
                     },
                   ].map((item, i) => (
@@ -256,65 +245,88 @@ const Dashboard = () => {
 
               <DashboardChart />
 
-              {/* Carbon Revenue Potential */}
-              <div className="bg-[#F9FBFC] border border-gray-200 px-6 py-8 md:px-16 md:py-10 rounded-xl">
-                <p className="text-lg font-medium text-gray-800">
-                  Carbon Revenue Potential
-                </p>
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mt-6">
-                  <div className="space-y-6">
-                    <div className="border border-gray-200 rounded-xl px-6 py-5">
-                      <div className="flex items-center gap-3">
-                        <Image
-                          src={projectIcon4}
-                          alt="Icon"
-                          className="w-5 h-5"
-                        />
-                        <p className="text-sm font-medium text-gray-700">
-                          Renewable Energy Capacity Added
-                        </p>
-                      </div>
-                      <h1 className="text-3xl font-bold text-gray-800 mt-2">
-                        720 MWh
-                      </h1>
-                      <span className="text-xs text-green-600 font-medium">
-                        +15% vs last year
-                      </span>
-                    </div>
-                    <div className="border border-gray-200 rounded-xl px-6 py-5">
-                      <div className="flex items-center gap-3">
-                        <Image
-                          src={projectIcon3}
-                          alt="Icon"
-                          className="w-5 h-5"
-                        />
-                        <p className="text-sm font-medium text-gray-700">
-                          Energy Savings per Unit
-                        </p>
-                      </div>
-                      <h1 className="text-3xl font-bold text-gray-800 mt-2">
-                        +32%
-                      </h1>
-                      <span className="text-xs text-yellow-600 font-medium">
-                        +17% of the potential
-                      </span>
-                    </div>
+              {/*  */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                {[
+                  {
+                    label: "Renewable Energy Capacity Added",
+                    value: "1,340 mwh",
+                    change: "+42% vs last year",
+                    positive: true,
+                  },
+                  {
+                    label: "Energy Savings per Unit",
+                    value: "+32%",
+                    change: "-5% vs last year",
+                    positive: false,
+                  },
+                ].map((item, i) => (
+                  <div
+                    key={i}
+                    className="border border-gray-200 rounded-xl px-6 py-5"
+                  >
+                    <p className="text-xs font-medium text-gray-600">
+                      {item.label}
+                    </p>
+                    <h1 className="text-3xl font-bold text-gray-800 mt-1">
+                      {item.value}
+                    </h1>
+                    <span
+                      className={`text-xs font-medium ${item.positive ? "text-green-600" : "text-red-600"
+                        }`}
+                    >
+                      {item.change}
+                    </span>
                   </div>
-                  <div className="col-span-2">
-                    <GHGIntensityLineChart />
-                  </div>
-                </div>
+                ))}
               </div>
 
-              <ResourceConservationCharts />
+              {/*  */}
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                {[
+                  {
+                    label: "Total GHG Emissions (tonnes)",
+                    value: "6,340 mwh",
+                    change: "78% renewable",
+                  },
+                  {
+                    label: "Total Energy Consumption (tonnes)",
+                    value: "3,805",
+                    change: "78% renewable",
+                  },
+                  {
+                    label: "Total Waste Generated (tonnes)",
+                    value: "845",
+                    change: "78% recycled",
+                  },
+                ].map((item, i) => (
+                  <div
+                    key={i}
+                    className="border border-gray-200 rounded-xl px-6 py-5"
+                  >
+                    <p className="text-xs font-medium text-gray-600">
+                      {item.label}
+                    </p>
+                    <h1 className="text-3xl font-bold text-gray-800 mt-1">
+                      {item.value}
+                    </h1>
+                    <span
+                      className={`text-xs font-medium`}
+                    >
+                      {item.change}
+                    </span>
+                  </div>
+                ))}
+              </div>
+
 
               {/* Sustainable Development Goals */}
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-10">
+              <div className="grid grid-cols-1 md:grid-cols-1 gap-10">
                 <div className="space-y-6">
                   <h1 className="text-lg font-medium text-gray-800">
                     Sustainable Development Goals
                   </h1>
-                  <div className="grid grid-cols-1 gap-6">
+                  <div className="grid grid-cols-2 gap-6">
                     {[
                       {
                         bg: "bg-[#F7F9FE]",
@@ -371,7 +383,7 @@ const Dashboard = () => {
                   </div>
                 </div>
 
-                <div className="space-y-6">
+                {/* <div className="space-y-6">
                   <h1 className="text-lg font-medium text-gray-800">
                     Financial Performance
                   </h1>
@@ -380,8 +392,9 @@ const Dashboard = () => {
                     <FinancialPerformanceChart number={73} type="npv" />
                     <FinancialPerformanceChart number={64} type="irr" />
                   </div>
-                </div>
+                </div> */}
               </div>
+
 
               {/* Beneficiaries Section */}
               <div className="bg-[#F9FBFC] border border-gray-200 px-6 py-8 md:px-16 md:py-10 rounded-xl space-y-8">
@@ -423,9 +436,8 @@ const Dashboard = () => {
                         {item.value}
                       </h1>
                       <span
-                        className={`text-xs font-medium ${
-                          item.positive ? "text-green-600" : "text-gray-600"
-                        }`}
+                        className={`text-xs font-medium ${item.positive ? "text-green-600" : "text-gray-600"
+                          }`}
                       >
                         {item.change}
                       </span>
@@ -435,34 +447,193 @@ const Dashboard = () => {
                 <JobCreationRadialChart />
               </div>
 
-              {/* Stakeholder Satisfaction */}
-              <div className="bg-[#F6FFEB] rounded-xl p-6 flex items-center justify-between shadow-sm border border-[#E6F0D9]">
-                <div className="flex items-center gap-4">
-                  <div className="p-3 bg-[#B1CA69] rounded-xl shadow-md">
-                    <Image
-                      src={projectIcon}
-                      alt="Project"
-                      width={28}
-                      height={28}
-                      className="w-7 h-7"
-                    />
+              {/* Carbon Revenue Potential */}
+              <div className="bg-[#F9FBFC] border border-gray-200 px-6 py-8 md:px-16 md:py-10 rounded-xl">
+                <p className="text-lg font-medium text-gray-800">
+                  Material Topics
+                </p>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mt-6">
+                  <div className="col-span-2">
+                    <GHGIntensityLineChart />
                   </div>
-                  <div>
-                    <h3 className="text-base font-medium text-gray-800">
-                      Stakeholder Satisfaction
-                    </h3>
-                    <p className="text-xs text-gray-600 mt-1">
-                      From survey of stakeholders
-                    </p>
+                  <div className="space-y-6">
+                    <div className="border border-gray-200 rounded-xl px-6 py-5">
+                      <div className="flex items-center gap-3">
+                        <Image
+                          src={acticon1}
+                          alt="Icon"
+                          className="w-5 h-5"
+                        />
+                        <p className="text-sm font-medium text-gray-700">
+                          Total Material Topics
+                        </p>
+                      </div>
+                      <h1 className="text-3xl font-bold text-gray-800 mt-2">
+                        157
+                      </h1>
+                      <span className="text-xs text-yellow-600 font-medium">
+                        +12% vs last year
+                      </span>
+                    </div>
+                    <div>
+                      <h1>Assessment Sources</h1>
+                      <div className="flex flex-col gap-2 text-xs">
+                        <span className="w-fit h-fit bg-gray-100 px-4 py-1 rounded-full">Stakeholder input (3)</span>
+                        <span className="w-fit h-fit bg-gray-100 px-4 py-1 rounded-full">Internal Risk Assessment (34)</span>
+                        <span className="w-fit h-fit bg-gray-100 px-4 py-1 rounded-full">Consultant-Led Assessment (42)</span>
+                      </div>
+                    </div>
                   </div>
                 </div>
-                <button className="flex items-center gap-3 px-5 py-3 bg-white rounded-xl border border-[#E6F0D9] hover:bg-[#F0FDF4] transition-all group">
-                  <BadgeCheck size={22} color="#065F46" fill="#86efac" />
-                  <span className="text-sm font-medium text-[#065F46]">
-                    On Track
-                  </span>
-                </button>
               </div>
+
+              <div className="px-6 py-8 md:px-16 md:py-10 border border-gray-300 rounded-lg">
+                <h1>Procurement Spend</h1>
+                {/*  */}
+                <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+                  {[
+                    {
+                      label: "Total Diverse Spend",
+                      value: "$1,700,000",
+                      change: "57% of total procurement",
+                      positive: true,
+                    },
+                    {
+                      label: "Average per project",
+                      value: "$320,000",
+                      change: "57% of total procurement",
+                      positive: false,
+                    },
+                  ].map((item, i) => (
+                    <div
+                      key={i}
+                      className="border border-gray-200 rounded-xl px-6 py-5"
+                    >
+                      <p className="text-xs font-medium text-gray-600">
+                        {item.label}
+                      </p>
+                      <h1 className="text-3xl font-bold text-gray-800 mt-1">
+                        {item.value}
+                      </h1>
+                      <span
+                        className={`text-xs font-medium ${item.positive ? "text-green-600" : "text-red-600"
+                          }`}
+                      >
+                        {item.change}
+                      </span>
+                    </div>
+                  ))}
+                </div>
+                {/*  */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  {[
+                    {
+                      label: "PWD-Led (disability owned)",
+                      value: "$120,000",
+                      change: "35% of total",
+                      positive: true,
+                    },
+                    {
+                      label: "Women-Owned Businesses",
+                      value: "$10,000",
+                      change: "35% of total",
+                      positive: true,
+                    },
+                  ].map((item, i) => (
+                    <div
+                      key={i}
+                      className="border border-gray-200 rounded-xl px-6 py-5"
+                    >
+                      <p className="text-xs font-medium text-gray-600">
+                        {item.label}
+                      </p>
+                      <h1 className="text-3xl font-bold text-gray-800 mt-1">
+                        {item.value}
+                      </h1>
+                      <span
+                        className={`text-xs font-medium ${item.positive ? "text-green-600" : "text-red-600"
+                          }`}
+                      >
+                        {item.change}
+                      </span>
+                    </div>
+                  ))}
+                </div>
+                {/*  */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  {[
+                    {
+                      label: "Local Community Vendors",
+                      value: "$120,000",
+                      change: "35% of total",
+                      positive: true,
+                    },
+                    {
+                      label: "Total No of Suppliers",
+                      value: "100",
+                      change: "35% of total",
+                      positive: true,
+                    },
+                  ].map((item, i) => (
+                    <div
+                      key={i}
+                      className="border border-gray-200 rounded-xl px-6 py-5"
+                    >
+                      <p className="text-xs font-medium text-gray-600">
+                        {item.label}
+                      </p>
+                      <h1 className="text-3xl font-bold text-gray-800 mt-1">
+                        {item.value}
+                      </h1>
+                      <span
+                        className={`text-xs font-medium ${item.positive ? "text-green-600" : "text-red-600"
+                          }`}
+                      >
+                        {item.change}
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              <div className="px-6 py-8 md:px-16 md:py-10 border border-gray-300 rounded-lg">
+                <h1>Human Rights</h1>
+                {/*  */}
+                <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+                  {[
+                    {
+                      label: "Activities with policies",
+                      value: "50",
+                    },
+                    {
+                      label: "Recent Assessment",
+                      value: "10",
+                    },
+                    {
+                      label: "Grievances logged",
+                      value: "0",
+                    },
+                    {
+                      label: "Remediation taken",
+                      value: "70",
+                    },
+                  ].map((item, i) => (
+                    <div
+                      key={i}
+                      className="border border-gray-200 rounded-xl px-6 py-5"
+                    >
+                      <p className="text-xs font-medium text-gray-600">
+                        {item.label}
+                      </p>
+                      <h1 className="text-3xl font-bold text-gray-800 mt-1">
+                        {item.value}
+                      </h1>
+
+                    </div>
+                  ))}
+                </div>
+              </div>
+
             </div>
           </main>
         </div>
