@@ -41,7 +41,7 @@ interface ProjectOverviewProps {
     projectId: string;
 }
 
-const ProjectOverview = ({ projectId }: ProjectOverviewProps) => {
+const ProjectOverview = ({ projectId }: OverviewProps) => {
     // Form States
     const [projectTitle, setProjectTitle] = useState('');
     const [institution, setInstitution] = useState('');
@@ -57,7 +57,7 @@ const ProjectOverview = ({ projectId }: ProjectOverviewProps) => {
     const [urbanRuralDropdownOpen, setUrbanRuralDropdownOpen] = useState(false);
     const [pickedCoords, setPickedCoords] = useState<{ lat: number; lng: number } | null>(null);
 
-    // Images
+    // Unlimited Images
     const [projectImages, setProjectImages] = useState<File[]>([]);
     const [imagePreviews, setImagePreviews] = useState<string[]>([]);
 
@@ -108,10 +108,10 @@ const ProjectOverview = ({ projectId }: ProjectOverviewProps) => {
         };
     }, [sectionRefs]);
 
-    // === UNIQUE STORAGE KEY FOR THIS PROJECT & STEP ===
+    // Unique storage key for this project & step
     const storageKey = `projectDraft_${projectId}_step1`;
 
-    // Auto-save (debounced) — now per-project
+    // Auto-save all data including unlimited images (base64)
     useEffect(() => {
         const saveDraft = () => {
             const draft = {
@@ -123,7 +123,7 @@ const ProjectOverview = ({ projectId }: ProjectOverviewProps) => {
                 region,
                 county,
                 urbanRural,
-                imagePreviews,   // Base64 strings are safe to store
+                imagePreviews, // base64 strings — safe for localStorage
                 pickedCoords,
             };
             localStorage.setItem(storageKey, JSON.stringify(draft));
@@ -142,10 +142,10 @@ const ProjectOverview = ({ projectId }: ProjectOverviewProps) => {
         urbanRural,
         imagePreviews,
         pickedCoords,
-        projectId, // important: re-run if projectId changes
+        projectId,
     ]);
 
-    // Load draft on mount — only for this project
+    // Load draft on mount
     useEffect(() => {
         const saved = localStorage.getItem(storageKey);
         if (saved) {
@@ -162,19 +162,18 @@ const ProjectOverview = ({ projectId }: ProjectOverviewProps) => {
                 setImagePreviews(draft.imagePreviews || []);
                 setPickedCoords(draft.pickedCoords || null);
             } catch (e) {
-                console.warn('Failed to load Step 1 draft for project:', projectId);
+                console.warn('Failed to load Step 1 draft');
             }
         }
     }, [projectId, storageKey]);
 
-    // Image handlers
+    // Handle unlimited image uploads
     const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const files = Array.from(e.target.files || []);
-        if (projectImages.length + files.length > 6) {
-            alert('Maximum 6 images allowed');
-            return;
-        }
         const imageFiles = files.filter((f) => f.type.startsWith('image/'));
+
+        if (imageFiles.length === 0) return;
+
         setProjectImages((prev) => [...prev, ...imageFiles]);
 
         imageFiles.forEach((file) => {
@@ -184,11 +183,14 @@ const ProjectOverview = ({ projectId }: ProjectOverviewProps) => {
             };
             reader.readAsDataURL(file);
         });
+
+        // Reset input so same file can be re-selected
+        e.target.value = '';
     };
 
-    const removeImage = (idx: number) => {
-        setProjectImages((prev) => prev.filter((_, i) => i !== idx));
-        setImagePreviews((prev) => prev.filter((_, i) => i !== idx));
+    const removeImage = (index: number) => {
+        setProjectImages((prev) => prev.filter((_, i) => i !== index));
+        setImagePreviews((prev) => prev.filter((_, i) => i !== index));
     };
 
     return (
@@ -225,7 +227,7 @@ const ProjectOverview = ({ projectId }: ProjectOverviewProps) => {
                     <h2 className="text-2xl font-semibold text-[#044D5E]">Project Basics</h2>
 
                     <div className="space-y-6">
-                        {/* Title */}
+                        {/* Project Title */}
                         <div>
                             <label className="block text-xs font-medium text-gray-700 mb-2">Project Title *</label>
                             <input
@@ -237,7 +239,7 @@ const ProjectOverview = ({ projectId }: ProjectOverviewProps) => {
                             />
                         </div>
 
-                        {/* Organization */}
+                        {/* Institution / Organization */}
                         <div>
                             <label className="block text-xs font-medium text-gray-700 mb-2">Institution / Organization *</label>
                             <input
@@ -249,7 +251,7 @@ const ProjectOverview = ({ projectId }: ProjectOverviewProps) => {
                             />
                         </div>
 
-                        {/* Description */}
+                        {/* Project Description */}
                         <div>
                             <label className="block text-xs font-medium text-gray-700 mb-2">Project Description *</label>
                             <textarea
@@ -257,16 +259,16 @@ const ProjectOverview = ({ projectId }: ProjectOverviewProps) => {
                                 onChange={(e) => setDescription(e.target.value)}
                                 rows={6}
                                 className="w-full px-4 py-3 border border-gray-300 rounded-lg resize-none focus:outline-none focus:border-gray-500 text-xs"
-                                placeholder="Provide a detailed overview..."
+                                placeholder="Provide a detailed overview of your project..."
                             />
                         </div>
 
-                        {/* Images */}
+                        {/* UNLIMITED Project Images */}
                         <div>
                             <label className="block text-xs font-medium text-gray-700 mb-4">
-                                Project Images * (up to 6)
+                                Project Images * (Unlimited)
                             </label>
-                            <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+                            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
                                 {imagePreviews.map((src, i) => (
                                     <div key={i} className="relative group">
                                         <Image
@@ -274,35 +276,39 @@ const ProjectOverview = ({ projectId }: ProjectOverviewProps) => {
                                             alt={`Project image ${i + 1}`}
                                             width={300}
                                             height={200}
-                                            className="w-full h-48 object-cover rounded-lg border border-gray-200"
+                                            className="w-full h-48 object-cover rounded-lg border border-gray-200 shadow-sm"
                                         />
                                         <button
+                                            type="button"
                                             onClick={() => removeImage(i)}
-                                            className="absolute top-2 right-2 bg-red-500 text-white p-1.5 rounded-full opacity-0 group-hover:opacity-100 transition"
+                                            className="absolute top-2 right-2 bg-red-500 hover:bg-red-600 text-white p-2 rounded-full opacity-0 group-hover:opacity-100 transition shadow-lg"
                                         >
-                                            <Trash2 size={14} />
+                                            <Trash2 size={16} />
                                         </button>
                                     </div>
                                 ))}
 
-                                {imagePreviews.length < 6 && (
-                                    <label className="flex flex-col items-center justify-center h-48 border-2 border-dashed border-gray-300 rounded-lg cursor-pointer hover:bg-gray-50 bg-white">
-                                        <UploadCloud className="w-10 h-10 text-gray-400 mb-2" />
-                                        <span className="text-xs text-gray-600">Add Image</span>
-                                        <input
-                                            type="file"
-                                            multiple
-                                            accept="image/*"
-                                            onChange={handleImageChange}
-                                            className="hidden"
-                                        />
-                                    </label>
-                                )}
+                                {/* Upload Button */}
+                                <label className="flex flex-col items-center justify-center h-48 border-2 border-dashed border-gray-400 rounded-lg cursor-pointer hover:bg-gray-50 bg-gray-50 transition">
+                                    <UploadCloud className="w-10 h-10 text-gray-400 mb-2" />
+                                    <span className="text-xs text-gray-600 text-center px-2">
+                                        Click to add more images
+                                    </span>
+                                    <input
+                                        type="file"
+                                        multiple
+                                        accept="image/*"
+                                        onChange={handleImageChange}
+                                        className="hidden"
+                                    />
+                                </label>
                             </div>
-                            <p className="text-xs text-gray-500 mt-2">{imagePreviews.length}/6 images</p>
+                            <p className="text-xs text-gray-500 mt-2 mt-3">
+                                {imagePreviews.length} image{imagePreviews.length !== 1 ? 's' : ''} uploaded
+                            </p>
                         </div>
 
-                        {/* Taxonomy Category Dropdown */}
+                        {/* Green Finance Taxonomy Category */}
                         <div className="relative">
                             <label className="block text-xs font-medium text-gray-700 mb-2">
                                 Green Finance Taxonomy Category *
@@ -330,7 +336,7 @@ const ProjectOverview = ({ projectId }: ProjectOverviewProps) => {
                                                 key={item}
                                                 onClick={() => {
                                                     setTaxonomyCategory(item);
-                                                    setSubCategory(item);
+                                                    setSubCategory(item); // optional: auto-sync
                                                     setTaxonomyDropdownOpen(false);
                                                 }}
                                                 className="px-4 py-3 hover:bg-gray-50 cursor-pointer text-xs"

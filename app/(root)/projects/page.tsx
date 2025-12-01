@@ -383,7 +383,7 @@ const Projects = () => {
                         </div>
                       </div>
 
-                      <div className="flex flex-col justify-center items-center gap-6 px-6">
+                      <div className="flex flex-col justify-between items-center gap-6 px-6 py-6">
                         <div className="flex items-center gap-2 text-xs">
                           <span>KGFT Alignment</span>
                           <BadgeCheck color="#fff" fill="#1ECEC9" />
