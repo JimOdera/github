@@ -55,10 +55,10 @@ const Governance = ({ projectId }: GovernanceProps) => {
     }, [projectId]);
 
     return (
-        <div className="w-full mx-auto px-2 md:px-6 py-8">
+        <div className="w-full mx-auto px-2 md:px-6 py-0">
             <div className="flex gap-8">
                 <aside className="hidden lg:block w-72 flex-shrink-0">
-                    <div className="sticky top-36">
+                    <div className="sticky top-42">
                         <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-4">
                             Form Sections
                         </h3>

@@ -194,150 +194,197 @@ const ProjectOverview = ({ projectId }: ProjectOverviewProps) => {
     };
 
     return (
-        <div className="flex gap-8 py-8">
-            {/* Sidebar */}
-            <aside className="hidden lg:block w-72 flex-shrink-0">
-                <div className="sticky top-36 space-y-4">
-                    <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wider">
-                        Form Sections
-                    </h3>
-                    <nav className="space-y-1">
-                        {navItems.map(({ name, icon: Icon }) => (
-                            <button
-                                key={name}
-                                onClick={() => handleNavClick(name)}
-                                className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg text-left transition-all ${
-                                    activeSection === name
-                                        ? 'bg-[#F2F2F2] text-[#044D5E] font-medium shadow-sm'
-                                        : 'text-gray-600 hover:bg-gray-50'
-                                }`}
-                            >
-                                <Icon size={18} />
-                                <span className="text-xs">{name}</span>
-                            </button>
-                        ))}
-                    </nav>
-                </div>
-            </aside>
+        <div className="w-full mx-auto px-2 md:px-6 py-0 space-y-6">
+            <div className="flex gap-8">
+                {/* Sidebar */}
+                <aside className="hidden lg:block w-72 flex-shrink-0">
+                    <div className="sticky top-42 space-y-4">
+                        <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-4">
+                            Form Sections
+                        </h3>
+                        <nav className="space-y-1">
+                            {navItems.map(({ name, icon: Icon }) => (
+                                <button
+                                    key={name}
+                                    onClick={() => handleNavClick(name)}
+                                    className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg text-left transition-all ${activeSection === name
+                                            ? 'bg-[#F2F2F2] text-[#044D5E] font-medium shadow-sm'
+                                            : 'text-gray-600 hover:bg-gray-50'
+                                        }`}
+                                >
+                                    <Icon size={18} />
+                                    <span className="text-xs">{name}</span>
+                                </button>
+                            ))}
+                        </nav>
+                    </div>
+                </aside>
 
-            {/* Main Content */}
-            <div className="flex-1 space-y-12 pb-20">
-                {/* Project Basics */}
-                <section ref={basicsRef} data-section="Project Basics" className="space-y-6 scroll-mt-24">
-                    <h2 className="text-2xl font-semibold text-[#044D5E]">Project Basics</h2>
+                {/* Main Content */}
+                <div className="flex-1 space-y-12 pb-20">
+                    {/* Project Basics */}
+                    <section ref={basicsRef} data-section="Project Basics" className="space-y-6 scroll-mt-24">
+                        <h2 className="text-2xl font-semibold text-[#044D5E]">Project Basics</h2>
 
-                    <div className="space-y-6">
-                        {/* Project Title */}
-                        <div>
-                            <label className="block text-xs font-medium text-gray-700 mb-2">Project Title *</label>
-                            <input
-                                type="text"
-                                value={projectTitle}
-                                onChange={(e) => setProjectTitle(e.target.value)}
-                                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:border-gray-500 transition text-xs"
-                                placeholder="e.g. Solar Mini-Grid in Kwale County"
-                            />
-                        </div>
-
-                        {/* Institution / Organization */}
-                        <div>
-                            <label className="block text-xs font-medium text-gray-700 mb-2">Institution / Organization *</label>
-                            <input
-                                type="text"
-                                value={institution}
-                                onChange={(e) => setInstitution(e.target.value)}
-                                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:border-gray-500 text-xs"
-                                placeholder="e.g. Kenya Climate Innovation Center"
-                            />
-                        </div>
-
-                        {/* Project Description */}
-                        <div>
-                            <label className="block text-xs font-medium text-gray-700 mb-2">Project Description *</label>
-                            <textarea
-                                value={description}
-                                onChange={(e) => setDescription(e.target.value)}
-                                rows={6}
-                                className="w-full px-4 py-3 border border-gray-300 rounded-lg resize-none focus:outline-none focus:border-gray-500 text-xs"
-                                placeholder="Provide a detailed overview of your project..."
-                            />
-                        </div>
-
-                        {/* UNLIMITED Project Images */}
-                        <div>
-                            <label className="block text-xs font-medium text-gray-700 mb-4">
-                                Project Images * (Unlimited)
-                            </label>
-                            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-                                {imagePreviews.map((src, i) => (
-                                    <div key={i} className="relative group">
-                                        <Image
-                                            src={src}
-                                            alt={`Project image ${i + 1}`}
-                                            width={300}
-                                            height={200}
-                                            className="w-full h-48 object-cover rounded-lg border border-gray-200 shadow-sm"
-                                        />
-                                        <button
-                                            type="button"
-                                            onClick={() => removeImage(i)}
-                                            className="absolute top-2 right-2 bg-red-500 hover:bg-red-600 text-white p-2 rounded-full opacity-0 group-hover:opacity-100 transition shadow-lg"
-                                        >
-                                            <Trash2 size={16} />
-                                        </button>
-                                    </div>
-                                ))}
-
-                                {/* Upload Button */}
-                                <label className="flex flex-col items-center justify-center h-48 border-2 border-dashed border-gray-400 rounded-lg cursor-pointer hover:bg-gray-50 bg-gray-50 transition">
-                                    <UploadCloud className="w-10 h-10 text-gray-400 mb-2" />
-                                    <span className="text-xs text-gray-600 text-center px-2">
-                                        Click to add more images
-                                    </span>
-                                    <input
-                                        type="file"
-                                        multiple
-                                        accept="image/*"
-                                        onChange={handleImageChange}
-                                        className="hidden"
-                                    />
-                                </label>
+                        <div className="space-y-6">
+                            {/* Project Title */}
+                            <div>
+                                <label className="block text-xs font-medium text-gray-700 mb-2">Project Title *</label>
+                                <input
+                                    type="text"
+                                    value={projectTitle}
+                                    onChange={(e) => setProjectTitle(e.target.value)}
+                                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:border-gray-500 transition text-xs"
+                                    placeholder="e.g. Solar Mini-Grid in Kwale County"
+                                />
                             </div>
-                            <p className="text-xs text-gray-500 mt-2 mt-3">
-                                {imagePreviews.length} image{imagePreviews.length !== 1 ? 's' : ''} uploaded
-                            </p>
-                        </div>
 
-                        {/* Green Finance Taxonomy Category */}
+                            {/* Institution / Organization */}
+                            <div>
+                                <label className="block text-xs font-medium text-gray-700 mb-2">Institution / Organization *</label>
+                                <input
+                                    type="text"
+                                    value={institution}
+                                    onChange={(e) => setInstitution(e.target.value)}
+                                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:border-gray-500 text-xs"
+                                    placeholder="e.g. Kenya Climate Innovation Center"
+                                />
+                            </div>
+
+                            {/* Project Description */}
+                            <div>
+                                <label className="block text-xs font-medium text-gray-700 mb-2">Project Description *</label>
+                                <textarea
+                                    value={description}
+                                    onChange={(e) => setDescription(e.target.value)}
+                                    rows={6}
+                                    className="w-full px-4 py-3 border border-gray-300 rounded-lg resize-none focus:outline-none focus:border-gray-500 text-xs"
+                                    placeholder="Provide a detailed overview of your project..."
+                                />
+                            </div>
+
+                            {/* UNLIMITED Project Images */}
+                            <div>
+                                <label className="block text-xs font-medium text-gray-700 mb-4">
+                                    Project Images * (Unlimited)
+                                </label>
+                                <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+                                    {imagePreviews.map((src, i) => (
+                                        <div key={i} className="relative group">
+                                            <Image
+                                                src={src}
+                                                alt={`Project image ${i + 1}`}
+                                                width={300}
+                                                height={200}
+                                                className="w-full h-48 object-cover rounded-lg border border-gray-200 shadow-sm"
+                                            />
+                                            <button
+                                                type="button"
+                                                onClick={() => removeImage(i)}
+                                                className="absolute top-2 right-2 bg-red-500 hover:bg-red-600 text-white p-2 rounded-full opacity-0 group-hover:opacity-100 transition shadow-lg"
+                                            >
+                                                <Trash2 size={16} />
+                                            </button>
+                                        </div>
+                                    ))}
+
+                                    {/* Upload Button */}
+                                    <label className="flex flex-col items-center justify-center h-48 border-2 border-dashed border-gray-400 rounded-lg cursor-pointer hover:bg-gray-50 bg-gray-50 transition">
+                                        <UploadCloud className="w-10 h-10 text-gray-400 mb-2" />
+                                        <span className="text-xs text-gray-600 text-center px-2">
+                                            Click to add more images
+                                        </span>
+                                        <input
+                                            type="file"
+                                            multiple
+                                            accept="image/*"
+                                            onChange={handleImageChange}
+                                            className="hidden"
+                                        />
+                                    </label>
+                                </div>
+                                <p className="text-xs text-gray-500 mt-2 mt-3">
+                                    {imagePreviews.length} image{imagePreviews.length !== 1 ? 's' : ''} uploaded
+                                </p>
+                            </div>
+
+                            {/* Green Finance Taxonomy Category */}
+                            <div className="relative">
+                                <label className="block text-xs font-medium text-gray-700 mb-2">
+                                    Green Finance Taxonomy Category *
+                                </label>
+                                <div
+                                    onClick={() => setTaxonomyDropdownOpen(!taxonomyDropdownOpen)}
+                                    className="w-full px-4 py-3 border border-gray-300 rounded-lg flex justify-between items-center cursor-pointer hover:bg-gray-50 transition text-xs"
+                                >
+                                    <span className={taxonomyCategory ? 'text-gray-900' : 'text-gray-500'}>
+                                        {taxonomyCategory || 'Select category'}
+                                    </span>
+                                    {taxonomyDropdownOpen ? <ChevronUp size={18} /> : <ChevronDown size={18} />}
+                                </div>
+
+                                <AnimatePresence>
+                                    {taxonomyDropdownOpen && (
+                                        <motion.div
+                                            initial={{ opacity: 0, y: -8 }}
+                                            animate={{ opacity: 1, y: 0 }}
+                                            exit={{ opacity: 0, y: -8 }}
+                                            className="absolute z-30 w-full mt-1 bg-white border border-gray-200 rounded-lg shadow-lg overflow-hidden"
+                                        >
+                                            {taxonomyCategories.map((item) => (
+                                                <div
+                                                    key={item}
+                                                    onClick={() => {
+                                                        setTaxonomyCategory(item);
+                                                        setSubCategory(item); // optional: auto-sync
+                                                        setTaxonomyDropdownOpen(false);
+                                                    }}
+                                                    className="px-4 py-3 hover:bg-gray-50 cursor-pointer text-xs"
+                                                >
+                                                    {item}
+                                                </div>
+                                            ))}
+                                        </motion.div>
+                                    )}
+                                </AnimatePresence>
+                            </div>
+                        </div>
+                    </section>
+
+                    <hr className="border-gray-200" />
+
+                    {/* Project Type */}
+                    <section ref={typeRef} data-section="Project Type" className="space-y-6 scroll-mt-24">
+                        <h2 className="text-2xl font-semibold text-[#044D5E]">Project Type</h2>
+
                         <div className="relative">
                             <label className="block text-xs font-medium text-gray-700 mb-2">
-                                Green Finance Taxonomy Category *
+                                Project Sub-Category (linked to taxonomy) *
                             </label>
                             <div
-                                onClick={() => setTaxonomyDropdownOpen(!taxonomyDropdownOpen)}
+                                onClick={() => setSubCategoryDropdownOpen(!subCategoryDropdownOpen)}
                                 className="w-full px-4 py-3 border border-gray-300 rounded-lg flex justify-between items-center cursor-pointer hover:bg-gray-50 transition text-xs"
                             >
-                                <span className={taxonomyCategory ? 'text-gray-900' : 'text-gray-500'}>
-                                    {taxonomyCategory || 'Select category'}
+                                <span className={subCategory ? 'text-gray-900' : 'text-gray-500'}>
+                                    {subCategory || 'Select sub-category'}
                                 </span>
-                                {taxonomyDropdownOpen ? <ChevronUp size={18} /> : <ChevronDown size={18} />}
+                                {subCategoryDropdownOpen ? <ChevronUp size={18} /> : <ChevronDown size={18} />}
                             </div>
 
                             <AnimatePresence>
-                                {taxonomyDropdownOpen && (
+                                {subCategoryDropdownOpen && (
                                     <motion.div
                                         initial={{ opacity: 0, y: -8 }}
                                         animate={{ opacity: 1, y: 0 }}
                                         exit={{ opacity: 0, y: -8 }}
-                                        className="absolute z-30 w-full mt-1 bg-white border border-gray-200 rounded-lg shadow-lg overflow-hidden"
+                                        className="absolute z-30 w-full mt-1 bg-white border border-gray-200 rounded-lg shadow-lg"
                                     >
                                         {taxonomyCategories.map((item) => (
                                             <div
                                                 key={item}
                                                 onClick={() => {
-                                                    setTaxonomyCategory(item);
-                                                    setSubCategory(item); // optional: auto-sync
-                                                    setTaxonomyDropdownOpen(false);
+                                                    setSubCategory(item);
+                                                    setSubCategoryDropdownOpen(false);
                                                 }}
                                                 className="px-4 py-3 hover:bg-gray-50 cursor-pointer text-xs"
                                             >
@@ -348,162 +395,116 @@ const ProjectOverview = ({ projectId }: ProjectOverviewProps) => {
                                 )}
                             </AnimatePresence>
                         </div>
-                    </div>
-                </section>
+                    </section>
 
-                <hr className="border-gray-200" />
+                    <hr className="border-gray-200" />
 
-                {/* Project Type */}
-                <section ref={typeRef} data-section="Project Type" className="space-y-6 scroll-mt-24">
-                    <h2 className="text-2xl font-semibold text-[#044D5E]">Project Type</h2>
+                    {/* Location & Geotagging */}
+                    <section ref={locationRef} data-section="Location & Geotagging" className="space-y-6 scroll-mt-24">
+                        <h2 className="text-2xl font-semibold text-[#044D5E]">Location & Geotagging</h2>
 
-                    <div className="relative">
-                        <label className="block text-xs font-medium text-gray-700 mb-2">
-                            Project Sub-Category (linked to taxonomy) *
-                        </label>
-                        <div
-                            onClick={() => setSubCategoryDropdownOpen(!subCategoryDropdownOpen)}
-                            className="w-full px-4 py-3 border border-gray-300 rounded-lg flex justify-between items-center cursor-pointer hover:bg-gray-50 transition text-xs"
-                        >
-                            <span className={subCategory ? 'text-gray-900' : 'text-gray-500'}>
-                                {subCategory || 'Select sub-category'}
-                            </span>
-                            {subCategoryDropdownOpen ? <ChevronUp size={18} /> : <ChevronDown size={18} />}
+                        <div className="grid md:grid-cols-2 gap-6">
+                            <div className="relative">
+                                <label className="block text-xs font-medium text-gray-700 mb-2">Country / Region</label>
+                                <div
+                                    onClick={() => setRegionDropdownOpen(!regionDropdownOpen)}
+                                    className="w-full px-4 py-3 border border-gray-300 rounded-lg flex justify-between items-center cursor-pointer hover:bg-gray-50 transition text-xs"
+                                >
+                                    <span className={region ? 'text-gray-900' : 'text-gray-500'}>
+                                        {region || 'Select region'}
+                                    </span>
+                                    {regionDropdownOpen ? <ChevronUp size={18} /> : <ChevronDown size={18} />}
+                                </div>
+
+                                <AnimatePresence>
+                                    {regionDropdownOpen && (
+                                        <motion.div
+                                            initial={{ opacity: 0, y: -8 }}
+                                            animate={{ opacity: 1, y: 0 }}
+                                            exit={{ opacity: 0, y: -8 }}
+                                            className="absolute z-30 w-full mt-1 bg-white border border-gray-200 rounded-lg shadow-lg"
+                                        >
+                                            {regions.map((r) => (
+                                                <div
+                                                    key={r}
+                                                    onClick={() => {
+                                                        setRegion(r);
+                                                        setRegionDropdownOpen(false);
+                                                    }}
+                                                    className="px-4 py-3 hover:bg-gray-50 cursor-pointer text-xs"
+                                                >
+                                                    {r}
+                                                </div>
+                                            ))}
+                                        </motion.div>
+                                    )}
+                                </AnimatePresence>
+                            </div>
+
+                            <div>
+                                <label className="block text-xs font-medium text-gray-700 mb-2">County / Subregion *</label>
+                                <input
+                                    type="text"
+                                    value={county}
+                                    onChange={(e) => setCounty(e.target.value)}
+                                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:border-gray-500 text-xs"
+                                    placeholder="e.g. Kisumu County"
+                                />
+                            </div>
                         </div>
 
-                        <AnimatePresence>
-                            {subCategoryDropdownOpen && (
-                                <motion.div
-                                    initial={{ opacity: 0, y: -8 }}
-                                    animate={{ opacity: 1, y: 0 }}
-                                    exit={{ opacity: 0, y: -8 }}
-                                    className="absolute z-30 w-full mt-1 bg-white border border-gray-200 rounded-lg shadow-lg"
-                                >
-                                    {taxonomyCategories.map((item) => (
-                                        <div
-                                            key={item}
-                                            onClick={() => {
-                                                setSubCategory(item);
-                                                setSubCategoryDropdownOpen(false);
-                                            }}
-                                            className="px-4 py-3 hover:bg-gray-50 cursor-pointer text-xs"
-                                        >
-                                            {item}
-                                        </div>
-                                    ))}
-                                </motion.div>
-                            )}
-                        </AnimatePresence>
-                    </div>
-                </section>
+                        <div className="mb-6">
+                            <LocationPicker onCoordsChange={setPickedCoords} />
+                            <p className="mt-3 text-xs font-medium text-gray-800">
+                                <span className="text-gray-600">Coordinates:</span>{' '}
+                                <span className="font-mono text-green-700">
+                                    {pickedCoords
+                                        ? `${pickedCoords.lat.toFixed(6)}, ${pickedCoords.lng.toFixed(6)}`
+                                        : '— Move or click the map to select'}
+                                </span>
+                            </p>
+                        </div>
 
-                <hr className="border-gray-200" />
-
-                {/* Location & Geotagging */}
-                <section ref={locationRef} data-section="Location & Geotagging" className="space-y-6 scroll-mt-24">
-                    <h2 className="text-2xl font-semibold text-[#044D5E]">Location & Geotagging</h2>
-
-                    <div className="grid md:grid-cols-2 gap-6">
                         <div className="relative">
-                            <label className="block text-xs font-medium text-gray-700 mb-2">Country / Region</label>
+                            <label className="block text-xs font-medium text-gray-700 mb-2">
+                                Rural / Urban Classification *
+                            </label>
                             <div
-                                onClick={() => setRegionDropdownOpen(!regionDropdownOpen)}
+                                onClick={() => setUrbanRuralDropdownOpen(!urbanRuralDropdownOpen)}
                                 className="w-full px-4 py-3 border border-gray-300 rounded-lg flex justify-between items-center cursor-pointer hover:bg-gray-50 transition text-xs"
                             >
-                                <span className={region ? 'text-gray-900' : 'text-gray-500'}>
-                                    {region || 'Select region'}
+                                <span className={urbanRural ? 'text-gray-900' : 'text-gray-500'}>
+                                    {urbanRural || 'Select classification'}
                                 </span>
-                                {regionDropdownOpen ? <ChevronUp size={18} /> : <ChevronDown size={18} />}
+                                {urbanRuralDropdownOpen ? <ChevronUp size={18} /> : <ChevronDown size={18} />}
                             </div>
 
                             <AnimatePresence>
-                                {regionDropdownOpen && (
+                                {urbanRuralDropdownOpen && (
                                     <motion.div
                                         initial={{ opacity: 0, y: -8 }}
                                         animate={{ opacity: 1, y: 0 }}
                                         exit={{ opacity: 0, y: -8 }}
                                         className="absolute z-30 w-full mt-1 bg-white border border-gray-200 rounded-lg shadow-lg"
                                     >
-                                        {regions.map((r) => (
+                                        {urbanRuralOptions.map((opt) => (
                                             <div
-                                                key={r}
+                                                key={opt}
                                                 onClick={() => {
-                                                    setRegion(r);
-                                                    setRegionDropdownOpen(false);
+                                                    setUrbanRural(opt);
+                                                    setUrbanRuralDropdownOpen(false);
                                                 }}
                                                 className="px-4 py-3 hover:bg-gray-50 cursor-pointer text-xs"
                                             >
-                                                {r}
+                                                {opt}
                                             </div>
                                         ))}
                                     </motion.div>
                                 )}
                             </AnimatePresence>
                         </div>
-
-                        <div>
-                            <label className="block text-xs font-medium text-gray-700 mb-2">County / Subregion *</label>
-                            <input
-                                type="text"
-                                value={county}
-                                onChange={(e) => setCounty(e.target.value)}
-                                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:border-gray-500 text-xs"
-                                placeholder="e.g. Kisumu County"
-                            />
-                        </div>
-                    </div>
-
-                    <div className="mb-6">
-                        <LocationPicker onCoordsChange={setPickedCoords} />
-                        <p className="mt-3 text-xs font-medium text-gray-800">
-                            <span className="text-gray-600">Coordinates:</span>{' '}
-                            <span className="font-mono text-green-700">
-                                {pickedCoords
-                                    ? `${pickedCoords.lat.toFixed(6)}, ${pickedCoords.lng.toFixed(6)}`
-                                    : '— Move or click the map to select'}
-                            </span>
-                        </p>
-                    </div>
-
-                    <div className="relative">
-                        <label className="block text-xs font-medium text-gray-700 mb-2">
-                            Rural / Urban Classification *
-                        </label>
-                        <div
-                            onClick={() => setUrbanRuralDropdownOpen(!urbanRuralDropdownOpen)}
-                            className="w-full px-4 py-3 border border-gray-300 rounded-lg flex justify-between items-center cursor-pointer hover:bg-gray-50 transition text-xs"
-                        >
-                            <span className={urbanRural ? 'text-gray-900' : 'text-gray-500'}>
-                                {urbanRural || 'Select classification'}
-                            </span>
-                            {urbanRuralDropdownOpen ? <ChevronUp size={18} /> : <ChevronDown size={18} />}
-                        </div>
-
-                        <AnimatePresence>
-                            {urbanRuralDropdownOpen && (
-                                <motion.div
-                                    initial={{ opacity: 0, y: -8 }}
-                                    animate={{ opacity: 1, y: 0 }}
-                                    exit={{ opacity: 0, y: -8 }}
-                                    className="absolute z-30 w-full mt-1 bg-white border border-gray-200 rounded-lg shadow-lg"
-                                >
-                                    {urbanRuralOptions.map((opt) => (
-                                        <div
-                                            key={opt}
-                                            onClick={() => {
-                                                setUrbanRural(opt);
-                                                setUrbanRuralDropdownOpen(false);
-                                            }}
-                                            className="px-4 py-3 hover:bg-gray-50 cursor-pointer text-xs"
-                                        >
-                                            {opt}
-                                        </div>
-                                    ))}
-                                </motion.div>
-                            )}
-                        </AnimatePresence>
-                    </div>
-                </section>
+                    </section>
+                </div>
             </div>
         </div>
     );

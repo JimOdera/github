@@ -155,7 +155,7 @@ const FormContent = () => {
       <main className="w-full md:w-[80vw] space-y-8 bg-[#FBFDFB] pb-10">
         <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-4 md:p-8">
           {/* Step Indicators */}
-          <div className="flex justify-between mb-8 bg-gray-50 border border-gray-200 p-3 rounded-full gap-3 shadow-inner">
+          <div className="sticky top-18 flex justify-between mb-8 bg-gray-50 border border-gray-200 p-3 rounded-full gap-3 shadow-inner z-50">
             {steps.map((stepInfo, index) => {
               const isCompleted = step > index + 1;
               const isCurrent = step === index + 1;
@@ -163,19 +163,17 @@ const FormContent = () => {
               return (
                 <div
                   key={index}
-                  className={`flex items-center justify-center flex-1 py-3 rounded-full transition-all ${
-                    isCompleted || isCurrent
+                  className={`flex items-center justify-center flex-1 py-3 rounded-full transition-all ${isCompleted || isCurrent
                       ? 'bg-gradient-to-r from-[#BFEFF8] to-[#B1CA69]/20 shadow-sm'
                       : 'bg-gray-100'
-                  }`}
+                    }`}
                 >
                   <div className="flex items-center gap-3">
                     <div
-                      className={`w-8 h-8 rounded-full flex items-center justify-center font-bold text-sm transition-all ${
-                        isCompleted || isCurrent
+                      className={`w-8 h-8 rounded-full flex items-center justify-center font-bold text-sm transition-all ${isCompleted || isCurrent
                           ? 'bg-[#044D5E] text-white'
                           : 'bg-gray-300 text-gray-600'
-                      }`}
+                        }`}
                     >
                       {isCompleted ? <Check size={16} /> : index + 1}
                     </div>
@@ -201,23 +199,24 @@ const FormContent = () => {
                 type="button"
                 onClick={handlePrevStep}
                 disabled={step === 1}
-                className={`px-8 py-3 rounded-full text-sm font-medium border flex items-center gap-2 transition-all ${
-                  step === 1
+                className={`relative px-6 py-2 rounded-full text-xs font-medium border flex items-center justify-center min-w-[100px]
+                                        transition-all duration-300 cursor-pointer ${step === 1
                     ? 'bg-gray-100 text-gray-400 border-gray-300 cursor-not-allowed'
                     : 'bg-white hover:bg-gray-50 text-gray-700 border-gray-300 hover:border-gray-400'
-                }`}
+                  }`}
               >
-                <ChevronLeft size={18} />
+                <ChevronLeft size={18} className="absolute left-1 top-1/2 -translate-y-1/2" />
                 Back
               </button>
 
               <button
                 type={step === 4 ? 'submit' : 'button'}
                 onClick={step === 4 ? undefined : handleNextStep}
-                className="px-8 py-3 bg-[#044D5E] hover:bg-[#044D5E]/90 text-white rounded-full text-sm font-medium flex items-center gap-2 transition-all shadow-lg hover:shadow-xl"
+                className="relative px-6 py-2 bg-[#044D5E] hover:bg-[#044D5E]/90 text-xs font-medium text-white rounded-full
+                                        transition-all duration-300 flex items-center justify-center min-w-[100px] cursor-pointer"
               >
-                {step === 4 ? 'Submit Project' : 'Next Step'}
-                <ChevronRight size={18} />
+                {step === 4 ? 'Submit Project' : 'Next'}
+                <ChevronRight size={18} className="absolute right-1 top-1/2 -translate-y-1/2" />
               </button>
             </div>
           </form>

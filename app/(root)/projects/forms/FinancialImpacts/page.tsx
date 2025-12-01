@@ -145,31 +145,35 @@ const FinancialImpacts = ({ projectId }: FinancialImpactsProps) => {
 
     return (
         <div className="w-full mx-auto px-2 md:px-6 py-0 space-y-6">
-            <div className="flex gap-4">
+            <div className="flex gap-8">
                 {/* Sticky Sidebar */}
-                <div className="w-72 hidden md:flex flex-col gap-2 sticky top-38 self-start">
-                    <h1 className="text-lg font-semibold text-gray-600">Content</h1>
-                    <div className="flex flex-col gap-1">
-                        {[
-                            { name: 'Use of Proceeds', icon: DollarSign },
-                            { name: 'Project Stage & Financials', icon: TrendingUp },
-                            { name: 'Carbon Revenue Potentials', icon: Leaf },
-                        ].map(({ name, icon: Icon }) => (
-                            <div
-                                key={name}
-                                onClick={() => handleNavClick(name)}
-                                className={`flex items-center gap-2 px-5 py-2 rounded-lg cursor-pointer transition-colors duration-300 ${
-                                    activeSection === name
-                                        ? 'bg-[#F2F2F2] text-[#044D5E] font-medium'
-                                        : 'hover:bg-gray-100 text-gray-500'
-                                }`}
-                            >
-                                <Icon size={16} />
-                                <p className="text-xs">{name}</p>
-                            </div>
-                        ))}
+                <aside className="hidden lg:block w-72 flex-shrink-0">
+                    <div className="sticky top-42 space-y-4">
+                        <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-4">
+                            Form Sections
+                        </h3>
+                        <nav className="space-y-1">
+                            {[
+                                { name: 'Use of Proceeds', icon: DollarSign },
+                                { name: 'Project Stage & Financials', icon: TrendingUp },
+                                { name: 'Carbon Revenue Potentials', icon: Leaf },
+                            ].map(({ name, icon: Icon }) => (
+                                <button
+                                    key={name}
+                                    onClick={() => handleNavClick(name)}
+                                    className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg text-left transition-all ${
+                                        activeSection === name
+                                            ? 'bg-[#F2F2F2] text-[#044D5E] font-medium shadow-sm'
+                                            : 'text-gray-600 hover:bg-gray-50'
+                                    }`}
+                                >
+                                    <Icon size={18} />
+                                    <span className="text-xs">{name}</span>
+                                </button>
+                            ))}
+                        </nav>
                     </div>
-                </div>
+                </aside>
 
                 {/* Form Content */}
                 <div className="w-full flex-1 space-y-6">
