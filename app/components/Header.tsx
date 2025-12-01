@@ -4,13 +4,21 @@ import { briefcase, coordinate, file, home, klima_logo_long, klima_logo_short } 
 import { ShoppingCart, Bell, X, LogOut } from "lucide-react";
 import Link from "next/link";
 import Image from "next/image";
-import { useState, useRef, type MouseEvent, useEffect } from "react";
+import { useState, useRef, useEffect } from "react";
 import { motion } from "framer-motion";
 import { usePathname, useRouter } from "next/navigation";
 import { signOut, useSession } from "next-auth/react";
 
-const variants = { hidden: { opacity: 0, x: 20 }, visible: { opacity: 1, x: 0 } };
-const containerVariants = { hidden: { opacity: 0 }, visible: { opacity: 1, transition: { staggerChildren: 0.1 } } };
+// Helper: safely get klimaUser from localStorage
+const getKlimaUser = () => {
+  if (typeof window === "undefined") return null;
+  try {
+    const item = localStorage.getItem("klimaUser");
+    return item ? JSON.parse(item) : null;
+  } catch {
+    return null;
+  }
+};
 
 const Header = () => {
   const [showMenu, setShowMenu] = useState(false);
@@ -18,14 +26,16 @@ const Header = () => {
   const ref = useRef<HTMLDivElement | null>(null);
   const pathname = usePathname();
   const router = useRouter();
-
   const { data: session, status } = useSession();
 
   const [user, setUser] = useState<any>(null);
+  const [hasCompletedOnboarding, setHasCompletedOnboarding] = useState(false);
 
+  // Load user + onboarding status
   useEffect(() => {
-    const stored = localStorage.getItem("klimaUser");
-    if (stored) setUser(JSON.parse(stored));
+    const storedUser = getKlimaUser();
+    setUser(storedUser);
+    setHasCompletedOnboarding(!!storedUser?.hasCompletedOnboarding);
   }, []);
 
   const isGoogleLogin = status === "authenticated" && session?.user;
@@ -39,36 +49,33 @@ const Header = () => {
     return namePart.slice(0, 2).toUpperCase();
   };
 
-  const userEmail = isGoogleLogin ? session!.user!.email! : user?.email || "";
+  const userEmail = isGoogleLogin ? session?.user?.email || "" : user?.email || "";
   const initials = userEmail ? getInitials(userEmail) : "??";
 
-  // FIXED LOGOUT — Works 100% after Google login
+  // FULLY WORKING LOGOUT (Google + Email + Storage)
   const handleLogout = async () => {
-    // 1. Clear Auth.js session (Google)
     if (isGoogleLogin) {
       await signOut({ redirect: false });
     }
 
-    // 2. Clear your custom storage
     localStorage.removeItem("klimaUser");
     document.cookie = "klimaUser=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT";
 
-    // 3. Reset local state
     setUser(null);
+    setHasCompletedOnboarding(false);
     setShowDropdown(false);
     setShowMenu(false);
 
-    // 4. Force session to reload on next render
-    window.location.href = "/sign-up"; // Full reload = clean slate
-    // OR use: router.push("/sign-up") + router.refresh() if you prefer SPA
+    window.location.href = "/sign-up"; // Full clean reload
   };
 
-  const handleClick = (e: MouseEvent<HTMLDivElement>) => {
+  const handleClick = (e: any) => {
     if (ref.current && e.target === ref.current) setShowMenu(false);
   };
 
   const isActive = (path: string) => pathname === path || pathname.startsWith(`${path}/`);
 
+  // NAV ITEMS — DISABLED IF NO ONBOARDING
   const navItems = [
     { href: "/dashboard", label: "Dashboard", icon: home, alt: "Dashboard" },
     { href: "/projects", label: "Projects", icon: briefcase, alt: "Projects", badge: "12 new", badgeColor: "green" },
@@ -92,8 +99,31 @@ const Header = () => {
         <nav className="hidden md:flex space-x-8 text-gray-700 text-sm font-medium">
           {navItems.map(({ href, label, icon, alt, badge, badgeColor }) => {
             const active = isActive(href);
-            return (
-              <Link key={href} href={href} className={`flex flex-col items-center space-y-2 transition-colors ${active ? "text-green-700" : "hover:text-green-700"}`}>
+            const disabled = !hasCompletedOnboarding;
+
+            return disabled ? (
+              <div
+                key={href}
+                className="flex flex-col items-center space-y-2 opacity-40 cursor-not-allowed"
+                title="Complete your profile to access"
+              >
+                <div className="flex items-center space-x-1">
+                  <Image src={icon} alt={alt} width={href === "/activities" ? 10 : 16} height={href === "/activities" ? 10 : 16} />
+                  <span className="text-xs font-medium">{label}</span>
+                  {badge && (
+                    <span className={`ml-1 text-xs px-1.5 rounded-full ${badgeColor === "green" ? "bg-green-200 text-green-800" : "bg-blue-200 text-blue-800"}`}>
+                      {badge}
+                    </span>
+                  )}
+                </div>
+                <hr className="w-full h-px bg-transparent border-0" />
+              </div>
+            ) : (
+              <Link
+                key={href}
+                href={href}
+                className={`flex flex-col items-center space-y-2 transition-colors ${active ? "text-green-700" : "hover:text-green-700"}`}
+              >
                 <div className="flex items-center space-x-1">
                   <Image src={icon} alt={alt} width={href === "/activities" ? 10 : 16} height={href === "/activities" ? 10 : 16} />
                   <span className="text-xs font-medium">{label}</span>
@@ -137,7 +167,9 @@ const Header = () => {
                 >
                   <div className="px-4 py-3 border-b border-gray-100">
                     <p className="text-sm font-semibold text-gray-900 truncate">{userEmail}</p>
-                    <p className="text-xs text-gray-500">Signed in via {isGoogleLogin ? "Google" : "Email"}</p>
+                    <p className="text-xs text-gray-500">
+                      {hasCompletedOnboarding ? "Profile complete" : "Complete your profile"}
+                    </p>
                   </div>
                   <button
                     onClick={handleLogout}
@@ -152,15 +184,15 @@ const Header = () => {
           )}
         </div>
 
-        {/* Hamburger */}
-        <div
+        {/* Mobile Hamburger */}
+        <button
           onClick={() => setShowMenu(true)}
-          className="w-6 h-5 flex flex-col justify-between items-center text-4xl text-[#044D5E] md:hidden cursor-pointer overflow-hidden group"
+          className="md:hidden w-6 h-5 flex flex-col justify-between text-4xl text-[#044D5E] cursor-pointer overflow-hidden group"
         >
           <span className="w-full h-[2px] bg-[#044D5E] inline-flex transform group-hover:translate-x-2 transition-all ease-in-out duration-300"></span>
           <span className="w-full h-[2px] bg-[#044D5E] inline-flex transform translate-x-3 group-hover:translate-x-0 transition-all ease-in-out duration-300"></span>
           <span className="w-full h-[2px] bg-[#044D5E] inline-flex transform translate-x-1 group-hover:translate-x-3 transition-all ease-in-out duration-300"></span>
-        </div>
+        </button>
       </div>
 
       {/* Mobile Menu */}
@@ -168,21 +200,21 @@ const Header = () => {
         <div ref={ref} onClick={handleClick} className="absolute md:hidden top-0 right-0 w-full h-screen bg-[#F9FBFC]/50 backdrop-blur-lg flex flex-col items-end z-50">
           <motion.div initial={{ x: 20, opacity: 0 }} animate={{ x: 0, opacity: 1 }} className="w-[80%] h-full overflow-y-scroll bg-[#F9FBFC]/10 flex flex-col items-center px-4 py-18 relative">
             <X onClick={() => setShowMenu(false)} className="text-3xl text-textGreen cursor-pointer hover:text-red-500 absolute top-4 right-4 duration-300" />
-            <motion.div initial="hidden" animate="visible" variants={containerVariants} className="flex flex-col items-center gap-7">
+            <motion.div initial="hidden" animate="visible" className="flex flex-col items-center gap-7">
               <ul className="flex flex-col text-[13px] gap-7">
                 {navItems.map(({ href, label, icon, alt, badge, badgeColor }) => {
-                  const active = isActive(href);
-                  return (
-                    <Link key={href} onClick={() => setShowMenu(false)} href={href} className={`flex items-center gap-1 font-medium transition-colors ${active ? "text-green-700" : "text-textDark hover:text-textGreen"}`}>
-                      <motion.li variants={variants} className="flex items-center gap-2">
-                        <Image src={icon} alt={alt} width={href === "/activities" ? 10 : 16} height={href === "/activities" ? 10 : 16} />
-                        {label}
-                        {badge && (
-                          <span className={`ml-1 text-xs px-1.5 rounded-full ${badgeColor === "green" ? "bg-green-200 text-green-800" : "bg-blue-200 text-blue-800"}`}>
-                            {badge}
-                          </span>
-                        )}
-                      </motion.li>
+                  const disabled = !hasCompletedOnboarding;
+                  return disabled ? (
+                    <div key={href} className="flex items-center gap-2 opacity-40">
+                      <Image src={icon} alt={alt} width={href === "/activities" ? 10 : 16} height={href === "/activities" ? 10 : 16} />
+                      {label}
+                      {badge && <span className={`ml-1 text-xs px-1.5 rounded-full ${badgeColor === "green" ? "bg-green-200" : "bg-blue-200"}`}>{badge}</span>}
+                    </div>
+                  ) : (
+                    <Link key={href} onClick={() => setShowMenu(false)} href={href} className="flex items-center gap-2 font-medium text-textDark hover:text-textGreen">
+                      <Image src={icon} alt={alt} width={href === "/activities" ? 10 : 16} height={href === "/activities" ? 10 : 16} />
+                      {label}
+                      {badge && <span className={`ml-1 text-xs px-1.5 rounded-full ${badgeColor === "green" ? "bg-green-200" : "bg-blue-200"}`}>{badge}</span>}
                     </Link>
                   );
                 })}
