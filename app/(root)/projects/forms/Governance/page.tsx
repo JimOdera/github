@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ChevronDown, ChevronUp, Users } from 'lucide-react';
 
@@ -9,16 +9,10 @@ interface GovernanceProps {
 }
 
 const Governance = ({ projectId }: GovernanceProps) => {
-    // Form State
-    const [relationshipManager, setRelationshipManager] = useState<string>('');
-    const [keyHolderExpert, setKeyHolderExpert] = useState<string>('');
-
-    // Dropdown States
+    const [relationshipManager, setRelationshipManager] = useState('');
+    const [keyHolderExpert, setKeyHolderExpert] = useState('');
     const [relationshipManagerDropdownOpen, setRelationshipManagerDropdownOpen] = useState(false);
     const [keyHolderDropdownOpen, setKeyHolderDropdownOpen] = useState(false);
-
-    // Navigation
-    const sectionRef = useRef<HTMLDivElement>(null);
 
     const relationshipManagers = [
         'John Smith',
@@ -34,24 +28,19 @@ const Governance = ({ projectId }: GovernanceProps) => {
         'Robert Taylor',
     ];
 
-    // === UNIQUE STORAGE KEY FOR THIS PROJECT + STEP 4 ===
     const storageKey = `projectDraft_${projectId}_step4`;
 
-    // Auto-save to localStorage (debounced) — per project
+    // Auto-save
     useEffect(() => {
         const saveDraft = () => {
-            const draft = {
-                relationshipManager,
-                keyHolderExpert,
-            };
+            const draft = { relationshipManager, keyHolderExpert };
             localStorage.setItem(storageKey, JSON.stringify(draft));
         };
-
         const timeoutId = setTimeout(saveDraft, 600);
         return () => clearTimeout(timeoutId);
     }, [relationshipManager, keyHolderExpert, projectId]);
 
-    // Load draft on mount — only for this project
+    // Load draft
     useEffect(() => {
         const saved = localStorage.getItem(storageKey);
         if (saved) {
@@ -60,15 +49,14 @@ const Governance = ({ projectId }: GovernanceProps) => {
                 setRelationshipManager(draft.relationshipManager || '');
                 setKeyHolderExpert(draft.keyHolderExpert || '');
             } catch (e) {
-                console.warn('Failed to load Step 4 draft for project:', projectId);
+                console.warn('Failed to load Step 4 draft');
             }
         }
-    }, [projectId, storageKey]);
+    }, [projectId]);
 
     return (
         <div className="w-full mx-auto px-2 md:px-6 py-8">
             <div className="flex gap-8">
-                {/* Sidebar */}
                 <aside className="hidden lg:block w-72 flex-shrink-0">
                     <div className="sticky top-36">
                         <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-4">
@@ -81,8 +69,7 @@ const Governance = ({ projectId }: GovernanceProps) => {
                     </div>
                 </aside>
 
-                {/* Main Content
-                <div ref={sectionRef} className="flex-1 max-w-4xl">
+                <div className="flex-1 max-w-4xl">
                     <h1 className="text-2xl font-semibold text-[#044D5E] mb-8">
                         Responsibility & Oversight
                     </h1>
@@ -169,7 +156,8 @@ const Governance = ({ projectId }: GovernanceProps) => {
                         </div>
                     </div>
                 </div>
-            
+            </div>
+        </div>
     );
 };
 

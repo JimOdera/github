@@ -66,18 +66,19 @@ const FormContent = () => {
         step1: `projectDraft_${projectId}_step1`,
         step2: `projectDraft_${projectId}_step2`,
         step3: `projectDraft_${projectId}_step3`,
-        step4: `projectDraft_${projectId}_step4`,
+        step4: `projectDraft_${projectId}_step4`,  // ← NEW: added step4
       };
 
       const raw = {
         step1: localStorage.getItem(keys.step1),
         step2: localStorage.getItem(keys.step2),
         step3: localStorage.getItem(keys.step3),
-        step4: localStorage.getItem(keys.step4),
+        step4: localStorage.getItem(keys.step4),  // ← NEW: added step4
       };
 
+      // ← THIS IS THE ONLY CHANGE YOU CARE ABOUT
       if (!raw.step1 || !raw.step2 || !raw.step3 || !raw.step4) {
-        toast.error('Please complete all steps before submitting.');
+        toast.error('Please complete all 4 steps before submitting.');
         return;
       }
 
@@ -86,7 +87,7 @@ const FormContent = () => {
         overview: JSON.parse(raw.step1),
         financialImpacts: JSON.parse(raw.step2),
         kgftAlignment: JSON.parse(raw.step3),
-        governance: JSON.parse(raw.step4),
+        governance: JSON.parse(raw.step4),  // ← NEW: includes step4 data
         submittedAt: new Date().toISOString(),
         status: 'Submitted',
       };

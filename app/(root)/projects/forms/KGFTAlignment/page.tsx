@@ -1,67 +1,71 @@
 'use client';
 
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ChevronDown, ChevronUp, Trash2, Leaf, Plus } from 'lucide-react';
-
-interface EmissionFactor {
-    type: string;
-    value: string;
-}
+import { ChevronDown, ChevronUp } from 'lucide-react';
 
 interface KGFTAlignmentProps {
     projectId: string;
 }
 
 const KGFTAlignment = ({ projectId }: KGFTAlignmentProps) => {
-    // === Form State ===
-    const [activityOwner, setActivityOwner] = useState('');
+    // === FORM STATES ===
+    const [projectOwner, setProjectOwner] = useState('');
     const [greenClassificationReason, setGreenClassificationReason] = useState('');
     const [genderEquity, setGenderEquity] = useState<'yes' | 'no' | null>(null);
     const [selectedUseOfProceeds, setSelectedUseOfProceeds] = useState<string | null>(null);
     const [financingUse, setFinancingUse] = useState('');
-    const [activityLocation, setActivityLocation] = useState('');
+    const [physicalLocation, setPhysicalLocation] = useState('');
     const [listedInKGFT, setListedInKGFT] = useState<'yes' | 'no' | 'pending' | null>(null);
     const [mitigationCategorySelected, setMitigationCategorySelected] = useState<string[]>([]);
     const [selectedActivityType, setSelectedActivityType] = useState<string | null>(null);
     const [ghgReduction, setGhgReduction] = useState('');
-    const [selectedGhc, setSelectedGhc] = useState<string | null>(null);
-    const [ghgEmissionMechanism, setGhgEmissionMechanism] = useState('');
+    const [selectedGhcMechanism, setSelectedGhcMechanism] = useState<string | null>(null);
     const [activityScale, setActivityScale] = useState('');
+    const [selectedEmissionFactor, setSelectedEmissionFactor] = useState<string | null>(null);
     const [annualEmissionReduction, setAnnualEmissionReduction] = useState('');
     const [supportingEvidence, setSupportingEvidence] = useState<'yes' | 'no' | 'pending' | null>(null);
     const [dnshMet, setDnshMet] = useState<'yes' | 'no' | 'pending' | null>(null);
     const [socialSafeguard, setSocialSafeguard] = useState<'yes' | 'no' | 'pending' | null>(null);
     const [alignmentStatus, setAlignmentStatus] = useState<'yes' | 'no' | 'pending' | null>(null);
 
-    // Emission Factors
-    const [emissionFactors, setEmissionFactors] = useState<EmissionFactor[]>([]);
-    const [selectedEmissionFactorType, setSelectedEmissionFactorType] = useState<string | null>(null);
-    const [selectedEmissionFactorValue, setSelectedEmissionFactorValue] = useState<string | null>(null);
-
     // Dropdown States
     const [useOfProceedsDropdownOpen, setUseOfProceedsDropdownOpen] = useState(false);
     const [activityTypeDropdownOpen, setActivityTypeDropdownOpen] = useState(false);
-    const [ghcDropdownOpen, setGhcDropdownOpen] = useState(false);
-    const [emissionFactorTypeDropdownOpen, setEmissionFactorTypeDropdownOpen] = useState(false);
-    const [emissionFactorValueDropdownOpen, setEmissionFactorValueDropdownOpen] = useState(false);
+    const [ghcMechanismDropdownOpen, setGhcMechanismDropdownOpen] = useState(false);
+    const [emissionFactorDropdownOpen, setEmissionFactorDropdownOpen] = useState(false);
+    const [countyDropdownOpen, setCountyDropdownOpen] = useState(false);
 
     // Navigation
-    const sectionRef = useRef<HTMLDivElement>(null);
+    const [activeSection, setActiveSection] = useState('Project Basics');
+    const basicsRef = useRef<HTMLDivElement>(null);
+    const ghgRef = useRef<HTMLDivElement>(null);
+    const finalRef = useRef<HTMLDivElement>(null);
 
-    // Options
+    const sectionRefs = {
+        'Project Basics': basicsRef,
+        'GHG Reduction': ghgRef,
+        'Final Status': finalRef,
+    };
+
+    // === DATA FROM YOUR TABLE ===
     const useOfProceedsOptions = [
-        'Renewable Energy- Solar',
-        'Renewable Energy- Wind',
-        'Renewable Energy- Hydro',
-        'Renewable Energy- Biomass',
-        'Energy Storage',
-        'Energy Transmission & Distribution',
-        'Grid Infrastructure',
-        'Efficient lighting',
+        'Renewable Energy – Solar', 'Renewable Energy – Wind', 'Renewable Energy – Hydro', 'Renewable Energy – Biomass',
+        'Energy Storage', 'Energy Transmission & Distribution', 'Grid Infrastructure (Smart Grids, etc.)',
+        'Efficient Lighting or Appliances', 'Regenerative Agriculture', 'Agroforestry', 'Climate-Smart Irrigation',
+        'Sustainable Crop Production', 'Sustainable Livestock Management', 'Organic Fertiliser Production',
+        'Forest Restoration / Afforestation', 'Avoided Deforestation', 'Land Use Carbon Sequestration',
+        'Electric Vehicle Manufacturing', 'Electric Mobility Infrastructure (EV Charging)', 'Public Transport Electrification',
+        'Non-Motorised Transport Infrastructure', 'Low-Emission Vehicle Fleets', 'Energy Efficient Manufacturing Processes',
+        'Production of Renewable Energy Equipment', 'Low-Carbon Cement or Concrete', 'Circular Economy Practices',
+        'Green Building Materials', 'Industrial Process Electrification', 'Biogas from Waste', 'Composting and Organic Waste Recycling',
+        'Landfill Methane Capture', 'Waste-to-Energy', 'Water Efficiency Technologies', 'Wastewater Treatment and Reuse',
+        'Green Building Design', 'Retrofitting for Energy Efficiency', 'Use of Low-Carbon Materials', 'Smart Building Systems',
+        'Passive Cooling / Ventilation', 'Smart Grids and Smart Meters', 'Climate Data Platforms', 'Monitoring and Verification Tools',
+        'Environmental Management Software'
     ];
 
-    const ghcOptions = [
+    const ghcMechanisms = [
         'Displacement of grid electricity through renewable energy (e.g., solar, wind, hydro)',
         'On-site renewable energy generation (e.g., rooftop solar)',
         'Energy efficiency improvements (e.g., machinery upgrades, LED lighting)',
@@ -70,46 +74,121 @@ const KGFTAlignment = ({ projectId }: KGFTAlignmentProps) => {
         'Process optimization to reduce fuel or electricity use',
         'Waste-to-energy (biogas, landfill methane capture)',
         'Fuel switch to lower-emission fuels (e.g., coal to biomass, diesel to LPG)',
+        'Carbon capture and storage (CCS)',
+        'Carbon capture and utilisation (CCU)',
+        'Adoption of regenerative agriculture to enhance soil carbon',
+        'Reforestation, afforestation, or agroforestry',
+        'Avoided deforestation or forest degradation',
+        'Methane capture from livestock or manure management',
+        'Organic waste composting (reduces methane)',
+        'Reduced use of synthetic fertilisers',
+        'Sustainable biomass or biofuel production',
+        'Recovery and recycling of industrial waste heat',
+        'Water efficiency measures reducing pumping energy',
+        'Digitization or monitoring leading to optimized energy use'
+    ];
+
+    const emissionFactors = [
+        'Grid electricity – 0.72 tCO₂e/MWh', 'Diesel – 2.68 tCO₂e/m³', 'Petrol – 2.31 tCO₂e/m³', 'LPG – 1.51 tCO₂e/m³',
+        'Coal (bituminous) – 2.42 tCO₂e/tonne', 'Natural gas – 0.202 tCO₂e/MWh', 'Solar PV (displaces grid) – 0.72 tCO₂e/MWh',
+        'Wind power (displaces grid) – 0.72 tCO₂e/MWh', 'Biogas – 1.00 tCO₂e/household/year', 'Improved cookstove – 2.00 tCO₂e/stove/year',
+        'Electric vehicle – 0.20 tCO₂e/km (fuel displacement)', 'Afforestation – 10.00 tCO₂e/ha/year', 'Reforestation – 7.00 tCO₂e/ha/year',
+        'Regenerative agriculture – 2.00 tCO₂e/ha/year', 'Manure methane capture – 1.50 tCO₂e/animal/year', 'Composting – 0.50 tCO₂e/tonne organic waste',
+        'Organic fertiliser – 0.25 tCO₂e/tonne applied', 'Recycled heat recovery – 0.30 tCO₂e/MWh', 'Water pumping efficiency – 0.72 tCO₂e/MWh saved',
+        'Digital monitoring (indirect) – 0.10 tCO₂e/unit/year (estimated)'
+    ];
+
+    // === KENYAN COUNTIES ===
+    const kenyanCounties = [
+        'Baringo', 'Bomet', 'Bungoma', 'Busia', 'Elgeyo-Marakwet', 'Embu', 'Garissa',
+        'Homa Bay', 'Isiolo', 'Kajiado', 'Kakamega', 'Kericho', 'Kiambu', 'Kilifi',
+        'Kirinyaga', 'Kisii', 'Kisumu', 'Kitui', 'Kwale', 'Laikipia', 'Lamu',
+        'Machakos', 'Makueni', 'Mandera', 'Marsabit', 'Meru', 'Migori', 'Mombasa',
+        'Murang\'a', 'Nairobi', 'Nakuru', 'Nandi', 'Narok', 'Nyamira', 'Nyandarua',
+        'Nyeri', 'Samburu', 'Siaya', 'Taita-Taveta', 'Tana River', 'Tharaka-Nithi',
+        'Trans Nzoia', 'Turkana', 'Uasin Gishu', 'Vihiga', 'Wajir', 'West Pokot'
     ];
 
     const activityTypes = ['Own Performance', 'Enabling', 'Transitional'];
+    const mitigationCategories = ['Renewable Energy', 'Strengthening land carbon sinks', 'Clean mobility', 'Carbon Energy'];
 
-    const mitigationCategories = [
-        'Renewable Energy',
-        'Strengthening land carbon sinks',
-        'Clean mobility',
-        'Carbon Energy',
-    ];
+    // === AUTO-CALCULATION (REAL-TIME, BULLETPROOF) ===
+    const calculatedReduction = useMemo(() => {
+        if (!activityScale || !selectedEmissionFactor) {
+            setAnnualEmissionReduction('');
+            return '';
+        }
 
-    const emissionFactorTypes = ['Grid Electricity', 'Land Use'];
-    const emissionFactorValues = ['0.72 tCO₂e/MWh', '1.5 tCO₂e/ha'];
+        // Extract number from activity scale: handles "20,000", "500", "1.5", commas, spaces
+        const scaleMatch = activityScale.match(/[\d,]+(\.\d+)?/);
+        const scaleNum = scaleMatch ? parseFloat(scaleMatch[0].replace(/,/g, '')) : null;
 
-    // === UNIQUE STORAGE KEY FOR THIS PROJECT + STEP 3 ===
+        // Extract factor: handles "–", "−", "–" (en-dash, em-dash, hyphen)
+        const factorMatch = selectedEmissionFactor.match(/[–−–-]\s*([\d.]+)/);
+        const factorNum = factorMatch ? parseFloat(factorMatch[1]) : null;
+
+        if (scaleNum !== null && factorNum !== null && scaleNum > 0 && factorNum > 0) {
+            const result = scaleNum * factorNum;
+            const formatted = result.toLocaleString('en-US', {
+                maximumFractionDigits: 2,
+                minimumFractionDigits: 0,
+            });
+            setAnnualEmissionReduction(formatted);
+            return formatted;
+        }
+
+        setAnnualEmissionReduction('');
+        return '';
+    }, [activityScale, selectedEmissionFactor]);
+
+    // === NAVIGATION ===
+    const handleNavClick = (section: string) => {
+        setActiveSection(section);
+        sectionRefs[section as keyof typeof sectionRefs].current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    };
+
+    useEffect(() => {
+        const observer = new IntersectionObserver(
+            (entries) => {
+                entries.forEach((entry) => {
+                    if (entry.isIntersecting) {
+                        const section = entry.target.getAttribute('data-section');
+                        if (section) setActiveSection(section);
+                    }
+                });
+            },
+            { threshold: 0.3, rootMargin: '-100px 0px -50% 0px' }
+        );
+
+        Object.values(sectionRefs).forEach((ref) => ref.current && observer.observe(ref.current));
+        return () => Object.values(sectionRefs).forEach((ref) => ref.current && observer.unobserve(ref.current));
+    }, []);
+
+    // === UNIQUE STORAGE KEY ===
     const storageKey = `projectDraft_${projectId}_step3`;
 
-    // === Auto-save to localStorage (debounced) ===
+    // === AUTO-SAVE ===
     useEffect(() => {
         const saveDraft = () => {
             const draft = {
-                activityOwner,
+                projectOwner,
                 greenClassificationReason,
                 genderEquity,
                 selectedUseOfProceeds,
                 financingUse,
-                activityLocation,
+                physicalLocation,
                 listedInKGFT,
                 mitigationCategorySelected,
                 selectedActivityType,
                 ghgReduction,
-                selectedGhc,
-                ghgEmissionMechanism,
+                selectedGhcMechanism,
                 activityScale,
+                selectedEmissionFactor,
                 annualEmissionReduction,
                 supportingEvidence,
                 dnshMet,
                 socialSafeguard,
                 alignmentStatus,
-                emissionFactors,
             };
             localStorage.setItem(storageKey, JSON.stringify(draft));
         };
@@ -117,77 +196,64 @@ const KGFTAlignment = ({ projectId }: KGFTAlignmentProps) => {
         const timeoutId = setTimeout(saveDraft, 600);
         return () => clearTimeout(timeoutId);
     }, [
-        activityOwner,
-        greenClassificationReason,
-        genderEquity,
-        selectedUseOfProceeds,
-        financingUse,
-        activityLocation,
-        listedInKGFT,
-        mitigationCategorySelected,
-        selectedActivityType,
-        ghgReduction,
-        selectedGhc,
-        ghgEmissionMechanism,
-        activityScale,
-        annualEmissionReduction,
-        supportingEvidence,
-        dnshMet,
-        socialSafeguard,
-        alignmentStatus,
-        emissionFactors,
-        projectId,
+        projectOwner, greenClassificationReason, genderEquity, selectedUseOfProceeds, financingUse,
+        physicalLocation, listedInKGFT, mitigationCategorySelected, selectedActivityType,
+        ghgReduction, selectedGhcMechanism, activityScale, selectedEmissionFactor,
+        annualEmissionReduction, supportingEvidence, dnshMet, socialSafeguard, alignmentStatus, projectId,
     ]);
 
-    // === Load draft on mount ===
+    // === LOAD DRAFT ===
     useEffect(() => {
         const saved = localStorage.getItem(storageKey);
         if (saved) {
             try {
                 const draft = JSON.parse(saved);
-                setActivityOwner(draft.activityOwner || '');
+                setProjectOwner(draft.projectOwner || '');
                 setGreenClassificationReason(draft.greenClassificationReason || '');
                 setGenderEquity(draft.genderEquity || null);
                 setSelectedUseOfProceeds(draft.selectedUseOfProceeds || null);
                 setFinancingUse(draft.financingUse || '');
-                setActivityLocation(draft.activityLocation || '');
+                setPhysicalLocation(draft.physicalLocation || '');
                 setListedInKGFT(draft.listedInKGFT || null);
                 setMitigationCategorySelected(draft.mitigationCategorySelected || []);
                 setSelectedActivityType(draft.selectedActivityType || null);
                 setGhgReduction(draft.ghgReduction || '');
-                setSelectedGhc(draft.selectedGhc || null);
-                setGhgEmissionMechanism(draft.ghgEmissionMechanism || '');
+                setSelectedGhcMechanism(draft.selectedGhcMechanism || null);
                 setActivityScale(draft.activityScale || '');
+                setSelectedEmissionFactor(draft.selectedEmissionFactor || null);
                 setAnnualEmissionReduction(draft.annualEmissionReduction || '');
                 setSupportingEvidence(draft.supportingEvidence || null);
                 setDnshMet(draft.dnshMet || null);
                 setSocialSafeguard(draft.socialSafeguard || null);
                 setAlignmentStatus(draft.alignmentStatus || null);
-                setEmissionFactors(draft.emissionFactors || []);
             } catch (e) {
                 console.warn('Failed to load Step 3 draft for project:', projectId);
             }
         }
     }, [projectId, storageKey]);
 
+    // === UTILITY FUNCTIONS ===
     const toggleMitigationCategory = (category: string) => {
         setMitigationCategorySelected(prev =>
-            prev.includes(category)
-                ? prev.filter(c => c !== category)
-                : [...prev, category]
+            prev.includes(category) ? prev.filter(c => c !== category) : [...prev, category]
         );
     };
 
-    const addEmissionFactor = () => {
-        if (selectedEmissionFactorType && selectedEmissionFactorValue) {
-            setEmissionFactors(prev => [...prev, { type: selectedEmissionFactorType, value: selectedEmissionFactorValue }]);
-            setSelectedEmissionFactorType(null);
-            setSelectedEmissionFactorValue(null);
-        }
-    };
+    const calculateAnnualReduction = () => {
+        if (activityScale && selectedEmissionFactor) {
+            // Extract numbers from activity scale (e.g., "20,000 MWh/year" → 20000)
+            const scaleNum = parseFloat(activityScale.replace(/[^\d.,]/g, '').replace(',', ''));
 
-    const removeEmissionFactor = (index: number) => {
-        setEmissionFactors(prev => prev.filter((_, i) => i !== index));
+            // Extract number from emission factor (e.g., "0.72 tCO₂e/MWh" → 0.72)
+            const factorNum = parseFloat(selectedEmissionFactor.split('–')[1]?.split(' ')[0] || '0');
+
+            if (!isNaN(scaleNum) && !isNaN(factorNum)) {
+                const result = (scaleNum * factorNum).toFixed(2);
+                setAnnualEmissionReduction(result);
+                return result;
+            }
+        }
+        return '';
     };
 
     return (
@@ -195,53 +261,72 @@ const KGFTAlignment = ({ projectId }: KGFTAlignmentProps) => {
             <div className="flex gap-8">
                 {/* Sidebar */}
                 <aside className="hidden lg:block w-72 flex-shrink-0">
-                    <div className="sticky top-36">
+                    <div className="sticky top-36 space-y-4">
                         <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-4">
                             Form Sections
                         </h3>
-                        <button className="w-full flex items-center gap-3 px-4 py-3 rounded-lg bg-[#F2F2F2] text-[#044D5E] font-medium shadow-sm">
-                            <Leaf size={18} />
-                            <span className="text-xs">KGFT Alignment</span>
-                        </button>
+                        <nav className="space-y-1">
+                            {[
+                                { name: 'Project Basics', icon: ChevronDown },
+                                { name: 'GHG Reduction', icon: ChevronDown },
+                                { name: 'Final Status', icon: ChevronDown },
+                            ].map(({ name, icon: Icon }) => (
+                                <button
+                                    key={name}
+                                    onClick={() => handleNavClick(name)}
+                                    className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg text-left transition-all ${activeSection === name
+                                        ? 'bg-[#F2F2F2] text-[#044D5E] font-medium shadow-sm'
+                                        : 'text-gray-600 hover:bg-gray-50'
+                                        }`}
+                                >
+                                    <Icon size={18} />
+                                    <span className="text-xs">{name}</span>
+                                </button>
+                            ))}
+                        </nav>
                     </div>
                 </aside>
 
                 {/* Main Form */}
-                <div ref={sectionRef} className="flex-1 max-w-4xl">
-                    <h1 className="text-2xl font-semibold text-[#044D5E] mb-8">KGFT Alignment Assessment</h1>
+                <div className="flex-1 max-w-4xl space-y-8">
+                    {/* PROJECT BASICS */}
+                    <section ref={basicsRef} data-section="Project Basics" className="space-y-6 scroll-mt-24">
+                        <h2 className="text-2xl font-semibold text-[#044D5E]">KGFT Alignment</h2>
 
-                    <div className="space-y-8">
-                        {/* Activity Owner */}
+                        {/* Project Owner */}
                         <div>
                             <label className="block text-xs font-medium text-gray-700 mb-2">
-                                Indicate who owns or controls the activity *
+                                Indicate who owns or controls the Project* <br />
+                                <span className="text-xs text-gray-500">(e.g., mixed gender ownership, Women-owned, Not women-owned, Unknown)</span>
                             </label>
                             <textarea
-                                value={activityOwner}
-                                onChange={(e) => setActivityOwner(e.target.value)}
-                                rows={4}
+                                value={projectOwner}
+                                onChange={(e) => setProjectOwner(e.target.value)}
+                                rows={3}
                                 className="w-full px-4 py-3 border border-gray-300 rounded-lg resize-none focus:outline-none focus:border-gray-500 text-xs"
-                                placeholder="e.g. Farmer cooperative, private company, government entity..."
+                                placeholder="e.g., Mixed gender ownership, Women-owned cooperative..."
                             />
                         </div>
 
                         {/* Green Classification Reason */}
                         <div>
                             <label className="block text-xs font-medium text-gray-700 mb-2">
-                                Why is this activity being considered for green classification? *
+                                Briefly explain why the Project is being considered for green classification* <br />
+                                <span className="text-xs text-gray-500">(e.g., The solar mini-grid reduces emissions)</span>
                             </label>
                             <textarea
                                 value={greenClassificationReason}
                                 onChange={(e) => setGreenClassificationReason(e.target.value)}
                                 rows={4}
                                 className="w-full px-4 py-3 border border-gray-300 rounded-lg resize-none focus:outline-none focus:border-gray-500 text-xs"
+                                placeholder="e.g., The solar mini-grid reduces emissions by displacing diesel generators..."
                             />
                         </div>
 
                         {/* Gender Equity */}
                         <div>
                             <p className="text-xs font-medium text-gray-700 mb-3">
-                                Does the project contribute to gender equity? (e.g., women-owned/operated)
+                                Does the project contribute to gender equity? (e.g., operated by women)
                             </p>
                             <div className="flex gap-3">
                                 {(['yes', 'no'] as const).map(val => (
@@ -249,13 +334,12 @@ const KGFTAlignment = ({ projectId }: KGFTAlignmentProps) => {
                                         key={val}
                                         type="button"
                                         onClick={() => setGenderEquity(val)}
-                                        className={`px-5 py-2.5 rounded-lg border text-xs font-medium transition ${
-                                            genderEquity === val
-                                                ? val === 'yes'
-                                                    ? 'bg-green-100 border-green-500 text-green-700'
-                                                    : 'bg-red-100 border-red-500 text-red-700'
-                                                : 'border-gray-300 hover:bg-gray-50'
-                                        }`}
+                                        className={`px-6 py-3 rounded-lg border-2 text-xs font-medium transition-all ${genderEquity === val
+                                            ? val === 'yes'
+                                                ? 'bg-green-100 border-green-500 text-green-700 shadow-sm'
+                                                : 'bg-red-100 border-red-500 text-red-700 shadow-sm'
+                                            : 'border-gray-300 hover:bg-gray-50 hover:border-gray-400'
+                                            }`}
                                     >
                                         {val === 'yes' ? 'Yes' : 'No'}
                                     </button>
@@ -263,14 +347,12 @@ const KGFTAlignment = ({ projectId }: KGFTAlignmentProps) => {
                             </div>
                         </div>
 
-                        {/* Use of Proceeds */}
+                        {/* Use of Proceeds Dropdown */}
                         <div className="relative">
-                            <label className="block text-xs font-medium text-gray-700 mb-2">
-                                Use of Proceeds (Sub-sector) *
-                            </label>
+                            <label className="block text-xs font-medium text-gray-700 mb-2">Use of Proceeds (sub-sector) *</label>
                             <div
                                 onClick={() => setUseOfProceedsDropdownOpen(!useOfProceedsDropdownOpen)}
-                                className="w-full px-4 py-3 border border-gray-300 rounded-lg flex justify-between items-center cursor-pointer hover:bg-gray-50 text-xs"
+                                className="w-full px-4 py-3 border border-gray-300 rounded-lg flex justify-between items-center cursor-pointer hover:bg-gray-50 text-xs transition"
                             >
                                 <span className={selectedUseOfProceeds ? 'text-gray-900' : 'text-gray-500'}>
                                     {selectedUseOfProceeds || 'Select sub-sector'}
@@ -292,7 +374,7 @@ const KGFTAlignment = ({ projectId }: KGFTAlignmentProps) => {
                                                     setSelectedUseOfProceeds(option);
                                                     setUseOfProceedsDropdownOpen(false);
                                                 }}
-                                                className="px-4 py-2.5 hover:bg-gray-50 cursor-pointer text-xs"
+                                                className="px-4 py-3 hover:bg-gray-50 cursor-pointer text-xs border-b border-gray-100 last:border-b-0"
                                             >
                                                 {option}
                                             </div>
@@ -305,50 +387,79 @@ const KGFTAlignment = ({ projectId }: KGFTAlignmentProps) => {
                         {/* Financing Use */}
                         <div>
                             <label className="block text-xs font-medium text-gray-700 mb-2">
-                                What is the financing being used for? (What/How/Why/Scale) *
+                                Describe what the financing is being used for i.e what/how/why and scale* <br />
+                                <span className="text-xs text-gray-500">(e.g., Adoption of regenerative agriculture practices on 500 hectares of degraded cropland in Narok County, focused on soil carbon sequestration and reduced fertiliser use.)</span>
                             </label>
                             <textarea
                                 value={financingUse}
                                 onChange={(e) => setFinancingUse(e.target.value)}
                                 rows={5}
                                 className="w-full px-4 py-3 border border-gray-300 rounded-lg resize-none focus:outline-none focus:border-gray-500 text-xs"
+                                placeholder="Describe the specific use of financing..."
                             />
                         </div>
 
                         {/* Physical Location */}
-                        <div>
+                        {/* Physical Location - County Dropdown */}
+                        <div className="relative">
                             <label className="block text-xs font-medium text-gray-700 mb-2">
-                                Physical location of the activity *
+                                Enter the physical location of the Project that is specific to the use of proceeds* <br />
+                                <span className="text-xs text-gray-500">(Select County)</span>
                             </label>
-                            <textarea
-                                value={activityLocation}
-                                onChange={(e) => setActivityLocation(e.target.value)}
-                                rows={3}
-                                className="w-full px-4 py-3 border border-gray-300 rounded-lg resize-none focus:outline-none focus:border-gray-500 text-xs"
-                                placeholder="e.g. Kwale County, Kenya – 4.2°S, 39.5°E"
-                            />
+                            <div
+                                onClick={() => setCountyDropdownOpen(!countyDropdownOpen)}
+                                className="w-full px-4 py-3 border border-gray-300 rounded-lg flex justify-between items-center cursor-pointer hover:bg-gray-50 text-xs transition bg-white"
+                            >
+                                <span className={physicalLocation ? 'text-gray-900' : 'text-gray-500'}>
+                                    {physicalLocation || 'Select County'}
+                                </span>
+                                {countyDropdownOpen ? <ChevronUp size={18} /> : <ChevronDown size={18} />}
+                            </div>
+
+                            <AnimatePresence>
+                                {countyDropdownOpen && (
+                                    <motion.div
+                                        initial={{ opacity: 0, y: -8 }}
+                                        animate={{ opacity: 1, y: 0 }}
+                                        exit={{ opacity: 0, y: -8 }}
+                                        className="absolute z-30 w-full mt-1 bg-white border border-gray-200 rounded-lg shadow-lg max-h-60 overflow-y-auto"
+                                    >
+                                        {kenyanCounties.map(county => (
+                                            <div
+                                                key={county}
+                                                onClick={() => {
+                                                    setPhysicalLocation(county);
+                                                    setCountyDropdownOpen(false);
+                                                }}
+                                                className="px-4 py-3 hover:bg-gray-50 cursor-pointer text-xs border-b border-gray-100 last:border-b-0"
+                                            >
+                                                {county}
+                                            </div>
+                                        ))}
+                                    </motion.div>
+                                )}
+                            </AnimatePresence>
                         </div>
 
                         {/* Listed in KGFT */}
                         <div>
-                            <p className="text-xs font-medium text-gray-700 mb-3">Is activity listed in KGFT Mitigation Categories? *</p>
+                            <p className="text-xs font-medium text-gray-700 mb-3">Is Activity listed in KGFT Mitigation Categories? *</p>
                             <div className="flex flex-wrap gap-3">
                                 {(['yes', 'no', 'pending'] as const).map(val => (
                                     <button
                                         key={val}
                                         type="button"
                                         onClick={() => setListedInKGFT(val)}
-                                        className={`px-5 py-2.5 rounded-lg border text-xs font-medium capitalize transition ${
-                                            listedInKGFT === val
-                                                ? val === 'yes'
-                                                    ? 'bg-green-100 border-green-500 text-green-700'
-                                                    : val === 'no'
-                                                        ? 'bg-red-100 border-red-500 text-red-700'
-                                                        : 'bg-orange-100 border-orange-500 text-orange-700'
-                                                : 'border-gray-300 hover:bg-gray-50'
-                                        }`}
+                                        className={`px-6 py-3 rounded-lg border-2 text-xs font-medium capitalize transition-all ${listedInKGFT === val
+                                            ? val === 'yes'
+                                                ? 'bg-green-100 border-green-500 text-green-700 shadow-sm'
+                                                : val === 'no'
+                                                    ? 'bg-red-100 border-red-500 text-red-700 shadow-sm'
+                                                    : 'bg-orange-100 border-orange-500 text-orange-700 shadow-sm'
+                                            : 'border-gray-300 hover:bg-gray-50 hover:border-gray-400'
+                                            }`}
                                     >
-                                        {val === 'pending' ? 'Pending' : val === 'yes' ? 'Yes' : 'No'}
+                                        {val === 'pending' ? 'Pending' : val.charAt(0).toUpperCase() + val.slice(1)}
                                     </button>
                                 ))}
                             </div>
@@ -356,18 +467,17 @@ const KGFTAlignment = ({ projectId }: KGFTAlignmentProps) => {
 
                         {/* Mitigation Categories */}
                         <div>
-                            <p className="text-xs font-medium text-gray-700 mb-3">Select applicable KGFT Mitigation Categories *</p>
-                            <div className="grid grid-cols-2 gap-3">
+                            <p className="text-xs font-medium text-gray-700 mb-3">KGFT Mitigation Category *</p>
+                            <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
                                 {mitigationCategories.map(cat => (
                                     <button
                                         key={cat}
                                         type="button"
                                         onClick={() => toggleMitigationCategory(cat)}
-                                        className={`px-4 py-2.5 rounded-lg border text-xs font-medium transition ${
-                                            mitigationCategorySelected.includes(cat)
-                                                ? 'bg-green-100 border-green-500 text-green-700'
-                                                : 'border-gray-300 hover:bg-gray-50'
-                                        }`}
+                                        className={`px-4 py-3 rounded-lg border-2 text-xs font-medium transition-all ${mitigationCategorySelected.includes(cat)
+                                            ? 'bg-green-100 border-green-500 text-green-700 shadow-sm'
+                                            : 'border-gray-300 hover:bg-gray-50 hover:border-gray-400'
+                                            }`}
                                     >
                                         {cat}
                                     </button>
@@ -375,12 +485,12 @@ const KGFTAlignment = ({ projectId }: KGFTAlignmentProps) => {
                             </div>
                         </div>
 
-                        {/* Activity Type */}
+                        {/* Project Type */}
                         <div className="relative">
-                            <label className="block text-xs font-medium text-gray-700 mb-2">Activity Type *</label>
+                            <label className="block text-xs font-medium text-gray-700 mb-2">Project Type *</label>
                             <div
                                 onClick={() => setActivityTypeDropdownOpen(!activityTypeDropdownOpen)}
-                                className="w-full px-4 py-3 border border-gray-300 rounded-lg flex justify-between items-center cursor-pointer hover:bg-gray-50 text-xs"
+                                className="w-full px-4 py-3 border border-gray-300 rounded-lg flex justify-between items-center cursor-pointer hover:bg-gray-50 text-xs transition"
                             >
                                 <span className={selectedActivityType ? 'text-gray-900' : 'text-gray-500'}>
                                     {selectedActivityType || 'Select type'}
@@ -393,7 +503,7 @@ const KGFTAlignment = ({ projectId }: KGFTAlignmentProps) => {
                                         initial={{ opacity: 0, y: -8 }}
                                         animate={{ opacity: 1, y: 0 }}
                                         exit={{ opacity: 0, y: -8 }}
-                                        className="absolute z-30 w-full mt-1 bg-white border border-gray-200 rounded-lg shadow-lg"
+                                        className="absolute z-30 w-full mt-1 bg-white border border-gray-200 rounded-lg shadow-lg max-h-40 overflow-y-auto"
                                     >
                                         {activityTypes.map(type => (
                                             <div
@@ -402,7 +512,7 @@ const KGFTAlignment = ({ projectId }: KGFTAlignmentProps) => {
                                                     setSelectedActivityType(type);
                                                     setActivityTypeDropdownOpen(false);
                                                 }}
-                                                className="px-4 py-2.5 hover:bg-gray-50 cursor-pointer text-xs"
+                                                className="px-4 py-3 hover:bg-gray-50 cursor-pointer text-xs border-b border-gray-100 last:border-b-0"
                                             >
                                                 {type}
                                             </div>
@@ -411,52 +521,62 @@ const KGFTAlignment = ({ projectId }: KGFTAlignmentProps) => {
                                 )}
                             </AnimatePresence>
                         </div>
+                    </section>
 
-                        {/* GHG Reduction & Mechanism */}
+                    <hr className="border-gray-200 my-8" />
+
+                    {/* GHG REDUCTION */}
+                    <section ref={ghgRef} data-section="GHG Reduction" className="space-y-6 scroll-mt-24">
+                        <h2 className="text-2xl font-semibold text-[#044D5E]">GHG Reduction</h2>
+
+                        {/* GHG Reduction Description */}
                         <div>
                             <label className="block text-xs font-medium text-gray-700 mb-2">
-                                GHG Emission Reduction Mechanism *
+                                GHG Reduction* <br />
+                                <span className="text-xs text-gray-500">Briefly state if the project results in GHG reduction</span>
                             </label>
                             <textarea
                                 value={ghgReduction}
                                 onChange={(e) => setGhgReduction(e.target.value)}
-                                rows={5}
+                                rows={4}
                                 className="w-full px-4 py-3 border border-gray-300 rounded-lg resize-none focus:outline-none focus:border-gray-500 text-xs"
-                                placeholder="Describe how GHG emissions are avoided or reduced..."
+                                placeholder="e.g., This project reduces GHG emissions by displacing fossil fuel-based electricity generation..."
                             />
                         </div>
 
+                        {/* GHG Emission Reduction Mechanism */}
                         <div className="relative">
                             <label className="block text-xs font-medium text-gray-700 mb-2">
-                                GHG Emission Reduction Pathway *
+                                GHG Emission Reduction Mechanism* <br />
+                                <span className="text-xs text-gray-500">Select from available mechanisms</span>
                             </label>
                             <div
-                                onClick={() => setGhcDropdownOpen(!ghcDropdownOpen)}
-                                className="w-full px-4 py-3 border border-gray-300 rounded-lg flex justify-between items-center cursor-pointer hover:bg-gray-50 text-xs"
+                                onClick={() => setGhcMechanismDropdownOpen(!ghcMechanismDropdownOpen)}
+                                className="w-full px-4 py-3 border border-gray-300 rounded-lg flex justify-between items-center cursor-pointer hover:bg-gray-50 text-xs transition"
                             >
-                                <span className={selectedGhc ? 'text-gray-900' : 'text-gray-500'}>
-                                    {selectedGhc || 'Select pathway'}
+                                <span className={selectedGhcMechanism ? 'text-gray-900' : 'text-gray-500'}>
+                                    {selectedGhcMechanism || 'Select mechanism'}
                                 </span>
-                                {ghcDropdownOpen ? <ChevronUp size={18} /> : <ChevronDown size={18} />}
+                                {ghcMechanismDropdownOpen ? <ChevronUp size={18} /> : <ChevronDown size={18} />}
                             </div>
                             <AnimatePresence>
-                                {ghcDropdownOpen && (
+                                {ghcMechanismDropdownOpen && (
                                     <motion.div
                                         initial={{ opacity: 0, y: -8 }}
                                         animate={{ opacity: 1, y: 0 }}
                                         exit={{ opacity: 0, y: -8 }}
                                         className="absolute z-30 w-full mt-1 bg-white border border-gray-200 rounded-lg shadow-lg max-h-60 overflow-y-auto"
                                     >
-                                        {ghcOptions.map(option => (
+                                        {ghcMechanisms.map(mechanism => (
                                             <div
-                                                key={option}
+                                                key={mechanism}
                                                 onClick={() => {
-                                                    setSelectedGhc(option);
-                                                    setGhcDropdownOpen(false);
+                                                    setSelectedGhcMechanism(mechanism);
+                                                    setGhcMechanismDropdownOpen(false);
                                                 }}
-                                                className="px-4 py-2.5 hover:bg-gray-50 cursor-pointer text-xs"
+                                                className="px-4 py-3 hover:bg-gray-50 cursor-pointer text-xs border-b border-gray-100 last:border-b-0"
                                             >
-                                                {option}
+                                                {mechanism}
                                             </div>
                                         ))}
                                     </motion.div>
@@ -464,158 +584,193 @@ const KGFTAlignment = ({ projectId }: KGFTAlignmentProps) => {
                             </AnimatePresence>
                         </div>
 
-                        {/* Emission Factors */}
-                        <div>
-                            <p className="text-xs font-medium text-gray-700 mb-4">Emission Factors Used</p>
-                            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                                <div className="relative">
-                                    <div
-                                        onClick={() => setEmissionFactorTypeDropdownOpen(!emissionFactorTypeDropdownOpen)}
-                                        className="w-full px-4 py-3 border border-gray-300 rounded-lg flex justify-between items-center cursor-pointer hover:bg-gray-50 text-xs"
-                                    >
-                                        <span className={selectedEmissionFactorType ? 'text-gray-900' : 'text-gray-500'}>
-                                            {selectedEmissionFactorType || 'Type'}
-                                        </span>
-                                        {emissionFactorTypeDropdownOpen ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
-                                    </div>
-                                    <AnimatePresence>
-                                        {emissionFactorTypeDropdownOpen && (
-                                            <motion.div className="absolute z-30 w-full mt-1 bg-white border border-gray-200 rounded-lg shadow-lg">
-                                                {emissionFactorTypes.map(t => (
-                                                    <div
-                                                        key={t}
-                                                        onClick={() => {
-                                                            setSelectedEmissionFactorType(t);
-                                                            setEmissionFactorTypeDropdownOpen(false);
-                                                        }}
-                                                        className="px-4 py-2 hover:bg-gray-50 cursor-pointer text-xs"
-                                                    >
-                                                        {t}
-                                                    </div>
-                                                ))}
-                                            </motion.div>
-                                        )}
-                                    </AnimatePresence>
-                                </div>
+                        {/* Activity Scale & Emission Factor */}
+                        <div className="grid md:grid-cols-1 gap-6 mb-6">
+                            {/* Activity Scale */}
+                            <div>
+                                <label className="block text-xs font-medium text-gray-700 mb-2">
+                                    Quantify the scale of the activity* <br />
+                                    <span className="text-xs text-gray-500">(e.g., "20,000 MWh/year", "500 hectares")</span>
+                                </label>
+                                <input
+                                    type="text"
+                                    value={activityScale}
+                                    onChange={(e) => setActivityScale(e.target.value)}
+                                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:border-gray-500 text-xs"
+                                    placeholder="e.g., 20,000 MWh/year"
+                                />
+                            </div>
 
-                                <div className="relative">
-                                    <div
-                                        onClick={() => setEmissionFactorValueDropdownOpen(!emissionFactorValueDropdownOpen)}
-                                        className="w-full px-4 py-3 border border-gray-300 rounded-lg flex justify-between items-center cursor-pointer hover:bg-gray-50 text-xs"
-                                    >
-                                        <span className={selectedEmissionFactorValue ? 'text-gray-900' : 'text-gray-500'}>
-                                            {selectedEmissionFactorValue || 'Value'}
-                                        </span>
-                                        {emissionFactorValueDropdownOpen ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
-                                    </div>
-                                    <AnimatePresence>
-                                        {emissionFactorValueDropdownOpen && (
-                                            <motion.div className="absolute z-30 w-full mt-1 bg-white border border-gray-200 rounded-lg shadow-lg">
-                                                {emissionFactorValues.map(v => (
-                                                    <div
-                                                        key={v}
-                                                        onClick={() => {
-                                                            setSelectedEmissionFactorValue(v);
-                                                            setEmissionFactorValueDropdownOpen(false);
-                                                        }}
-                                                        className="px-4 py-2 hover:bg-gray-50 cursor-pointer text-xs"
-                                                    >
-                                                        {v}
-                                                    </div>
-                                                ))}
-                                            </motion.div>
-                                        )}
-                                    </AnimatePresence>
-                                </div>
-
-                                <button
-                                    type="button"
-                                    onClick={addEmissionFactor}
-                                    disabled={!selectedEmissionFactorType || !selectedEmissionFactorValue}
-                                    className={`w-full py-3 rounded-lg font-medium text-xs flex items-center justify-center gap-2 transition ${
-                                        selectedEmissionFactorType && selectedEmissionFactorValue
-                                            ? 'bg-[#044D5E] text-white hover:bg-[#044D5E]/90'
-                                            : 'bg-gray-200 text-gray-400 cursor-not-allowed'
-                                    }`}
+                            {/* Emission Factor */}
+                            {/* Emission Factor Dropdown + Auto Result */}
+                            <div>
+                                <label className="block text-xs font-medium text-gray-700 mb-2">
+                                    Select Emission Factor*
+                                </label>
+                                <div
+                                    onClick={() => setEmissionFactorDropdownOpen(!emissionFactorDropdownOpen)}
+                                    className="w-full px-4 py-3 border border-gray-300 rounded-lg flex justify-between items-center cursor-pointer hover:bg-gray-50 text-xs transition"
                                 >
-                                    <Plus size={16} />
-                                    Add Factor
-                                </button>
-                            </div>
+                                    <span className={selectedEmissionFactor ? 'text-gray-900' : 'text-gray-500'}>
+                                        {selectedEmissionFactor || 'Select emission factor'}
+                                    </span>
+                                    {emissionFactorDropdownOpen ? <ChevronUp size={18} /> : <ChevronDown size={18} />}
+                                </div>
 
-                            {emissionFactors.length > 0 && (
-                                <div className="mt-6 space-y-3">
-                                    {emissionFactors.map((f, i) => (
-                                        <div
-                                            key={i}
-                                            className="flex items-center justify-between bg-gray-50 border border-gray-200 rounded-lg px-4 py-3 text-xs"
+                                <AnimatePresence>
+                                    {emissionFactorDropdownOpen && (
+                                        <motion.div
+                                            initial={{ opacity: 0, y: -8 }}
+                                            animate={{ opacity: 1, y: 0 }}
+                                            exit={{ opacity: 0, y: -8 }}
+                                            className="absolute z-30 w-full mt-1 bg-white border border-gray-200 rounded-lg shadow-lg max-h-60 overflow-y-auto"
                                         >
-                                            <span>{f.value} ({f.type})</span>
-                                            <button
-                                                type="button"
-                                                onClick={() => removeEmissionFactor(i)}
-                                                className="text-red-600 hover:text-red-800 transition"
-                                            >
-                                                <Trash2 size={16} />
-                                            </button>
-                                        </div>
-                                    ))}
-                                </div>
-                            )}
-                        </div>
-
-                        {/* Annual Emission Reduction */}
-                        <div>
-                            <label className="block text-xs font-medium text-gray-700 mb-2">
-                                Estimated Annual Emission Reduction (tCO₂e/year) *
-                            </label>
-                            <textarea
-                                value={annualEmissionReduction}
-                                onChange={(e) => setAnnualEmissionReduction(e.target.value)}
-                                rows={4}
-                                className="w-full px-4 py-3 border border-gray-300 rounded-lg resize-none focus:outline-none focus:border-gray-500 text-xs"
-                                placeholder="Show calculation: Activity Data × Emission Factor = Result"
-                            />
-                        </div>
-
-                        {/* Final Status Questions */}
-                        {[
-                            { key: 'supportingEvidence', label: 'Supporting Evidence Attached?', setter: setSupportingEvidence },
-                            { key: 'dnshMet', label: 'DNSH (Do No Significant Harm) Met?', setter: setDnshMet },
-                            { key: 'socialSafeguard', label: 'Social Safeguard Met?', setter: setSocialSafeguard },
-                            { key: 'alignmentStatus', label: 'Final KGFT Alignment Status?', setter: setAlignmentStatus },
-                        ].map(({ label, setter }) => (
-                            <div key={label}>
-                                <p className="text-xs font-medium text-gray-700 mb-3">{label} *</p>
-                                <div className="flex flex-wrap gap-3">
-                                    {(['yes', 'no', 'pending'] as const).map(val => {
-                                        const currentValue = label.includes('Evidence') ? supportingEvidence :
-                                                            label.includes('DNSH') ? dnshMet :
-                                                            label.includes('Social') ? socialSafeguard : alignmentStatus;
-
-                                        return (
-                                            <button
-                                                key={val}
-                                                type="button"
-                                                onClick={() => setter(val)}
-                                                className={`px-5 py-2.5 rounded-lg border text-xs font-medium capitalize transition ${
-                                                    currentValue === val
-                                                        ? val === 'yes'
-                                                            ? 'bg-green-100 border-green-500 text-green-700'
-                                                            : val === 'no'
-                                                                ? 'bg-red-100 border-red-500 text-red-700'
-                                                                : 'bg-orange-100 border-orange-500 text-orange-700'
-                                                        : 'border-gray-300 hover:bg-gray-50 text-gray-600'
-                                                }`}
-                                            >
-                                                {val === 'pending' ? 'Pending' : val === 'yes' ? 'Yes' : 'No'}
-                                            </button>
-                                        );
-                                    })}
-                                </div>
+                                            {emissionFactors.map(factor => (
+                                                <div
+                                                    key={factor}
+                                                    onClick={() => {
+                                                        setSelectedEmissionFactor(factor);
+                                                        setEmissionFactorDropdownOpen(false);
+                                                    }}
+                                                    className="px-4 py-3 hover:bg-gray-50 cursor-pointer text-xs border-b border-gray-100 last:border-b-0"
+                                                >
+                                                    {factor}
+                                                </div>
+                                            ))}
+                                        </motion.div>
+                                    )}
+                                </AnimatePresence>
                             </div>
-                        ))}
-                    </div>
+                            <div>
+
+                                {/* Simple, clean result below — left-aligned, text-xs */}
+                                {calculatedReduction ? (
+                                    <p className="mt-0 text-xs font-medium text-green-700">
+                                        Estimated Annual Reduction: <span className="font-bold">{calculatedReduction} tCO₂e/year</span>
+                                    </p>
+                                ) : activityScale && selectedEmissionFactor ? (
+                                    <p className="mt-3 text-xs text-red-600">
+                                        Invalid format — please check scale and factor
+                                    </p>
+                                ) : null}
+                            </div>
+                        </div>
+                    </section>
+
+                    <hr className="border-gray-200 my-8" />
+
+                    {/* FINAL STATUS */}
+                    <section ref={finalRef} data-section="Final Status" className="space-y-6 scroll-mt-24">
+                        <h2 className="text-2xl font-semibold text-[#044D5E]">Final Status</h2>
+
+                        {/* Supporting Evidence */}
+                        <div>
+                            <p className="text-xs font-medium text-gray-700 mb-3">
+                                Supporting Evidence Attached?* <br />
+                                <span className="text-xs text-gray-500">Select Yes if documents are available (e.g., EIA, feasibility study, emissions model); No if not; Pending if in progress.</span>
+                            </p>
+                            <div className="flex flex-wrap gap-3">
+                                {(['yes', 'no', 'pending'] as const).map(val => (
+                                    <button
+                                        key={val}
+                                        type="button"
+                                        onClick={() => setSupportingEvidence(val)}
+                                        className={`px-6 py-3 rounded-lg border-2 text-xs font-medium capitalize transition-all ${supportingEvidence === val
+                                            ? val === 'yes'
+                                                ? 'bg-green-100 border-green-500 text-green-700 shadow-sm'
+                                                : val === 'no'
+                                                    ? 'bg-red-100 border-red-500 text-red-700 shadow-sm'
+                                                    : 'bg-orange-100 border-orange-500 text-orange-700 shadow-sm'
+                                            : 'border-gray-300 hover:bg-gray-50 hover:border-gray-400'
+                                            }`}
+                                    >
+                                        {val === 'pending' ? 'Pending' : val.charAt(0).toUpperCase() + val.slice(1)}
+                                    </button>
+                                ))}
+                            </div>
+                        </div>
+
+                        {/* DNSH Met */}
+                        <div>
+                            <p className="text-xs font-medium text-gray-700 mb-3">
+                                DNSH Met?* <br />
+                                <span className="text-xs text-gray-500">"Do No Significant Harm" — select Yes if activity does not harm other environmental objectives, No if it does, Pending if under review. Requires EIA or screening tool.</span>
+                            </p>
+                            <div className="flex flex-wrap gap-3">
+                                {(['yes', 'no', 'pending'] as const).map(val => (
+                                    <button
+                                        key={val}
+                                        type="button"
+                                        onClick={() => setDnshMet(val)}
+                                        className={`px-6 py-3 rounded-lg border-2 text-xs font-medium capitalize transition-all ${dnshMet === val
+                                            ? val === 'yes'
+                                                ? 'bg-green-100 border-green-500 text-green-700 shadow-sm'
+                                                : val === 'no'
+                                                    ? 'bg-red-100 border-red-500 text-red-700 shadow-sm'
+                                                    : 'bg-orange-100 border-orange-500 text-orange-700 shadow-sm'
+                                            : 'border-gray-300 hover:bg-gray-50 hover:border-gray-400'
+                                            }`}
+                                    >
+                                        {val === 'pending' ? 'Pending' : val.charAt(0).toUpperCase() + val.slice(1)}
+                                    </button>
+                                ))}
+                            </div>
+                        </div>
+
+                        {/* Social Safeguard */}
+                        <div>
+                            <p className="text-xs font-medium text-gray-700 mb-3">
+                                Social Safeguard Met?* <br />
+                                <span className="text-xs text-gray-500">Select Yes if the project complies with labor laws, ILO conventions, and human rights standards; No or Pending if unclear.</span>
+                            </p>
+                            <div className="flex flex-wrap gap-3">
+                                {(['yes', 'no', 'pending'] as const).map(val => (
+                                    <button
+                                        key={val}
+                                        type="button"
+                                        onClick={() => setSocialSafeguard(val)}
+                                        className={`px-6 py-3 rounded-lg border-2 text-xs font-medium capitalize transition-all ${socialSafeguard === val
+                                            ? val === 'yes'
+                                                ? 'bg-green-100 border-green-500 text-green-700 shadow-sm'
+                                                : val === 'no'
+                                                    ? 'bg-red-100 border-red-500 text-red-700 shadow-sm'
+                                                    : 'bg-orange-100 border-orange-500 text-orange-700 shadow-sm'
+                                            : 'border-gray-300 hover:bg-gray-50 hover:border-gray-400'
+                                            }`}
+                                    >
+                                        {val === 'pending' ? 'Pending' : val.charAt(0).toUpperCase() + val.slice(1)}
+                                    </button>
+                                ))}
+                            </div>
+                        </div>
+
+                        {/* Alignment Status */}
+                        <div>
+                            <p className="text-xs font-medium text-gray-700 mb-3">
+                                Alignment Status?* <br />
+                                <span className="text-xs text-gray-500">Final status based on the full evaluation: Aligned if all criteria are met, Pending Further Review if incomplete, Not Aligned if any criterion fails.</span>
+                            </p>
+                            <div className="flex flex-wrap gap-3">
+                                {(['yes', 'no', 'pending'] as const).map(val => (
+                                    <button
+                                        key={val}
+                                        type="button"
+                                        onClick={() => setAlignmentStatus(val)}
+                                        className={`px-6 py-3 rounded-lg border-2 text-xs font-medium capitalize transition-all ${alignmentStatus === val
+                                            ? val === 'yes'
+                                                ? 'bg-green-100 border-green-500 text-green-700 shadow-sm'
+                                                : val === 'no'
+                                                    ? 'bg-red-100 border-red-500 text-red-700 shadow-sm'
+                                                    : 'bg-orange-100 border-orange-500 text-orange-700 shadow-sm'
+                                            : 'border-gray-300 hover:bg-gray-50 hover:border-gray-400'
+                                            }`}
+                                    >
+                                        {val === 'pending' ? 'Pending Further Review' : val === 'yes' ? 'Aligned' : 'Not Aligned'}
+                                    </button>
+                                ))}
+                            </div>
+                        </div>
+                    </section>
                 </div>
             </div>
         </div>
