@@ -11,11 +11,15 @@ export default function KlimaHarvestPage() {
   const dashimg = "/images/dashimg.png";
 
   const memberTypes = [
-    { icon: "/images/icons/home/icon1.svg", label: "Institution", link: "/platform/create-account" },               // no beta
-    { icon: "/images/icons/home/icon2.svg", label: "Individual Investor", link: "/platform/create-individual-investor", beta: true },
-    { icon: "/images/icons/home/icon3.svg", label: "Carbon Expert", link: "/platform/create-carbon-expert", beta: true },
-    { icon: "/images/icons/home/icon4.svg", label: "Carbon Harvester", link: "/platform/create-carbon-harvestor", beta: true },
-    { icon: "/images/icons/home/icon5.svg", label: "Aspirational Harvester", link: '/platform/create-aspiration-harvester', beta: true }, // no link → disabled + beta
+    { icon: "/images/icons/home/icon1.svg", label: "Institution", link: "/platform/create-account" },
+    { icon: "/images/icons/home/icon2.svg", label: "Individual Investor", beta: true },
+    { icon: "/images/icons/home/icon3.svg", label: "Carbon Expert", beta: true },
+    { icon: "/images/icons/home/icon4.svg", label: "Carbon Harvester", beta: true },
+    { icon: "/images/icons/home/icon5.svg", label: "Aspirational Harvester", beta: true },
+    // { icon: "/images/icons/home/icon2.svg", label: "Individual Investor", link: "/platform/create-individual-investor", beta: true },
+    // { icon: "/images/icons/home/icon3.svg", label: "Carbon Expert", link: "/platform/create-carbon-expert", beta: true },
+    // { icon: "/images/icons/home/icon4.svg", label: "Carbon Harvester", link: "/platform/create-carbon-harvestor", beta: true },
+    // { icon: "/images/icons/home/icon5.svg", label: "Aspirational Harvester", link: '/platform/create-aspiration-harvester', beta: true },
   ];
 
   // const isViewAllActive = memberTypes.length > 5;
