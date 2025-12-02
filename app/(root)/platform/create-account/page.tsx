@@ -20,7 +20,6 @@ import { motion, AnimatePresence } from "framer-motion";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 
-// Add this helper at the top of your file (after imports)
 const getKlimaUser = (): any => {
   if (typeof window === "undefined") return null;
   try {
@@ -33,7 +32,6 @@ const getKlimaUser = (): any => {
 
 const Page = () => {
   const router = useRouter();
-
   const [userName, setUserName] = useState("User");
 
   useEffect(() => {
@@ -161,7 +159,6 @@ const Page = () => {
     return () => observer.disconnect();
   }, [sectionRefs]);
 
-  // === File Upload Preview Logic ===
   const handleFileChange = (
     file: File | null,
     setFile: React.Dispatch<React.SetStateAction<File | null>>,
@@ -188,7 +185,6 @@ const Page = () => {
     setPreview(null);
   };
 
-  // Cleanup on unmount
   useEffect(() => {
     return () => {
       if (greenFinancePreview) URL.revokeObjectURL(greenFinancePreview);
@@ -196,9 +192,7 @@ const Page = () => {
     };
   }, [greenFinancePreview, brandingPreview]);
 
-  // === Submit Handler ===
   const handleSubmit = async () => {
-    // Prevent double click
     if (isSubmitting) return;
     setIsSubmitting(true);
 
@@ -232,73 +226,74 @@ const Page = () => {
       };
 
       const updatedUser = {
-      ...user,
-      institutionData,
-      hasCompletedOnboarding: true,
-    };
+        ...user,
+        institutionData,
+        hasCompletedOnboarding: true,
+      };
 
-    // Only save if we're in the browser
-    if (typeof window !== "undefined") {
-      localStorage.setItem("klimaUser", JSON.stringify(updatedUser));
+      if (typeof window !== "undefined") {
+        localStorage.setItem("klimaUser", JSON.stringify(updatedUser));
+      }
+
+      await fetch("/api/auth/set-user", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(updatedUser),
+      });
+
+      router.push("/dashboard");
+    } catch (error) {
+      console.error("Submit error:", error);
+      setIsSubmitting(false);
     }
-
-    await fetch("/api/auth/set-user", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(updatedUser),
-    });
-
-    router.push("/dashboard");
-  } catch (error) {
-    console.error("Submit error:", error);
-    setIsSubmitting(false);
-  }
   };
 
   const dashimg = "/images/dashimg.png";
 
   return (
-    <div className="min-h-screen bg-gradient-to-r from-[#BFEFF8]/30 to-[#B1CA69]/30 flex flex-col">
+    <div className="min-h-screen bg-gradient-to-r from-[#BFEFF8]/30 to-[#B1CA69]/30 flex flex-col space-y-0 md:space-y-6">
       <Header />
 
       <div className="pt-16 md:pt-20">
-        {/* Hero */}
+        {/* Hero Section */}
         <section
-          className="relative bg-cover bg-center h-48 w-full lg:w-[90vw] mx-auto lg:rounded-lg overflow-hidden"
+          className="relative bg-cover bg-center h-48 w-full lg:w-[90vw] mx-auto lg:rounded-lg overflow-hidden p-0 md:px-24"
           style={{ backgroundImage: `url(${dashimg})` }}
         >
           <div className="absolute inset-0 bg-black/40"></div>
-          <div className="relative z-10 px-4 py-2 text-white flex flex-col md:flex-row items-start md:items-end justify-between h-full md:px-6 md:py-10">
-            <div>
-              <h2 className="text-lg">
-                {/* Hello {JSON.parse(localStorage.getItem("klimaUser") || "{}")?.name || "User"} */}
-                <h2 className="text-lg">Hello {userName}</h2>
-              </h2>
+          <div className="relative z-10 px-4 py-2 text-white flex flex-col md:flex-row items-start md:items-end justify-end md:justify-between h-full md:-bottom-6 md:px-6 md:py-10">
+            <div className="flex flex-col md:space-y-4">
+              <h2 className="text-sm lg:text-lg">Hello {userName}</h2>
               <h1 className="text-xl lg:text-3xl font-semibold">Welcome to Klima Harvest</h1>
             </div>
             <Link
               href="/projects/marketplace"
-              className="bg-[#00D98A] hover:bg-[#00D98A]/90 text-black px-5 py-2 rounded-lg text-xs"
+              className="flex items-center justify-center mt-4 bg-[#00D98A] hover:bg-[#00D98A]/90 text-xs text-black px-5 py-2 rounded-lg transition-all duration-300"
             >
               Explore Community
             </Link>
           </div>
         </section>
 
-        {/* Form */}
-        <main className="flex-grow w-full md:w-[80vw] mx-auto p-4 md:px-6 md:py-8">
-          <div className="bg-white rounded-2xl shadow-lg py-8 px-6 md:px-24 space-y-12">
-            <div className="mb-10">
-              <div className="w-fit text-xs text-gray-500 font-semibold mb-2">Join Our Platform</div>
-              <h1 className="text-2xl text-[#044D5E] font-semibold">Register as an Institution</h1>
-              <p className="text-xs text-gray-500 mt-3">
-                Are you an institution with green finance objectives? Do you prioritise investments that align with environmental goals while delivering financial returns? Klima Harvest will support you in tracking your green finance commitments against environment, social and economic performance indicators, while connecting you to carbon revenue generating opportunities across your portfolio. 
-              </p>
+        {/* Form Section */}
+        <main className="flex-grow w-full md:w-[80vw] mx-auto p-2 md:px-6 md:py-4">
+          <div className="bg-white rounded-sm md:rounded-2xl shadow-md py-2 px-2 md:py-8 md:px-24 space-y-12">
+            <div className="flex flex-col gap-2 mb-8">
+              <div className="w-fit text-sm text-[#1ECEC9] font-semibold mb-2">
+                Create an account
+              </div>
+              <div className="space-y-2">
+                <h1 className="text-xl text-[#044D5E] font-semibold">
+                  Register as an Institution
+                </h1>
+                <p className="text-xs text-gray-500">
+                  Are you an institution with green finance objectives? Do you prioritise investments that align with environmental goals while delivering financial returns? Klima Harvest will support you in tracking your green finance commitments against environment, social and economic performance indicators, while connecting you to carbon revenue generating opportunities across your portfolio.
+                </p>
+              </div>
             </div>
 
-            <div className="flex gap-8">
-              {/* Sidebar */}
-              <div className="w-72 hidden lg:flex flex-col gap-2 sticky top-20 self-start">
+            <div className="flex gap-4">
+              <div className="w-72 hidden md:flex flex-col gap-2 sticky top-17 self-start">
                 <div className="flex flex-col gap-1">
                   {[
                     { name: "Institution Information", icon: Pencil },
@@ -312,160 +307,112 @@ const Page = () => {
                     <div
                       key={name}
                       onClick={() => handleNavClick(name)}
-                      className={`flex items-center gap-3 px-5 py-3 rounded-lg cursor-pointer transition-all ${activeSection === name
-                        ? "bg-[#F2F2F2] text-[#044D5E] font-medium"
-                        : "hover:bg-gray-50 text-gray-600"
-                        }`}
+                      className={`flex items-center gap-2 px-5 py-2 rounded-lg cursor-pointer transition-colors duration-300 ${
+                        activeSection === name
+                          ? "bg-[#F2F2F2] text-[#044D5E]"
+                          : "hover:bg-gray-50 text-gray-500"
+                      }`}
                     >
-                      <Icon size={18} />
+                      <Icon size={16} />
                       <p className="text-xs">{name}</p>
                     </div>
                   ))}
                 </div>
               </div>
 
-              {/* Form Fields */}
-              <form className="flex-1 space-y-12">
+              <form className="w-full mx-auto px-4 md:px-6 py-0 flex-1 space-y-6">
                 {/* Institution Information */}
                 <div ref={institutionInfoRef} data-section="Institution Information">
-                  <h2 className="text-xl font-semibold text-gray-800 mb-8">Institution Information</h2>
-
-                  <div className="mb-10">
-                    <p className="text-xs font-medium text-gray-700 mb-3">
+                  <h1 className="text-lg font-medium text-gray-600 mb-6">Institution Information</h1>
+                  <div className="mb-6">
+                    <p className="text-xs text-gray-700 mb-2 font-medium">
                       What is your institutional approach to green finance and sustainability?
                     </p>
                     <textarea
                       value={institutionApproach}
                       onChange={(e) => setInstitutionApproach(e.target.value)}
-                      className="w-full h-32 text-xs border border-gray-300 rounded-lg p-4 resize-none focus:outline-none focus:border-gray-500 transition"
-                      placeholder="Describe your institution's commitment and strategy..."
-                    />
+                      className="w-full h-24 text-xs border border-gray-300 rounded-lg p-3 resize-none focus:outline-none focus:border-gray-400 transition"
+                      placeholder="Type your answer here..."
+                    ></textarea>
                   </div>
 
-                  {/* Green Finance Strategy Upload */}
-                  <div className="mb-10">
-                    <p className="text-xs font-medium text-gray-700 mb-4">
+                  <div className="mb-6">
+                    <p className="text-xs text-gray-700 mb-2 font-medium">
                       Upload Green Finance Strategy/Sustainability Strategy*
                     </p>
-                    <label className="block relative h-64 border border-dashed border-gray-300 rounded-2xl overflow-hidden cursor-pointer group hover:border-gray-500 transition">
-                      {greenFinancePreview ? (
-                        <>
-                          {greenFinanceFile?.type.startsWith("image/") ? (
-                            <div
-                              className="absolute inset-0 bg-cover bg-center"
-                              style={{ backgroundImage: `url(${greenFinancePreview})` }}
-                            />
-                          ) : (
-                            <div className="absolute inset-0 bg-gradient-to-br from-gray-50 to-gray-100 flex items-center justify-center">
-                              <div className="text-center">
-                                <FileText size={48} className="text-gray-500 mx-auto mb-3" />
-                                <p className="text-xs font-medium text-gray-700">PDF Document</p>
-                                <p className="text-xs text-gray-500 mt-1 max-w-xs truncate">{greenFinanceFile?.name}</p>
-                              </div>
-                            </div>
-                          )}
-                          <div className="absolute inset-0 bg-black/50 group-hover:bg-black/60 transition" />
-                          <button
-                            type="button"
-                            onClick={(e) => {
-                              e.preventDefault();
-                              removeFile(setGreenFinanceFile, setGreenFinancePreview, greenFinancePreview);
-                            }}
-                            className="absolute top-4 right-4 bg-white/90 hover:bg-white p-2 rounded-full shadow-lg transition"
-                          >
-                            <X size={20} className="text-gray-700" />
-                          </button>
-                          <div className="absolute bottom-5 left-5 text-white">
-                            <p className="text-xs font-medium truncate max-w-md">{greenFinanceFile?.name}</p>
+                    <div className="flex items-center justify-center w-full">
+                      <label className="flex flex-col items-center justify-center w-full h-24 border border-dashed border-gray-300 rounded-lg cursor-pointer hover:bg-gray-50 focus:outline-none focus:border-gray-400 transition">
+                        {greenFinancePreview ? (
+                          <div className="flex flex-col items-center space-y-1">
+                            <FileText className="w-6 h-6 text-gray-500" />
+                            <span className="text-xs text-gray-500 truncate max-w-[200px]">{greenFinanceFile?.name}</span>
                           </div>
-                        </>
-                      ) : (
-                        <div className="h-full flex flex-col items-center justify-center bg-gray-50 group-hover:bg-gray-100 transition">
-                          <UploadCloud size={48} className="text-gray-400 mb-4" />
-                          <p className="text-sm font-medium text-gray-700">Drop your document here or click to upload</p>
-                          <p className="text-xs text-gray-500 mt-2">PDF, DOC, DOCX • Max 10MB</p>
-                        </div>
-                      )}
-                      <input
-                        type="file"
-                        className="absolute inset-0 opacity-0 cursor-pointer"
-                        accept=".pdf,.doc,.docx"
-                        onChange={(e) =>
-                          handleFileChange(e.target.files?.[0] || null, setGreenFinanceFile, setGreenFinancePreview, greenFinancePreview)
-                        }
-                      />
-                    </label>
+                        ) : (
+                          <>
+                            <UploadCloud className="w-6 h-6 text-gray-500" />
+                            <span className="text-xs text-gray-500">
+                              Upload your strategy document (PDF, DOC)
+                            </span>
+                          </>
+                        )}
+                        <input
+                          type="file"
+                          className="hidden"
+                          accept=".pdf,.doc,.docx"
+                          onChange={(e) => handleFileChange(e.target.files?.[0] || null, setGreenFinanceFile, setGreenFinancePreview, greenFinancePreview)}
+                        />
+                      </label>
+                    </div>
                   </div>
 
-                  {/* Branding Materials Upload */}
-                  <div className="mb-10">
-                    <p className="text-xs font-medium text-gray-700 mb-4">Upload branding materials**</p>
-                    <label className="block relative h-64 border border-dashed border-gray-300 rounded-2xl overflow-hidden cursor-pointer group hover:border-gray-500 transition">
-                      {brandingPreview ? (
-                        <>
-                          {brandingFile?.type.startsWith("image/") ? (
-                            <div
-                              className="absolute inset-0 bg-cover bg-center"
-                              style={{ backgroundImage: `url(${brandingPreview})` }}
-                            />
-                          ) : (
-                            <div className="absolute inset-0 bg-gradient-to-br from-gray-50 to-gray-100 flex items-center justify-center">
-                              <div className="text-center">
-                                <FileText size={48} className="text-gray-500 mx-auto mb-3" />
-                                <p className="text-xs font-medium text-gray-700">File Uploaded</p>
-                                <p className="text-xs text-gray-500 mt-1 max-w-xs truncate">{brandingFile?.name}</p>
-                              </div>
-                            </div>
-                          )}
-                          <div className="absolute inset-0 bg-black/50 group-hover:bg-black/60 transition" />
-                          <button
-                            type="button"
-                            onClick={(e) => {
-                              e.preventDefault();
-                              removeFile(setBrandingFile, setBrandingPreview, brandingPreview);
-                            }}
-                            className="absolute top-4 right-4 bg-white/90 hover:bg-white p-2 rounded-full shadow-lg transition"
-                          >
-                            <X size={20} className="text-gray-700" />
-                          </button>
-                          <div className="absolute bottom-5 left-5 text-white">
-                            <p className="text-xs font-medium truncate max-w-md">{brandingFile?.name}</p>
+                  <div className="mb-6">
+                    <p className="text-xs text-gray-700 mb-2 font-medium">
+                      Upload branding materials**
+                    </p>
+                    <div className="flex items-center justify-center w-full">
+                      <label className="flex flex-col items-center justify-center w-full h-24 border border-dashed border-gray-300 rounded-lg cursor-pointer hover:bg-gray-50 focus:outline-none focus:border-gray-400 transition">
+                        {brandingPreview ? (
+                          <div className="flex flex-col items-center space-y-1">
+                            <FileText className="w-6 h-6 text-gray-500" />
+                            <span className="text-xs text-gray-500 truncate max-w-[200px]">{brandingFile?.name}</span>
                           </div>
-                        </>
-                      ) : (
-                        <div className="h-full flex flex-col items-center justify-center bg-gray-50 group-hover:bg-gray-100 transition">
-                          <UploadCloud size={48} className="text-gray-400 mb-4" />
-                          <p className="text-sm font-medium text-gray-700">Drop your logo & branding here</p>
-                          <p className="text-xs text-gray-500 mt-2">PNG, JPG, PDF • Max 10MB</p>
-                        </div>
-                      )}
-                      <input
-                        type="file"
-                        className="absolute inset-0 opacity-0 cursor-pointer"
-                        accept=".png,.jpg,.jpeg,.pdf"
-                        onChange={(e) =>
-                          handleFileChange(e.target.files?.[0] || null, setBrandingFile, setBrandingPreview, brandingPreview)
-                        }
-                      />
-                    </label>
+                        ) : (
+                          <>
+                            <UploadCloud className="w-6 h-6 text-gray-500" />
+                            <span className="text-xs text-gray-500">
+                              Upload branding materials (PDF, PNG, JPG)
+                            </span>
+                          </>
+                        )}
+                        <input
+                          type="file"
+                          className="hidden"
+                          accept=".pdf,.png,.jpg,.jpeg"
+                          onChange={(e) => handleFileChange(e.target.files?.[0] || null, setBrandingFile, setBrandingPreview, brandingPreview)}
+                        />
+                      </label>
+                    </div>
                   </div>
                 </div>
 
+                <hr className="border-t border-gray-200 my-6" />
+
                 {/* Investment Objectives */}
                 <div ref={investmentObjectivesRef} data-section="Investment Objectives">
-                  <h2 className="text-xl font-semibold text-gray-800 mb-8">Investment Objectives</h2>
-                  <div className="space-y-6">
+                  <h1 className="text-lg font-medium text-gray-600 mb-6">Investment Objectives</h1>
+                  <div className="space-y-3">
                     <div className="relative">
-                      <p className="text-xs font-medium text-gray-700 mb-3">What are your specific objectives?</p>
+                      <p className="text-xs text-gray-700 mb-1">
+                        What are your specific objectives in seeking green finance opportunities?
+                      </p>
                       <div
-                        className={`w-full text-xs rounded-lg px-5 py-4 flex justify-between items-center cursor-pointer transition-all border ${objectiveOpen ? "border-gray-500 bg-white shadow-md" : "border-gray-300 hover:bg-gray-50"
-                          }`}
+                        className={`w-full text-xs rounded-lg px-4 py-2 flex justify-between items-center cursor-pointer transition-all duration-200 ${
+                          objectiveOpen ? "border border-gray-400 bg-white shadow-sm" : "border border-gray-300 hover:bg-gray-50"
+                        }`}
                         onClick={() => setObjectiveOpen(!objectiveOpen)}
                       >
-                        <span className={selectedObjective === "Select" ? "text-gray-500" : "text-gray-800"}>
-                          {selectedObjective}
-                        </span>
-                        {objectiveOpen ? <ChevronUp size={20} /> : <ChevronDown size={20} />}
+                        <span className="text-gray-600">{selectedObjective}</span>
+                        {objectiveOpen ? <ChevronUp size={18} className="text-gray-400" /> : <ChevronDown size={18} className="text-gray-400" />}
                       </div>
                       <AnimatePresence>
                         {objectiveOpen && (
@@ -473,7 +420,8 @@ const Page = () => {
                             initial={{ opacity: 0, y: -10 }}
                             animate={{ opacity: 1, y: 0 }}
                             exit={{ opacity: 0, y: -10 }}
-                            className="absolute top-full left-0 right-0 mt-2 border border-gray-200 rounded-lg bg-white shadow-lg z-20 overflow-hidden"
+                            transition={{ duration: 0.2 }}
+                            className="absolute top-full left-0 right-0 mt-1 border border-gray-200 rounded-lg bg-white shadow-md z-10"
                           >
                             {objectives.map((item) => (
                               <div
@@ -482,7 +430,7 @@ const Page = () => {
                                   setSelectedObjective(item);
                                   setObjectiveOpen(false);
                                 }}
-                                className="px-5 py-3 text-xs hover:bg-gray-50 cursor-pointer transition"
+                                className="px-4 py-2 text-xs text-gray-700 hover:bg-gray-50 cursor-pointer transition"
                               >
                                 {item}
                               </div>
@@ -492,68 +440,71 @@ const Page = () => {
                       </AnimatePresence>
                     </div>
                     <div>
-                      <p className="text-xs font-medium text-gray-700 mb-3">
+                      <p className="text-xs text-gray-700 mb-1">
                         Do you have any sector or geographic preferences for investments?
                       </p>
                       <input
                         type="text"
                         value={sectorPreferences}
                         onChange={(e) => setSectorPreferences(e.target.value)}
-                        placeholder="e.g. Renewable energy in East Africa"
-                        className="w-full text-xs border border-gray-300 rounded-lg px-5 py-4 focus:outline-none focus:border-gray-500 transition"
+                        className="w-full text-xs border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:border-gray-400 transition"
+                        placeholder="Enter preferences"
                       />
                     </div>
                   </div>
                 </div>
 
+                <hr className="border-t border-gray-200 my-6" />
+
                 {/* Risk Appetite */}
                 <div ref={riskAppetiteRef} data-section="Risk Appetite">
-                  <h2 className="text-xl font-semibold text-gray-800 mb-8">Risk Appetite</h2>
-                  <div className="space-y-8">
+                  <h1 className="text-lg font-medium text-gray-600 mb-6">Risk Appetite</h1>
+                  <div className="space-y-6">
                     <div>
-                      <p className="text-xs font-medium text-gray-700 mb-4">What is your risk tolerance?</p>
-                      <div className="flex gap-4">
+                      <p className="text-xs text-gray-700 mb-2">
+                        What is your risk tolerance when it comes to green investments?
+                      </p>
+                      <div className="flex gap-3 mb-4">
                         {["low", "medium", "high"].map((level) => (
                           <button
                             key={level}
                             type="button"
                             onClick={() => setRiskTolerance(riskTolerance === level ? null : level as any)}
-                            className={`px-4 py-3 rounded-lg border text-xs font-medium capitalize transition-all ${riskTolerance === level
-                              ? level === "low"
-                                ? "bg-green-50 border-green-500 text-green-700"
-                                : level === "medium"
-                                  ? "bg-yellow-50 border-yellow-500 text-yellow-700"
-                                  : "bg-red-50 border-red-500 text-red-700"
-                              : "border-gray-300 hover:bg-gray-50"
-                              }`}
+                            className={`px-4 py-2 rounded-lg border text-xs font-medium text-gray-500 ${
+                              riskTolerance === level
+                                ? level === "low"
+                                  ? "bg-green-100 border-green-500"
+                                  : level === "medium"
+                                  ? "bg-yellow-100 border-yellow-500"
+                                  : "bg-red-100 border-red-500"
+                                : "hover:bg-gray-50 border-gray-300"
+                            } focus:outline-none`}
                           >
-                            {level}
+                            {level[0].toUpperCase() + level.slice(1)}
                           </button>
                         ))}
                       </div>
                     </div>
                     <div>
-                      <p className="text-xs font-medium text-gray-700 mb-4">
-                        Open to emerging green technologies?
+                      <p className="text-xs text-gray-700 mb-2">
+                        Are you open to exploring both established and emerging green technologies or projects?
                       </p>
-                      <div className="flex gap-4">
+                      <div className="flex gap-3 mb-4">
                         <button
                           type="button"
                           onClick={() => setExploreEmerging(exploreEmerging === true ? null : true)}
-                          className={`px-4 py-3 rounded-lg border text-xs font-medium ${exploreEmerging === true
-                            ? "bg-green-50 border-green-500 text-green-700"
-                            : "border-gray-300 hover:bg-gray-50"
-                            }`}
+                          className={`px-4 py-2 rounded-lg border text-xs font-medium text-gray-500 ${
+                            exploreEmerging === true ? "bg-green-100 border-green-500" : "hover:bg-gray-50 border-gray-300"
+                          } focus:outline-none`}
                         >
                           Yes
                         </button>
                         <button
                           type="button"
                           onClick={() => setExploreEmerging(exploreEmerging === false ? null : false)}
-                          className={`px-4 py-3 rounded-lg border text-xs font-medium ${exploreEmerging === false
-                            ? "bg-red-50 border-red-500 text-red-700"
-                            : "border-gray-300 hover:bg-gray-50"
-                            }`}
+                          className={`px-4 py-2 rounded-lg border text-xs font-medium text-gray-500 ${
+                            exploreEmerging === false ? "bg-red-100 border-red-500" : "hover:bg-gray-50 border-gray-300"
+                          } focus:outline-none`}
                         >
                           No
                         </button>
@@ -562,32 +513,32 @@ const Page = () => {
                   </div>
                 </div>
 
+                <hr className="border-t border-gray-200 my-6" />
+
                 {/* Performance Metrics */}
                 <div ref={performanceMetricsRef} data-section="Performance Metrics">
-                  <h2 className="text-xl font-semibold text-gray-800 mb-8">Performance Metrics</h2>
-                  <div className="space-y-8">
+                  <h1 className="text-lg font-medium text-gray-600 mb-6">Performance Metrics</h1>
+                  <div className="space-y-6">
                     <div>
-                      <p className="text-xs font-medium text-gray-700 mb-4">
-                        Do you currently measure green portfolio performance?
+                      <p className="text-xs text-gray-700 mb-2">
+                        Do you currently measure the performance of your green portfolio?
                       </p>
-                      <div className="flex gap-4">
+                      <div className="flex gap-3 mb-4">
                         <button
                           type="button"
                           onClick={() => setMeasurePerformance(measurePerformance === true ? null : true)}
-                          className={`px-4 py-3 rounded-lg border text-xs font-medium ${measurePerformance === true
-                            ? "bg-green-50 border-green-500 text-green-700"
-                            : "border-gray-300 hover:bg-gray-50"
-                            }`}
+                          className={`px-4 py-2 rounded-lg border text-xs font-medium text-gray-500 ${
+                            measurePerformance === true ? "bg-green-100 border-green-500" : "hover:bg-gray-50 border-gray-300"
+                          } focus:outline-none`}
                         >
                           Yes
                         </button>
                         <button
                           type="button"
                           onClick={() => setMeasurePerformance(measurePerformance === false ? null : false)}
-                          className={`px-4 py-3 rounded-lg border text-xs font-medium ${measurePerformance === false
-                            ? "bg-red-50 border-red-500 text-red-700"
-                            : "border-gray-300 hover:bg-gray-50"
-                            }`}
+                          className={`px-4 py-2 rounded-lg border text-xs font-medium text-gray-500 ${
+                            measurePerformance === false ? "bg-red-100 border-red-500" : "hover:bg-gray-50 border-gray-300"
+                          } focus:outline-none`}
                         >
                           No
                         </button>
@@ -595,26 +546,27 @@ const Page = () => {
                     </div>
                     {measurePerformance === true && (
                       <div>
-                        <p className="text-xs font-medium text-gray-700 mb-3">If yes, please explain</p>
+                        <p className="text-xs text-gray-700 mb-2">If yes Please explain</p>
                         <textarea
                           value={performanceExplanation}
                           onChange={(e) => setPerformanceExplanation(e.target.value)}
-                          className="w-full h-32 text-xs border border-gray-300 rounded-lg p-4 resize-none focus:outline-none focus:border-gray-500"
-                          placeholder="Describe your current measurement approach..."
-                        />
+                          className="w-full h-24 text-xs border border-gray-300 rounded-lg p-3 resize-none focus:outline-none focus:border-gray-400 transition"
+                          placeholder="Type your explanation here..."
+                        ></textarea>
                       </div>
                     )}
                     <div className="relative">
-                      <p className="text-xs font-medium text-gray-700 mb-3">Key Performance Indicators (KPIs)</p>
+                      <p className="text-xs text-gray-700 mb-1">
+                        What Key Performance Indicators (KPIs) are important to your institution?
+                      </p>
                       <div
-                        className={`w-full text-xs rounded-lg px-5 py-4 flex justify-between items-center cursor-pointer transition-all border ${kpiDropdownOpen ? "border-gray-500 bg-white shadow-md" : "border-gray-300 hover:bg-gray-50"
-                          }`}
+                        className={`w-full text-xs rounded-lg px-4 py-2 flex justify-between items-center cursor-pointer transition-all duration-200 ${
+                          kpiDropdownOpen ? "border border-gray-400 bg-white shadow-sm" : "border border-gray-300 hover:bg-gray-50"
+                        }`}
                         onClick={() => setKpiDropdownOpen(!kpiDropdownOpen)}
                       >
-                        <span className={selectedKpi ? "text-gray-800" : "text-gray-500"}>
-                          {selectedKpi || "Select KPI"}
-                        </span>
-                        {kpiDropdownOpen ? <ChevronUp size={20} /> : <ChevronDown size={20} />}
+                        <span className="text-gray-600">{selectedKpi || "Select KPI"}</span>
+                        {kpiDropdownOpen ? <ChevronUp size={18} className="text-gray-400" /> : <ChevronDown size={18} className="text-gray-400" />}
                       </div>
                       <AnimatePresence>
                         {kpiDropdownOpen && (
@@ -622,7 +574,8 @@ const Page = () => {
                             initial={{ opacity: 0, y: -10 }}
                             animate={{ opacity: 1, y: 0 }}
                             exit={{ opacity: 0, y: -10 }}
-                            className="absolute top-full left-0 right-0 mt-2 border border-gray-200 rounded-lg bg-white shadow-lg z-20"
+                            transition={{ duration: 0.2 }}
+                            className="absolute top-full left-0 right-0 mt-1 border border-gray-200 rounded-lg bg-white shadow-md z-10"
                           >
                             {kpis.map((kpi) => (
                               <div
@@ -631,7 +584,7 @@ const Page = () => {
                                   setSelectedKpi(kpi);
                                   setKpiDropdownOpen(false);
                                 }}
-                                className="px-5 py-3 text-xs hover:bg-gray-50 cursor-pointer"
+                                className="px-4 py-2 text-xs text-gray-700 hover:bg-gray-50 cursor-pointer transition"
                               >
                                 {kpi}
                               </div>
@@ -643,21 +596,24 @@ const Page = () => {
                   </div>
                 </div>
 
+                <hr className="border-t border-gray-200 my-6" />
+
                 {/* Stakeholder Engagement */}
                 <div ref={stakeholderEngagementRef} data-section="Stakeholder Engagement">
-                  <h2 className="text-xl font-semibold text-gray-800 mb-8">Stakeholder Engagement</h2>
-                  <div className="space-y-8">
+                  <h1 className="text-lg font-medium text-gray-600 mb-6">Stakeholder Engagement</h1>
+                  <div className="space-y-6">
                     <div className="relative">
-                      <p className="text-xs font-medium text-gray-700 mb-3">Key stakeholders involved?</p>
+                      <p className="text-xs text-gray-700 mb-1">
+                        Who are the key stakeholders within your organization involved in green finance decisions?
+                      </p>
                       <div
-                        className={`w-full text-xs rounded-lg px-5 py-4 flex justify-between items-center cursor-pointer transition-all border ${stakeholderDropdownOpen1 ? "border-gray-500 bg-white shadow-md" : "border-gray-300 hover:bg-gray-50"
-                          }`}
+                        className={`w-full text-xs rounded-lg px-4 py-2 flex justify-between items-center cursor-pointer transition-all duration-200 ${
+                          stakeholderDropdownOpen1 ? "border border-gray-400 bg-white shadow-sm" : "border border-gray-300 hover:bg-gray-50"
+                        }`}
                         onClick={() => setStakeholderDropdownOpen1(!stakeholderDropdownOpen1)}
                       >
-                        <span className={selectedStakeholder1 ? "text-gray-800" : "text-gray-500"}>
-                          {selectedStakeholder1 || "Select Stakeholder"}
-                        </span>
-                        {stakeholderDropdownOpen1 ? <ChevronUp size={20} /> : <ChevronDown size={20} />}
+                        <span className="text-gray-600">{selectedStakeholder1 || "Select Stakeholder"}</span>
+                        {stakeholderDropdownOpen1 ? <ChevronUp size={18} className="text-gray-400" /> : <ChevronDown size={18} className="text-gray-400" />}
                       </div>
                       <AnimatePresence>
                         {stakeholderDropdownOpen1 && (
@@ -665,7 +621,8 @@ const Page = () => {
                             initial={{ opacity: 0, y: -10 }}
                             animate={{ opacity: 1, y: 0 }}
                             exit={{ opacity: 0, y: -10 }}
-                            className="absolute top-full left-0 right-0 mt-2 border border-gray-200 rounded-lg bg-white shadow-lg z-20"
+                            transition={{ duration: 0.2 }}
+                            className="absolute top-full left-0 right-0 mt-1 border border-gray-200 rounded-lg bg-white shadow-md z-10"
                           >
                             {stakeholders1.map((s) => (
                               <div
@@ -674,7 +631,7 @@ const Page = () => {
                                   setSelectedStakeholder1(s);
                                   setStakeholderDropdownOpen1(false);
                                 }}
-                                className="px-5 py-3 text-xs hover:bg-gray-50 cursor-pointer"
+                                className="px-4 py-2 text-xs text-gray-700 hover:bg-gray-50 cursor-pointer transition"
                               >
                                 {s}
                               </div>
@@ -684,16 +641,17 @@ const Page = () => {
                       </AnimatePresence>
                     </div>
                     <div className="relative">
-                      <p className="text-xs font-medium text-gray-700 mb-3">Stakeholder preferences?</p>
+                      <p className="text-xs text-gray-700 mb-1">
+                        Are there any specific requirements or preferences from your stakeholders?
+                      </p>
                       <div
-                        className={`w-full text-xs rounded-lg px-5 py-4 flex justify-between items-center cursor-pointer transition-all border ${stakeholderDropdownOpen2 ? "border-gray-500 bg-white shadow-md" : "border-gray-300 hover:bg-gray-50"
-                          }`}
+                        className={`w-full text-xs rounded-lg px-4 py-2 flex justify-between items-center cursor-pointer transition-all duration-200 ${
+                          stakeholderDropdownOpen2 ? "border border-gray-400 bg-white shadow-sm" : "border border-gray-300 hover:bg-gray-50"
+                        }`}
                         onClick={() => setStakeholderDropdownOpen2(!stakeholderDropdownOpen2)}
                       >
-                        <span className={selectedStakeholder2 ? "text-gray-800" : "text-gray-500"}>
-                          {selectedStakeholder2 || "Select Preference"}
-                        </span>
-                        {stakeholderDropdownOpen2 ? <ChevronUp size={20} /> : <ChevronDown size={20} />}
+                        <span className="text-gray-600">{selectedStakeholder2 || "Select Preference"}</span>
+                        {stakeholderDropdownOpen2 ? <ChevronUp size={18} className="text-gray-400" /> : <ChevronDown size={18} className="text-gray-400" />}
                       </div>
                       <AnimatePresence>
                         {stakeholderDropdownOpen2 && (
@@ -701,7 +659,8 @@ const Page = () => {
                             initial={{ opacity: 0, y: -10 }}
                             animate={{ opacity: 1, y: 0 }}
                             exit={{ opacity: 0, y: -10 }}
-                            className="absolute top-full left-0 right-0 mt-2 border border-gray-200 rounded-lg bg-white shadow-lg z-20"
+                            transition={{ duration: 0.2 }}
+                            className="absolute top-full left-0 right-0 mt-1 border border-gray-200 rounded-lg bg-white shadow-md z-10"
                           >
                             {stakeholders2.map((s) => (
                               <div
@@ -710,7 +669,7 @@ const Page = () => {
                                   setSelectedStakeholder2(s);
                                   setStakeholderDropdownOpen2(false);
                                 }}
-                                className="px-5 py-3 text-xs hover:bg-gray-50 cursor-pointer"
+                                className="px-4 py-2 text-xs text-gray-700 hover:bg-gray-50 cursor-pointer transition"
                               >
                                 {s}
                               </div>
@@ -722,63 +681,68 @@ const Page = () => {
                   </div>
                 </div>
 
+                <hr className="border-t border-gray-200 my-6" />
+
                 {/* Regulatory Compliance */}
                 <div ref={regulatoryComplianceRef} data-section="Regulatory Compliance">
-                  <h2 className="text-xl font-semibold text-gray-800 mb-8">Regulatory Compliance</h2>
-                  <div className="space-y-8">
+                  <h1 className="text-lg font-medium text-gray-600 mb-6">Regulatory Compliance</h1>
+                  <div className="space-y-6">
                     <div>
-                      <p className="text-xs font-medium text-gray-700 mb-4">Are there regulatory requirements?</p>
-                      <div className="flex gap-4">
+                      <p className="text-xs text-gray-700 mb-2">
+                        Are there regulatory or compliance requirements that need to be considered?
+                      </p>
+                      <div className="flex gap-3 mb-4">
                         <button
                           type="button"
                           onClick={() => setRegulatoryCompliance(regulatoryCompliance === true ? null : true)}
-                          className={`px-4 py-3 rounded-lg border text-xs font-medium ${regulatoryCompliance === true
-                            ? "bg-green-50 border-green-500 text-green-700"
-                            : "border-gray-300 hover:bg-gray-50"
-                            }`}
+                          className={`px-4 py-2 rounded-lg border text-xs font-medium text-gray-500 ${
+                            regulatoryCompliance === true ? "bg-green-100 border-green-500" : "hover:bg-gray-50 border-gray-300"
+                          } focus:outline-none`}
                         >
                           Yes
                         </button>
                         <button
                           type="button"
                           onClick={() => setRegulatoryCompliance(regulatoryCompliance === false ? null : false)}
-                          className={`px-4 py-3 rounded-lg border text-xs font-medium ${regulatoryCompliance === false
-                            ? "bg-red-50 border-red-500 text-red-700"
-                            : "border-gray-300 hover:bg-gray-50"
-                            }`}
+                          className={`px-4 py-2 rounded-lg border text-xs font-medium text-gray-500 ${
+                            regulatoryCompliance === false ? "bg-red-100 border-red-500" : "hover:bg-gray-50 border-gray-300"
+                          } focus:outline-none`}
                         >
                           No
                         </button>
                       </div>
                     </div>
                     {regulatoryCompliance === true && (
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        {regulationsList.map((r) => (
-                          <button
-                            key={r}
-                            type="button"
-                            onClick={() => toggleRegulation(r)}
-                            className={`px-6 py-4 rounded-lg border text-xs text-left transition-all ${selectedRegulations.includes(r)
-                              ? "bg-green-50 border-green-500 text-green-700"
-                              : "border-gray-300 hover:bg-gray-50"
-                              }`}
-                          >
-                            {r}
-                          </button>
-                        ))}
+                      <div>
+                        <p className="text-xs text-gray-700 mb-2">If so, select those that apply</p>
+                        <div className="grid grid-cols-2 gap-3 mb-4">
+                          {regulationsList.map((r) => (
+                            <button
+                              key={r}
+                              type="button"
+                              onClick={() => toggleRegulation(r)}
+                              className={`px-4 py-2 rounded-lg border text-xs font-medium text-gray-500 ${
+                                selectedRegulations.includes(r) ? "bg-green-100 border-green-500" : "hover:bg-gray-50 border-gray-300"
+                              } focus:outline-none`}
+                            >
+                              {r}
+                            </button>
+                          ))}
+                        </div>
                       </div>
                     )}
                     <div className="relative">
-                      <p className="text-xs font-medium text-gray-700 mb-3">Sustainability standards followed?</p>
+                      <p className="text-xs text-gray-700 mb-1">
+                        How do you ensure alignment with relevant sustainability standards?
+                      </p>
                       <div
-                        className={`w-full text-xs rounded-lg px-5 py-4 flex justify-between items-center cursor-pointer transition-all border ${standardsDropdownOpen ? "border-gray-500 bg-white shadow-md" : "border-gray-300 hover:bg-gray-50"
-                          }`}
+                        className={`w-full text-xs rounded-lg px-4 py-2 flex justify-between items-center cursor-pointer transition-all duration-200 ${
+                          standardsDropdownOpen ? "border border-gray-400 bg-white shadow-sm" : "border border-gray-300 hover:bg-gray-50"
+                        }`}
                         onClick={() => setStandardsDropdownOpen(!standardsDropdownOpen)}
                       >
-                        <span className={selectedStandard ? "text-gray-800" : "text-gray-500"}>
-                          {selectedStandard || "Select Standard"}
-                        </span>
-                        {standardsDropdownOpen ? <ChevronUp size={20} /> : <ChevronDown size={20} />}
+                        <span className="text-gray-600">{selectedStandard || "Select Standard"}</span>
+                        {standardsDropdownOpen ? <ChevronUp size={18} className="text-gray-400" /> : <ChevronDown size={18} className="text-gray-400" />}
                       </div>
                       <AnimatePresence>
                         {standardsDropdownOpen && (
@@ -786,7 +750,8 @@ const Page = () => {
                             initial={{ opacity: 0, y: -10 }}
                             animate={{ opacity: 1, y: 0 }}
                             exit={{ opacity: 0, y: -10 }}
-                            className="absolute top-full left-0 right-0 mt-2 border border-gray-200 rounded-lg bg-white shadow-lg z-20"
+                            transition={{ duration: 0.2 }}
+                            className="absolute top-full left-0 right-0 mt-1 border border-gray-200 rounded-lg bg-white shadow-md z-10"
                           >
                             {standards.map((s) => (
                               <div
@@ -795,7 +760,7 @@ const Page = () => {
                                   setSelectedStandard(s);
                                   setStandardsDropdownOpen(false);
                                 }}
-                                className="px-5 py-3 text-xs hover:bg-gray-50 cursor-pointer"
+                                className="px-4 py-2 text-xs text-gray-700 hover:bg-gray-50 cursor-pointer transition"
                               >
                                 {s}
                               </div>
@@ -807,90 +772,84 @@ const Page = () => {
                   </div>
                 </div>
 
+                <hr className="border-t border-gray-200 my-6" />
+
                 {/* Partnership Opportunities */}
                 <div ref={partnershipOpportunitiesRef} data-section="Partnership Opportunities">
-                  <h2 className="text-xl font-semibold text-gray-800 mb-8">Partnership Opportunities</h2>
-                  <div className="space-y-8">
+                  <h1 className="text-lg font-medium text-gray-600 mb-6">Partnership Opportunities</h1>
+                  <div className="space-y-6">
                     <div>
-                      <p className="text-xs font-medium text-gray-700 mb-4">Open to partnerships?</p>
-                      <div className="flex gap-4">
+                      <p className="text-xs text-gray-700 mb-2">
+                        Are you open to partnership opportunities to enhance your green investment strategy?
+                      </p>
+                      <div className="flex gap-3 mb-4">
                         <button
                           type="button"
                           onClick={() => setPartnershipOpportunities(partnershipOpportunities === true ? null : true)}
-                          className={`px-4 py-3 rounded-lg border text-xs font-medium ${partnershipOpportunities === true
-                            ? "bg-green-50 border-green-500 text-green-700"
-                            : "border-gray-300 hover:bg-gray-50"
-                            }`}
+                          className={`px-4 py-2 rounded-lg border text-xs font-medium text-gray-500 ${
+                            partnershipOpportunities === true ? "bg-green-100 border-green-500" : "hover:bg-gray-50 border-gray-300"
+                          } focus:outline-none`}
                         >
                           Yes
                         </button>
                         <button
                           type="button"
                           onClick={() => setPartnershipOpportunities(partnershipOpportunities === false ? null : false)}
-                          className={`px-4 py-3 rounded-lg border text-xs font-medium ${partnershipOpportunities === false
-                            ? "bg-red-50 border-red-500 text-red-700"
-                            : "border-gray-300 hover:bg-gray-50"
-                            }`}
+                          className={`px-4 py-2 rounded-lg border text-xs font-medium text-gray-500 ${
+                            partnershipOpportunities === false ? "bg-red-100 border-red-500" : "hover:bg-gray-50 border-gray-300"
+                          } focus:outline-none`}
                         >
                           No
                         </button>
                       </div>
                     </div>
                     {partnershipOpportunities === true && (
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        {partnershipsList.map((p) => (
-                          <button
-                            key={p}
-                            type="button"
-                            onClick={() => togglePartnership(p)}
-                            className={`px-6 py-4 rounded-lg border text-xs text-left transition-all ${selectedPartnerships.includes(p)
-                              ? "bg-green-50 border-green-500 text-green-700"
-                              : "border-gray-300 hover:bg-gray-50"
-                              }`}
-                          >
-                            {p}
-                          </button>
-                        ))}
+                      <div>
+                        <p className="text-xs text-gray-700 mb-2">If so, select those that apply</p>
+                        <div className="grid grid-cols-2 gap-3 mb-4">
+                          {partnershipsList.map((p) => (
+                            <button
+                              key={p}
+                              type="button"
+                              onClick={() => togglePartnership(p)}
+                              className={`px-4 py-2 rounded-lg border text-xs font-medium text-gray-500 ${
+                                selectedPartnerships.includes(p) ? "bg-green-100 border-green-500" : "hover:bg-gray-50 border-gray-300"
+                              } focus:outline-none`}
+                            >
+                              {p}
+                            </button>
+                          ))}
+                        </div>
                       </div>
                     )}
                   </div>
                 </div>
 
-                {/* Submit */}
-                <div className="pt-12 border-t border-gray-200">
-                  <button
-                    type="button"
-                    onClick={handleSubmit}
-                    disabled={isSubmitting}
-                    className={`bg-[#044D5E] text-white px-6 py-4 rounded-full flex items-center gap-3 text-sm font-semibold transition-all cursor-pointer ${isSubmitting ? "opacity-70 cursor-not-allowed" : "hover:bg-[#044D5E]/90"
-                      }`}
-                  >
-                    {isSubmitting ? (
-                      <>
-                        Completing...
-                        <div className="w-5 h-5 border border-white border-t-transparent rounded-full animate-spin" />
-                      </>
-                    ) : (
-                      <>
-                        Complete Registration
-                        <ChevronRight size={24} />
-                      </>
-                    )}
-                  </button>
-                </div>
+                <hr className="border-t border-gray-200 my-6" />
+
+                <button
+                  type="button"
+                  onClick={handleSubmit}
+                  disabled={isSubmitting}
+                  className="mt-6 w-fit min-w-[140px] bg-[#044D5E] hover:bg-[#044D5E]/90 text-xs text-white px-5 py-2 rounded-full transition-all duration-300 flex items-center justify-center relative disabled:opacity-70"
+                >
+                  {isSubmitting ? "Submitting..." : "Submit"}
+                  {!isSubmitting && <ChevronRight size={16} className="absolute right-2" />}
+                </button>
               </form>
             </div>
           </div>
         </main>
       </div>
 
-      {/* Floating Help */}
-      <div className="fixed bottom-6 right-6 z-50">
-        <div className="bg-white text-xs text-gray-700 px-4 py-2 rounded-full shadow-2xl mb-3 animate-pulse">
-          Need help?
+      {/* Floating Help Button */}
+      <div className="fixed bottom-5 right-5 flex flex-col items-center">
+        <div className="bg-white text-xs text-gray-700 px-3 py-1 rounded-lg shadow-md mb-2 relative cursor-pointer">
+          need help?
+          <span className="absolute bottom-[-4px] left-1/2 transform -translate-x-1/2 w-2 h-2 bg-white rotate-45" aria-hidden="true"></span>
         </div>
-        <button className="bg-white shadow-2xl border border-gray-200 rounded-full p-4 hover:scale-110 transition">
-          <Image src={message_circle_more} alt="Help" width={28} height={28} />
+        <button className="bg-white shadow-md border border-gray-200 rounded-full p-3 flex items-center justify-center cursor-pointer transition-all duration-300">
+          <Image src={message_circle_more} alt="Help" className="w-5 h-5" />
         </button>
       </div>
     </div>
