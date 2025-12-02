@@ -289,10 +289,10 @@ const Page = () => {
         <main className="flex-grow w-full md:w-[80vw] mx-auto p-4 md:px-6 md:py-8">
           <div className="bg-white rounded-2xl shadow-lg py-8 px-6 md:px-24 space-y-12">
             <div className="mb-10">
-              <div className="w-fit text-sm text-[#1ECEC9] font-semibold mb-2">Create an account</div>
+              <div className="w-fit text-xs text-gray-500 font-semibold mb-2">Join Our Platform</div>
               <h1 className="text-2xl text-[#044D5E] font-semibold">Register as an Institution</h1>
-              <p className="text-sm text-gray-500 mt-3">
-                Are you an institution with green finance objectives? Klima Harvest will support you in tracking your green finance commitments...
+              <p className="text-xs text-gray-500 mt-3">
+                Are you an institution with green finance objectives? Do you prioritise investments that align with environmental goals while delivering financial returns? Klima Harvest will support you in tracking your green finance commitments against environment, social and economic performance indicators, while connecting you to carbon revenue generating opportunities across your portfolio. 
               </p>
             </div>
 
@@ -318,7 +318,7 @@ const Page = () => {
                         }`}
                     >
                       <Icon size={18} />
-                      <p className="text-sm">{name}</p>
+                      <p className="text-xs">{name}</p>
                     </div>
                   ))}
                 </div>
@@ -331,23 +331,23 @@ const Page = () => {
                   <h2 className="text-xl font-semibold text-gray-800 mb-8">Institution Information</h2>
 
                   <div className="mb-10">
-                    <p className="text-sm font-medium text-gray-700 mb-3">
+                    <p className="text-xs font-medium text-gray-700 mb-3">
                       What is your institutional approach to green finance and sustainability?
                     </p>
                     <textarea
                       value={institutionApproach}
                       onChange={(e) => setInstitutionApproach(e.target.value)}
-                      className="w-full h-32 text-sm border border-gray-300 rounded-xl p-4 resize-none focus:outline-none focus:border-[#1ECEC9] transition"
+                      className="w-full h-32 text-xs border border-gray-300 rounded-lg p-4 resize-none focus:outline-none focus:border-gray-500 transition"
                       placeholder="Describe your institution's commitment and strategy..."
                     />
                   </div>
 
                   {/* Green Finance Strategy Upload */}
                   <div className="mb-10">
-                    <p className="text-sm font-medium text-gray-700 mb-4">
+                    <p className="text-xs font-medium text-gray-700 mb-4">
                       Upload Green Finance Strategy/Sustainability Strategy*
                     </p>
-                    <label className="block relative h-64 border-2 border-dashed border-gray-300 rounded-2xl overflow-hidden cursor-pointer group hover:border-[#1ECEC9] transition">
+                    <label className="block relative h-64 border border-dashed border-gray-300 rounded-2xl overflow-hidden cursor-pointer group hover:border-gray-500 transition">
                       {greenFinancePreview ? (
                         <>
                           {greenFinanceFile?.type.startsWith("image/") ? (
@@ -358,9 +358,9 @@ const Page = () => {
                           ) : (
                             <div className="absolute inset-0 bg-gradient-to-br from-gray-50 to-gray-100 flex items-center justify-center">
                               <div className="text-center">
-                                <FileText size={48} className="text-[#1ECEC9] mx-auto mb-3" />
-                                <p className="text-lg font-medium text-gray-700">PDF Document</p>
-                                <p className="text-sm text-gray-500 mt-1 max-w-xs truncate">{greenFinanceFile?.name}</p>
+                                <FileText size={48} className="text-gray-500 mx-auto mb-3" />
+                                <p className="text-xs font-medium text-gray-700">PDF Document</p>
+                                <p className="text-xs text-gray-500 mt-1 max-w-xs truncate">{greenFinanceFile?.name}</p>
                               </div>
                             </div>
                           )}
@@ -376,14 +376,14 @@ const Page = () => {
                             <X size={20} className="text-gray-700" />
                           </button>
                           <div className="absolute bottom-5 left-5 text-white">
-                            <p className="text-sm font-medium truncate max-w-md">{greenFinanceFile?.name}</p>
+                            <p className="text-xs font-medium truncate max-w-md">{greenFinanceFile?.name}</p>
                           </div>
                         </>
                       ) : (
                         <div className="h-full flex flex-col items-center justify-center bg-gray-50 group-hover:bg-gray-100 transition">
                           <UploadCloud size={48} className="text-gray-400 mb-4" />
-                          <p className="text-lg font-medium text-gray-700">Drop your document here or click to upload</p>
-                          <p className="text-sm text-gray-500 mt-2">PDF, DOC, DOCX • Max 10MB</p>
+                          <p className="text-sm font-medium text-gray-700">Drop your document here or click to upload</p>
+                          <p className="text-xs text-gray-500 mt-2">PDF, DOC, DOCX • Max 10MB</p>
                         </div>
                       )}
                       <input
@@ -399,8 +399,8 @@ const Page = () => {
 
                   {/* Branding Materials Upload */}
                   <div className="mb-10">
-                    <p className="text-sm font-medium text-gray-700 mb-4">Upload branding materials**</p>
-                    <label className="block relative h-64 border-2 border-dashed border-gray-300 rounded-2xl overflow-hidden cursor-pointer group hover:border-[#1ECEC9] transition">
+                    <p className="text-xs font-medium text-gray-700 mb-4">Upload branding materials**</p>
+                    <label className="block relative h-64 border border-dashed border-gray-300 rounded-2xl overflow-hidden cursor-pointer group hover:border-gray-500 transition">
                       {brandingPreview ? (
                         <>
                           {brandingFile?.type.startsWith("image/") ? (
@@ -411,9 +411,9 @@ const Page = () => {
                           ) : (
                             <div className="absolute inset-0 bg-gradient-to-br from-gray-50 to-gray-100 flex items-center justify-center">
                               <div className="text-center">
-                                <FileText size={48} className="text-[#1ECEC9] mx-auto mb-3" />
-                                <p className="text-lg font-medium text-gray-700">File Uploaded</p>
-                                <p className="text-sm text-gray-500 mt-1 max-w-xs truncate">{brandingFile?.name}</p>
+                                <FileText size={48} className="text-gray-500 mx-auto mb-3" />
+                                <p className="text-xs font-medium text-gray-700">File Uploaded</p>
+                                <p className="text-xs text-gray-500 mt-1 max-w-xs truncate">{brandingFile?.name}</p>
                               </div>
                             </div>
                           )}
@@ -429,14 +429,14 @@ const Page = () => {
                             <X size={20} className="text-gray-700" />
                           </button>
                           <div className="absolute bottom-5 left-5 text-white">
-                            <p className="text-sm font-medium truncate max-w-md">{brandingFile?.name}</p>
+                            <p className="text-xs font-medium truncate max-w-md">{brandingFile?.name}</p>
                           </div>
                         </>
                       ) : (
                         <div className="h-full flex flex-col items-center justify-center bg-gray-50 group-hover:bg-gray-100 transition">
                           <UploadCloud size={48} className="text-gray-400 mb-4" />
-                          <p className="text-lg font-medium text-gray-700">Drop your logo & branding here</p>
-                          <p className="text-sm text-gray-500 mt-2">PNG, JPG, PDF • Max 10MB</p>
+                          <p className="text-sm font-medium text-gray-700">Drop your logo & branding here</p>
+                          <p className="text-xs text-gray-500 mt-2">PNG, JPG, PDF • Max 10MB</p>
                         </div>
                       )}
                       <input
@@ -456,9 +456,9 @@ const Page = () => {
                   <h2 className="text-xl font-semibold text-gray-800 mb-8">Investment Objectives</h2>
                   <div className="space-y-6">
                     <div className="relative">
-                      <p className="text-sm font-medium text-gray-700 mb-3">What are your specific objectives?</p>
+                      <p className="text-xs font-medium text-gray-700 mb-3">What are your specific objectives?</p>
                       <div
-                        className={`w-full text-sm rounded-xl px-5 py-4 flex justify-between items-center cursor-pointer transition-all border ${objectiveOpen ? "border-[#1ECEC9] bg-white shadow-md" : "border-gray-300 hover:bg-gray-50"
+                        className={`w-full text-xs rounded-lg px-5 py-4 flex justify-between items-center cursor-pointer transition-all border ${objectiveOpen ? "border-gray-500 bg-white shadow-md" : "border-gray-300 hover:bg-gray-50"
                           }`}
                         onClick={() => setObjectiveOpen(!objectiveOpen)}
                       >
@@ -473,7 +473,7 @@ const Page = () => {
                             initial={{ opacity: 0, y: -10 }}
                             animate={{ opacity: 1, y: 0 }}
                             exit={{ opacity: 0, y: -10 }}
-                            className="absolute top-full left-0 right-0 mt-2 border border-gray-200 rounded-xl bg-white shadow-lg z-20 overflow-hidden"
+                            className="absolute top-full left-0 right-0 mt-2 border border-gray-200 rounded-lg bg-white shadow-lg z-20 overflow-hidden"
                           >
                             {objectives.map((item) => (
                               <div
@@ -482,7 +482,7 @@ const Page = () => {
                                   setSelectedObjective(item);
                                   setObjectiveOpen(false);
                                 }}
-                                className="px-5 py-3 text-sm hover:bg-gray-50 cursor-pointer transition"
+                                className="px-5 py-3 text-xs hover:bg-gray-50 cursor-pointer transition"
                               >
                                 {item}
                               </div>
@@ -492,7 +492,7 @@ const Page = () => {
                       </AnimatePresence>
                     </div>
                     <div>
-                      <p className="text-sm font-medium text-gray-700 mb-3">
+                      <p className="text-xs font-medium text-gray-700 mb-3">
                         Do you have any sector or geographic preferences for investments?
                       </p>
                       <input
@@ -500,7 +500,7 @@ const Page = () => {
                         value={sectorPreferences}
                         onChange={(e) => setSectorPreferences(e.target.value)}
                         placeholder="e.g. Renewable energy in East Africa"
-                        className="w-full text-sm border border-gray-300 rounded-xl px-5 py-4 focus:outline-none focus:border-[#1ECEC9] transition"
+                        className="w-full text-xs border border-gray-300 rounded-lg px-5 py-4 focus:outline-none focus:border-gray-500 transition"
                       />
                     </div>
                   </div>
@@ -511,14 +511,14 @@ const Page = () => {
                   <h2 className="text-xl font-semibold text-gray-800 mb-8">Risk Appetite</h2>
                   <div className="space-y-8">
                     <div>
-                      <p className="text-sm font-medium text-gray-700 mb-4">What is your risk tolerance?</p>
+                      <p className="text-xs font-medium text-gray-700 mb-4">What is your risk tolerance?</p>
                       <div className="flex gap-4">
                         {["low", "medium", "high"].map((level) => (
                           <button
                             key={level}
                             type="button"
                             onClick={() => setRiskTolerance(riskTolerance === level ? null : level as any)}
-                            className={`px-8 py-4 rounded-xl border-2 text-sm font-medium capitalize transition-all ${riskTolerance === level
+                            className={`px-4 py-3 rounded-lg border text-xs font-medium capitalize transition-all ${riskTolerance === level
                               ? level === "low"
                                 ? "bg-green-50 border-green-500 text-green-700"
                                 : level === "medium"
@@ -533,14 +533,14 @@ const Page = () => {
                       </div>
                     </div>
                     <div>
-                      <p className="text-sm font-medium text-gray-700 mb-4">
+                      <p className="text-xs font-medium text-gray-700 mb-4">
                         Open to emerging green technologies?
                       </p>
                       <div className="flex gap-4">
                         <button
                           type="button"
                           onClick={() => setExploreEmerging(exploreEmerging === true ? null : true)}
-                          className={`px-8 py-4 rounded-xl border-2 text-sm font-medium ${exploreEmerging === true
+                          className={`px-4 py-3 rounded-lg border text-xs font-medium ${exploreEmerging === true
                             ? "bg-green-50 border-green-500 text-green-700"
                             : "border-gray-300 hover:bg-gray-50"
                             }`}
@@ -550,7 +550,7 @@ const Page = () => {
                         <button
                           type="button"
                           onClick={() => setExploreEmerging(exploreEmerging === false ? null : false)}
-                          className={`px-8 py-4 rounded-xl border-2 text-sm font-medium ${exploreEmerging === false
+                          className={`px-4 py-3 rounded-lg border text-xs font-medium ${exploreEmerging === false
                             ? "bg-red-50 border-red-500 text-red-700"
                             : "border-gray-300 hover:bg-gray-50"
                             }`}
@@ -567,14 +567,14 @@ const Page = () => {
                   <h2 className="text-xl font-semibold text-gray-800 mb-8">Performance Metrics</h2>
                   <div className="space-y-8">
                     <div>
-                      <p className="text-sm font-medium text-gray-700 mb-4">
+                      <p className="text-xs font-medium text-gray-700 mb-4">
                         Do you currently measure green portfolio performance?
                       </p>
                       <div className="flex gap-4">
                         <button
                           type="button"
                           onClick={() => setMeasurePerformance(measurePerformance === true ? null : true)}
-                          className={`px-8 py-4 rounded-xl border-2 text-sm font-medium ${measurePerformance === true
+                          className={`px-4 py-3 rounded-lg border text-xs font-medium ${measurePerformance === true
                             ? "bg-green-50 border-green-500 text-green-700"
                             : "border-gray-300 hover:bg-gray-50"
                             }`}
@@ -584,7 +584,7 @@ const Page = () => {
                         <button
                           type="button"
                           onClick={() => setMeasurePerformance(measurePerformance === false ? null : false)}
-                          className={`px-8 py-4 rounded-xl border-2 text-sm font-medium ${measurePerformance === false
+                          className={`px-4 py-3 rounded-lg border text-xs font-medium ${measurePerformance === false
                             ? "bg-red-50 border-red-500 text-red-700"
                             : "border-gray-300 hover:bg-gray-50"
                             }`}
@@ -595,19 +595,19 @@ const Page = () => {
                     </div>
                     {measurePerformance === true && (
                       <div>
-                        <p className="text-sm font-medium text-gray-700 mb-3">If yes, please explain</p>
+                        <p className="text-xs font-medium text-gray-700 mb-3">If yes, please explain</p>
                         <textarea
                           value={performanceExplanation}
                           onChange={(e) => setPerformanceExplanation(e.target.value)}
-                          className="w-full h-32 text-sm border border-gray-300 rounded-xl p-4 resize-none focus:outline-none focus:border-[#1ECEC9]"
+                          className="w-full h-32 text-xs border border-gray-300 rounded-lg p-4 resize-none focus:outline-none focus:border-gray-500"
                           placeholder="Describe your current measurement approach..."
                         />
                       </div>
                     )}
                     <div className="relative">
-                      <p className="text-sm font-medium text-gray-700 mb-3">Key Performance Indicators (KPIs)</p>
+                      <p className="text-xs font-medium text-gray-700 mb-3">Key Performance Indicators (KPIs)</p>
                       <div
-                        className={`w-full text-sm rounded-xl px-5 py-4 flex justify-between items-center cursor-pointer transition-all border ${kpiDropdownOpen ? "border-[#1ECEC9] bg-white shadow-md" : "border-gray-300 hover:bg-gray-50"
+                        className={`w-full text-xs rounded-lg px-5 py-4 flex justify-between items-center cursor-pointer transition-all border ${kpiDropdownOpen ? "border-gray-500 bg-white shadow-md" : "border-gray-300 hover:bg-gray-50"
                           }`}
                         onClick={() => setKpiDropdownOpen(!kpiDropdownOpen)}
                       >
@@ -622,7 +622,7 @@ const Page = () => {
                             initial={{ opacity: 0, y: -10 }}
                             animate={{ opacity: 1, y: 0 }}
                             exit={{ opacity: 0, y: -10 }}
-                            className="absolute top-full left-0 right-0 mt-2 border border-gray-200 rounded-xl bg-white shadow-lg z-20"
+                            className="absolute top-full left-0 right-0 mt-2 border border-gray-200 rounded-lg bg-white shadow-lg z-20"
                           >
                             {kpis.map((kpi) => (
                               <div
@@ -631,7 +631,7 @@ const Page = () => {
                                   setSelectedKpi(kpi);
                                   setKpiDropdownOpen(false);
                                 }}
-                                className="px-5 py-3 text-sm hover:bg-gray-50 cursor-pointer"
+                                className="px-5 py-3 text-xs hover:bg-gray-50 cursor-pointer"
                               >
                                 {kpi}
                               </div>
@@ -648,9 +648,9 @@ const Page = () => {
                   <h2 className="text-xl font-semibold text-gray-800 mb-8">Stakeholder Engagement</h2>
                   <div className="space-y-8">
                     <div className="relative">
-                      <p className="text-sm font-medium text-gray-700 mb-3">Key stakeholders involved?</p>
+                      <p className="text-xs font-medium text-gray-700 mb-3">Key stakeholders involved?</p>
                       <div
-                        className={`w-full text-sm rounded-xl px-5 py-4 flex justify-between items-center cursor-pointer transition-all border ${stakeholderDropdownOpen1 ? "border-[#1ECEC9] bg-white shadow-md" : "border-gray-300 hover:bg-gray-50"
+                        className={`w-full text-xs rounded-lg px-5 py-4 flex justify-between items-center cursor-pointer transition-all border ${stakeholderDropdownOpen1 ? "border-gray-500 bg-white shadow-md" : "border-gray-300 hover:bg-gray-50"
                           }`}
                         onClick={() => setStakeholderDropdownOpen1(!stakeholderDropdownOpen1)}
                       >
@@ -665,7 +665,7 @@ const Page = () => {
                             initial={{ opacity: 0, y: -10 }}
                             animate={{ opacity: 1, y: 0 }}
                             exit={{ opacity: 0, y: -10 }}
-                            className="absolute top-full left-0 right-0 mt-2 border border-gray-200 rounded-xl bg-white shadow-lg z-20"
+                            className="absolute top-full left-0 right-0 mt-2 border border-gray-200 rounded-lg bg-white shadow-lg z-20"
                           >
                             {stakeholders1.map((s) => (
                               <div
@@ -674,7 +674,7 @@ const Page = () => {
                                   setSelectedStakeholder1(s);
                                   setStakeholderDropdownOpen1(false);
                                 }}
-                                className="px-5 py-3 text-sm hover:bg-gray-50 cursor-pointer"
+                                className="px-5 py-3 text-xs hover:bg-gray-50 cursor-pointer"
                               >
                                 {s}
                               </div>
@@ -684,9 +684,9 @@ const Page = () => {
                       </AnimatePresence>
                     </div>
                     <div className="relative">
-                      <p className="text-sm font-medium text-gray-700 mb-3">Stakeholder preferences?</p>
+                      <p className="text-xs font-medium text-gray-700 mb-3">Stakeholder preferences?</p>
                       <div
-                        className={`w-full text-sm rounded-xl px-5 py-4 flex justify-between items-center cursor-pointer transition-all border ${stakeholderDropdownOpen2 ? "border-[#1ECEC9] bg-white shadow-md" : "border-gray-300 hover:bg-gray-50"
+                        className={`w-full text-xs rounded-lg px-5 py-4 flex justify-between items-center cursor-pointer transition-all border ${stakeholderDropdownOpen2 ? "border-gray-500 bg-white shadow-md" : "border-gray-300 hover:bg-gray-50"
                           }`}
                         onClick={() => setStakeholderDropdownOpen2(!stakeholderDropdownOpen2)}
                       >
@@ -701,7 +701,7 @@ const Page = () => {
                             initial={{ opacity: 0, y: -10 }}
                             animate={{ opacity: 1, y: 0 }}
                             exit={{ opacity: 0, y: -10 }}
-                            className="absolute top-full left-0 right-0 mt-2 border border-gray-200 rounded-xl bg-white shadow-lg z-20"
+                            className="absolute top-full left-0 right-0 mt-2 border border-gray-200 rounded-lg bg-white shadow-lg z-20"
                           >
                             {stakeholders2.map((s) => (
                               <div
@@ -710,7 +710,7 @@ const Page = () => {
                                   setSelectedStakeholder2(s);
                                   setStakeholderDropdownOpen2(false);
                                 }}
-                                className="px-5 py-3 text-sm hover:bg-gray-50 cursor-pointer"
+                                className="px-5 py-3 text-xs hover:bg-gray-50 cursor-pointer"
                               >
                                 {s}
                               </div>
@@ -727,12 +727,12 @@ const Page = () => {
                   <h2 className="text-xl font-semibold text-gray-800 mb-8">Regulatory Compliance</h2>
                   <div className="space-y-8">
                     <div>
-                      <p className="text-sm font-medium text-gray-700 mb-4">Are there regulatory requirements?</p>
+                      <p className="text-xs font-medium text-gray-700 mb-4">Are there regulatory requirements?</p>
                       <div className="flex gap-4">
                         <button
                           type="button"
                           onClick={() => setRegulatoryCompliance(regulatoryCompliance === true ? null : true)}
-                          className={`px-8 py-4 rounded-xl border-2 text-sm font-medium ${regulatoryCompliance === true
+                          className={`px-4 py-3 rounded-lg border text-xs font-medium ${regulatoryCompliance === true
                             ? "bg-green-50 border-green-500 text-green-700"
                             : "border-gray-300 hover:bg-gray-50"
                             }`}
@@ -742,7 +742,7 @@ const Page = () => {
                         <button
                           type="button"
                           onClick={() => setRegulatoryCompliance(regulatoryCompliance === false ? null : false)}
-                          className={`px-8 py-4 rounded-xl border-2 text-sm font-medium ${regulatoryCompliance === false
+                          className={`px-4 py-3 rounded-lg border text-xs font-medium ${regulatoryCompliance === false
                             ? "bg-red-50 border-red-500 text-red-700"
                             : "border-gray-300 hover:bg-gray-50"
                             }`}
@@ -758,7 +758,7 @@ const Page = () => {
                             key={r}
                             type="button"
                             onClick={() => toggleRegulation(r)}
-                            className={`px-6 py-4 rounded-xl border-2 text-sm text-left transition-all ${selectedRegulations.includes(r)
+                            className={`px-6 py-4 rounded-lg border text-xs text-left transition-all ${selectedRegulations.includes(r)
                               ? "bg-green-50 border-green-500 text-green-700"
                               : "border-gray-300 hover:bg-gray-50"
                               }`}
@@ -769,9 +769,9 @@ const Page = () => {
                       </div>
                     )}
                     <div className="relative">
-                      <p className="text-sm font-medium text-gray-700 mb-3">Sustainability standards followed?</p>
+                      <p className="text-xs font-medium text-gray-700 mb-3">Sustainability standards followed?</p>
                       <div
-                        className={`w-full text-sm rounded-xl px-5 py-4 flex justify-between items-center cursor-pointer transition-all border ${standardsDropdownOpen ? "border-[#1ECEC9] bg-white shadow-md" : "border-gray-300 hover:bg-gray-50"
+                        className={`w-full text-xs rounded-lg px-5 py-4 flex justify-between items-center cursor-pointer transition-all border ${standardsDropdownOpen ? "border-gray-500 bg-white shadow-md" : "border-gray-300 hover:bg-gray-50"
                           }`}
                         onClick={() => setStandardsDropdownOpen(!standardsDropdownOpen)}
                       >
@@ -786,7 +786,7 @@ const Page = () => {
                             initial={{ opacity: 0, y: -10 }}
                             animate={{ opacity: 1, y: 0 }}
                             exit={{ opacity: 0, y: -10 }}
-                            className="absolute top-full left-0 right-0 mt-2 border border-gray-200 rounded-xl bg-white shadow-lg z-20"
+                            className="absolute top-full left-0 right-0 mt-2 border border-gray-200 rounded-lg bg-white shadow-lg z-20"
                           >
                             {standards.map((s) => (
                               <div
@@ -795,7 +795,7 @@ const Page = () => {
                                   setSelectedStandard(s);
                                   setStandardsDropdownOpen(false);
                                 }}
-                                className="px-5 py-3 text-sm hover:bg-gray-50 cursor-pointer"
+                                className="px-5 py-3 text-xs hover:bg-gray-50 cursor-pointer"
                               >
                                 {s}
                               </div>
@@ -812,12 +812,12 @@ const Page = () => {
                   <h2 className="text-xl font-semibold text-gray-800 mb-8">Partnership Opportunities</h2>
                   <div className="space-y-8">
                     <div>
-                      <p className="text-sm font-medium text-gray-700 mb-4">Open to partnerships?</p>
+                      <p className="text-xs font-medium text-gray-700 mb-4">Open to partnerships?</p>
                       <div className="flex gap-4">
                         <button
                           type="button"
                           onClick={() => setPartnershipOpportunities(partnershipOpportunities === true ? null : true)}
-                          className={`px-8 py-4 rounded-xl border-2 text-sm font-medium ${partnershipOpportunities === true
+                          className={`px-4 py-3 rounded-lg border text-xs font-medium ${partnershipOpportunities === true
                             ? "bg-green-50 border-green-500 text-green-700"
                             : "border-gray-300 hover:bg-gray-50"
                             }`}
@@ -827,7 +827,7 @@ const Page = () => {
                         <button
                           type="button"
                           onClick={() => setPartnershipOpportunities(partnershipOpportunities === false ? null : false)}
-                          className={`px-8 py-4 rounded-xl border-2 text-sm font-medium ${partnershipOpportunities === false
+                          className={`px-4 py-3 rounded-lg border text-xs font-medium ${partnershipOpportunities === false
                             ? "bg-red-50 border-red-500 text-red-700"
                             : "border-gray-300 hover:bg-gray-50"
                             }`}
@@ -843,7 +843,7 @@ const Page = () => {
                             key={p}
                             type="button"
                             onClick={() => togglePartnership(p)}
-                            className={`px-6 py-4 rounded-xl border-2 text-sm text-left transition-all ${selectedPartnerships.includes(p)
+                            className={`px-6 py-4 rounded-lg border text-xs text-left transition-all ${selectedPartnerships.includes(p)
                               ? "bg-green-50 border-green-500 text-green-700"
                               : "border-gray-300 hover:bg-gray-50"
                               }`}
@@ -862,13 +862,13 @@ const Page = () => {
                     type="button"
                     onClick={handleSubmit}
                     disabled={isSubmitting}
-                    className={`bg-[#044D5E] text-white px-12 py-5 rounded-full flex items-center gap-3 text-lg font-semibold transition-all shadow-xl hover:shadow-2xl ${isSubmitting ? "opacity-70 cursor-not-allowed" : "hover:bg-[#044D5E]/90"
+                    className={`bg-[#044D5E] text-white px-6 py-4 rounded-full flex items-center gap-3 text-sm font-semibold transition-all cursor-pointer ${isSubmitting ? "opacity-70 cursor-not-allowed" : "hover:bg-[#044D5E]/90"
                       }`}
                   >
                     {isSubmitting ? (
                       <>
                         Completing...
-                        <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                        <div className="w-5 h-5 border border-white border-t-transparent rounded-full animate-spin" />
                       </>
                     ) : (
                       <>
@@ -886,7 +886,7 @@ const Page = () => {
 
       {/* Floating Help */}
       <div className="fixed bottom-6 right-6 z-50">
-        <div className="bg-white text-sm text-gray-700 px-4 py-2 rounded-full shadow-2xl mb-3 animate-pulse">
+        <div className="bg-white text-xs text-gray-700 px-4 py-2 rounded-full shadow-2xl mb-3 animate-pulse">
           Need help?
         </div>
         <button className="bg-white shadow-2xl border border-gray-200 rounded-full p-4 hover:scale-110 transition">
