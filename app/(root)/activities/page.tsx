@@ -18,30 +18,20 @@ import Link from 'next/link';
 import React, { useState, useMemo, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 
-// Filter options
-const locations = ['All', 'Africa', 'Asia', 'Europe', 'North America', 'South America', 'Oceania'];
-const locationCategories = ['All', 'Continent', 'Country', 'Region', 'City'];
-const carbonCreditStages = ['Stage', 'Planning', 'Validation', 'Implementation', 'Verification', 'Issuance'];
-const khExperts = ['All', 'John Smith', 'Jane Doe', 'Alex Johnson', 'Emily Brown', 'Sarah Wilson'];
-
-// Activity Card Interface
 interface ActivityCardData {
   id: string;
   title: string;
   category: string;
   sdgs?: string;
   status: string;
-  stakeholders?: string;
-  method?: string;
-  hasProgress?: boolean;
-  progress?: number;
+  entityName?: string;
+  lastUpdated?: string;
   location?: string;
   locationCategory?: string;
   carbonStage?: string;
   expert?: string;
-  isReal?: boolean;
-  entityName?: string;
-  lastUpdated?: string;
+  hasProgress?: boolean;
+  progress?: number;
 }
 
 const CollapsibleActivityCard: React.FC<{ card: ActivityCardData }> = ({ card }) => {
@@ -54,9 +44,9 @@ const CollapsibleActivityCard: React.FC<{ card: ActivityCardData }> = ({ card })
       animate={{ backgroundColor: isOpen ? '#FFFBE8' : '#F7F7F7' }}
       transition={{ duration: 0.35, ease: 'easeInOut' }}
       className={`rounded-lg overflow-hidden border border-gray-200 hover:shadow-sm transition-all duration-300
-        ${isOpen ? 'ring-1 ring-teal-500/20' : ''} ${card.isReal ? 'border-l-1 border-l-[#044D5E]' : ''}`}
+        ${isOpen ? 'ring-1 ring-teal-500/20' : ''}`}
     >
-      {/* Header - ONLY this part toggles the card */}
+      {/* Header */}
       <div
         className="px-6 py-5 cursor-pointer select-none"
         onClick={() => setIsOpen(!isOpen)}
@@ -65,7 +55,6 @@ const CollapsibleActivityCard: React.FC<{ card: ActivityCardData }> = ({ card })
           <div className="flex items-center gap-3">
             <h3 className="text-xl font-semibold text-teal-900">
               {card.title}
-              {card.isReal && <span className="ml-2 text-xs text-emerald-600 font-bold">[Real Activity]</span>}
             </h3>
             <BadgeCheck fill="#1ECEC9" color="#ffffff" size={24} />
           </div>
@@ -88,18 +77,6 @@ const CollapsibleActivityCard: React.FC<{ card: ActivityCardData }> = ({ card })
             <div>
               <span className="text-gray-500">Aligned SDGs:</span>{' '}
               <span className="font-medium text-gray-900">{card.sdgs}</span>
-            </div>
-          )}
-          {card.stakeholders && (
-            <div>
-              <span className="text-gray-500">Stakeholders:</span>{' '}
-              <span className="font-medium text-gray-900">{card.stakeholders}</span>
-            </div>
-          )}
-          {card.method && (
-            <div>
-              <span className="text-gray-500">Method:</span>{' '}
-              <span className="font-medium text-gray-900">{card.method}</span>
             </div>
           )}
           <div>
@@ -151,19 +128,18 @@ const CollapsibleActivityCard: React.FC<{ card: ActivityCardData }> = ({ card })
                     <div className="w-full bg-gray-200 rounded-full h-3.5 overflow-hidden">
                       <motion.div
                         initial={{ width: 0 }}
-                        animate={{ width: `${card.progress || 45}%` }}
+                        animate={{ width: `${card.progress || 100}%` }}
                         transition={{ duration: 1.4, ease: 'easeOut', delay: 0.2 }}
                         className="h-full bg-gradient-to-r from-emerald-500 to-teal-600"
                       />
                     </div>
                     <p className="mt-2 text-xs font-bold text-teal-900">
-                      {card.progress || 45}% of target achieved
+                      {card.progress || 100}% of target achieved
                     </p>
                   </div>
                 </div>
               )}
 
-              {/* Buttons Section */}
               <div className="flex flex-wrap items-center justify-between gap-4 pt-4">
                 <div className="flex flex-wrap gap-3">
                   <button className="bg-[#D3A029] hover:bg-[#D3A029]/90 text-white text-xs font-medium px-6 py-2.5 rounded-lg transition">
@@ -174,7 +150,6 @@ const CollapsibleActivityCard: React.FC<{ card: ActivityCardData }> = ({ card })
                   </button>
                 </div>
 
-                {/* FIXED: Now navigates to dynamic detail page */}
                 <Link
                   href={`/activities/${card.id}`}
                   onClick={(e) => e.stopPropagation()}
@@ -201,6 +176,20 @@ const Activities = () => {
   });
 
   const [isMounted, setIsMounted] = useState(false);
+  const [showFilters, setShowFilters] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
+
+  // Filter states
+  const [selectedLocation, setSelectedLocation] = useState('All');
+  const [selectedLocationCategory, setSelectedLocationCategory] = useState('All');
+  const [selectedCarbonStage, setSelectedCarbonStage] = useState('Stage');
+  const [selectedExpert, setSelectedExpert] = useState('All');
+
+  // Dropdown states
+  const [locationsDropdownOpen, setLocationsDropdownOpen] = useState(false);
+  const [locationCategoriesDropdownOpen, setLocationCategoriesDropdownOpen] = useState(false);
+  const [carbonCreditsDropdownOpen, setCarbonCreditsDropdownOpen] = useState(false);
+  const [khExpertsDropdownOpen, setKhExpertsDropdownOpen] = useState(false);
 
   const toggleSidebar = () => {
     const newState = !isCollapsed;
@@ -211,149 +200,70 @@ const Activities = () => {
   const contentMarginLeft = isCollapsed ? 'md:ml-28' : 'md:ml-58';
   const sectionTextContainerClass = `space-y-4 transition-all duration-300 ease-in-out ${isCollapsed ? 'scale-x-110' : 'scale-x-100'}`;
 
-  const [showFilters, setShowFilters] = useState(false);
-
-  // Filter states
-  const [selectedLocation, setSelectedLocation] = useState('All');
-  const [selectedLocationCategory, setSelectedLocationCategory] = useState('All');
-  const [selectedCarbonStage, setSelectedCarbonStage] = useState('Stage');
-  const [selectedExpert, setSelectedExpert] = useState('All');
-
-  // Dropdown open states
-  const [locationsDropdownOpen, setLocationsDropdownOpen] = useState(false);
-  const [locationCategoriesDropdownOpen, setLocationCategoriesDropdownOpen] = useState(false);
-  const [carbonCreditsDropdownOpen, setCarbonCreditsDropdownOpen] = useState(false);
-  const [khExpertsDropdownOpen, setKhExpertsDropdownOpen] = useState(false);
-
-  const [searchQuery, setSearchQuery] = useState('');
-
-  // Mount effect
   useEffect(() => {
     setIsMounted(true);
   }, []);
 
-  // Load real activities from localStorage
-  const realActivities = useMemo<ActivityCardData[]>(() => {
+  // ONLY SUBMITTED ACTIVITIES — NO DUMMY DATA
+  const submittedActivities = useMemo<ActivityCardData[]>(() => {
     if (!isMounted) return [];
 
     const activities: ActivityCardData[] = [];
 
     try {
-      // Load submitted activities
-      const submittedStr = localStorage.getItem('submittedActivities');
-      if (submittedStr) {
-        const submitted = JSON.parse(submittedStr);
-        if (Array.isArray(submitted)) {
-          submitted.forEach((activity: any) => {
-            const overview = activity.overview || {};
-            const activityDetails = activity.activityDetails || {};
-            
-            // Create timestamp from activity ID
-            const timestamp = activity.id.match(/_(\d+)_\w+/)?.[1];
-            const date = timestamp
-              ? new Date(Number(timestamp)).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })
-              : 'Recently';
+      const stored = localStorage.getItem('submittedActivities');
+      if (!stored) return [];
 
-            activities.push({
-              id: activity.id,
-              title: overview.entityName || 'Submitted Activity',
-              category: activityDetails.selectedCategory || 'General',
-              status: activity.status || 'Completed',
-              entityName: overview.entityName,
-              lastUpdated: date,
-              location: overview.orgCountry || 'Kenya',
-              locationCategory: 'Country',
-              carbonStage: 'Implementation',
-              expert: 'System',
-              isReal: true,
-              hasProgress: true,
-              progress: 100,
-            });
-          });
-        }
-      }
+      const submitted = JSON.parse(stored);
+      if (!Array.isArray(submitted)) return [];
 
-      // Load draft activities
-      Object.keys(localStorage).forEach(key => {
-        const match = key.match(/^activityDraft_(.+)_step1$/);
-        if (!match) return;
-        const activityId = match[1];
-        
-        // Skip if already submitted
-        if (activities.some(a => a.id === activityId)) return;
+      submitted.forEach((activity: any) => {
+        const overview = activity.overview || {};
+        const details = activity.activityDetails || {};
+        const timestampMatch = activity.id.match(/_(\d+)_\w+/);
+        const timestamp = timestampMatch ? Number(timestampMatch[1]) : Date.now();
 
-        try {
-          const step1Data = JSON.parse(localStorage.getItem(key) || '{}');
-          if (!step1Data.entityName) return;
+        const sdgs = overview.sdgs
+          ? overview.sdgs
+              .filter((s: any) => s.selected)
+              .map((s: any) => s.id)
+              .join(', ')
+          : undefined;
 
-          // Calculate progress based on filled steps
-          let filledSteps = 0;
-          for (let i = 1; i <= 3; i++) {
-            if (localStorage.getItem(`activityDraft_${activityId}_step${i}`)) filledSteps++;
-          }
-          const progress = Math.round((filledSteps / 3) * 100);
-
-          // Get category from step2
-          let category = 'Draft';
-          try {
-            const step2Data = JSON.parse(localStorage.getItem(`activityDraft_${activityId}_step2`) || '{}');
-            category = step2Data.selectedCategory || 'Draft';
-          } catch (e) {
-            console.warn('Failed to parse step2 for activity:', activityId);
-          }
-
-          activities.push({
-            id: activityId,
-            title: step1Data.entityName || 'Untitled Draft',
-            category: category,
-            status: progress === 100 ? 'Ready to Submit' : progress >= 50 ? 'In Progress' : 'Draft',
-            entityName: step1Data.entityName,
-            lastUpdated: 'In Progress',
-            location: step1Data.orgCountry || 'Location not set',
-            locationCategory: 'Country',
-            carbonStage: 'Planning',
-            expert: 'User',
-            isReal: true,
-            hasProgress: true,
-            progress: progress,
-          });
-        } catch (e) {
-          console.warn('Failed to parse draft activity:', key);
-        }
+        activities.push({
+          id: activity.id,
+          title: overview.entityName || 'Untitled Activity',
+          category: details.selectedCategory || 'General',
+          sdgs,
+          status: 'Completed',
+          entityName: overview.entityName,
+          lastUpdated: new Date(timestamp).toLocaleDateString('en-GB', {
+            day: 'numeric',
+            month: 'short',
+            year: 'numeric',
+          }),
+          location: overview.orgCountry || 'Global',
+          locationCategory: 'Country',
+          carbonStage: 'Implementation',
+          expert: 'KH Verified',
+          hasProgress: true,
+          progress: 100,
+        });
       });
-    } catch (e) {
-      console.warn('Failed to load activities from localStorage', e);
+    } catch (error) {
+      console.error('Error loading submitted activities:', error);
     }
 
     return activities;
   }, [isMounted]);
 
-  // 9 Dummy Activity Cards
-  const dummyActivityCards: ActivityCardData[] = useMemo<ActivityCardData[]>(
-    () => [
-      { id: '1', title: 'Social Impact Activity', category: 'Social Impact', sdgs: '2', status: 'No Resolutions', location: 'Africa', locationCategory: 'Continent', carbonStage: 'Implementation', expert: 'John Smith' },
-      { id: '2', title: 'Environmental Impact Activity', category: 'Environmental Impact', sdgs: '13', status: 'Below Standard', hasProgress: true, progress: 45, location: 'Asia', locationCategory: 'Region', carbonStage: 'Verification', expert: 'Jane Doe' },
-      { id: '3', title: 'Stakeholder Webinar', category: 'Stakeholder Engagement', stakeholders: 'Investors', method: 'ESG Forums', status: 'Resolutions Available', location: 'Europe', locationCategory: 'Country', carbonStage: 'Planning', expert: 'Alex Johnson' },
-      { id: '4', title: 'Material Topics', category: 'Material Topic', sdgs: '5', status: 'Meets Standard', location: 'North America', locationCategory: 'City', carbonStage: 'Issuance', expert: 'Emily Brown' },
-      { id: '5', title: 'Human Rights', category: 'Human Rights', sdgs: '8', status: 'Yes', location: 'South America', locationCategory: 'Country', carbonStage: 'Validation', expert: 'Sarah Wilson' },
-      { id: '6', title: 'Waste Management', category: 'Waste & Circular Economy', sdgs: '12', status: 'On Track', hasProgress: true, progress: 72, location: 'Oceania', locationCategory: 'Region', carbonStage: 'Implementation', expert: 'John Smith' },
-      { id: '7', title: 'E&S Compliance', category: 'Environmental & Social', status: 'Compliant', location: 'Europe', locationCategory: 'Continent', carbonStage: 'Verification', expert: 'Jane Doe' },
-      { id: '8', title: 'Custom Metric Tracker', category: 'Reporting & Metrics', status: 'Active', hasProgress: true, progress: 88, location: 'North America', locationCategory: 'Country', carbonStage: 'Planning', expert: 'Alex Johnson' },
-      { id: '9', title: 'Procurement Spend Diversity', category: 'Supply Chain', sdgs: '8,10', status: 'In Progress', hasProgress: true, progress: 60, location: 'Asia', locationCategory: 'Region', carbonStage: 'Validation', expert: 'Emily Brown' },
-    ],
-    []
-  );
-
-  // Combine real activities (at the top) with dummy activities
-  const allActivities = useMemo(() => {
-    return [...realActivities, ...dummyActivityCards];
-  }, [realActivities, dummyActivityCards]);
-
   const filteredCards = useMemo(() => {
-    return allActivities.filter(card => {
-      const matchesSearch = searchQuery === '' ||
+    return submittedActivities.filter(card => {
+      const matchesSearch =
+        searchQuery === '' ||
         card.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        card.category.toLowerCase().includes(searchQuery.toLowerCase());
+        card.category.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        (card.entityName?.toLowerCase().includes(searchQuery.toLowerCase()));
 
       const matchLocation = selectedLocation === 'All' || card.location === selectedLocation;
       const matchCategory = selectedLocationCategory === 'All' || card.locationCategory === selectedLocationCategory;
@@ -362,9 +272,8 @@ const Activities = () => {
 
       return matchesSearch && matchLocation && matchCategory && matchStage && matchExpert;
     });
-  }, [searchQuery, selectedLocation, selectedLocationCategory, selectedCarbonStage, selectedExpert, allActivities]);
+  }, [submittedActivities, searchQuery, selectedLocation, selectedLocationCategory, selectedCarbonStage, selectedExpert]);
 
-  // Prevent SSR flash / hydration mismatch
   if (!isMounted) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-[#BFEFF8]/30 to-[#B1CA69]/30 flex">
@@ -387,7 +296,7 @@ const Activities = () => {
             <div className="absolute inset-0 bg-gradient-to-br from-[#B1CA69]/30 via-transparent to-[#FBFDFB]/30 flex items-center p-6">
               <div className={`flex flex-col items-start ${contentMarginLeft} ${sectionTextContainerClass}`}>
                 <h2 className="text-lg md:text-3xl font-medium text-teal-900">
-                  Activities ({allActivities.length})
+                  Activities ({submittedActivities.length})
                 </h2>
                 <span className="text-xs text-teal-700">Activities / Listed Items</span>
               </div>
@@ -398,12 +307,6 @@ const Activities = () => {
 
           <main className="w-full space-y-6 bg-[#FBFDFB] relative z-10 pt-64 md:pt-72">
             <div className="w-full mx-auto px-2 py-4 md:px-8 md:py-6 space-y-8">
-              {/* Important Actions */}
-              <div className="flex flex-col space-y-6 bg-[#F9FBFC] border border-gray-200 px-4 py-4 md:px-16 md:py-6 rounded-xl">
-                <h1 className="text-xl font-semibold text-teal-900">
-                  Important Actions ({realActivities.filter(a => a.status === 'Draft' || a.status === 'In Progress').length})
-                </h1>
-              </div>
 
               {/* Search & Filters */}
               <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
@@ -434,7 +337,7 @@ const Activities = () => {
                 </div>
               </div>
 
-              {/* FILTER DROPDOWNS */}
+              {/* FILTER DROPDOWNS - 100% unchanged */}
               <AnimatePresence>
                 {showFilters && (
                   <motion.div
@@ -443,7 +346,6 @@ const Activities = () => {
                     exit={{ opacity: 0, height: 0 }}
                     className="grid grid-cols-1 md:grid-cols-4 gap-4"
                   >
-                    {/* All 4 filter dropdowns remain 100% unchanged */}
                     {/* Locations */}
                     <div className="relative">
                       <div
@@ -463,7 +365,7 @@ const Activities = () => {
                           exit={{ opacity: 0, y: -8 }}
                           className="absolute top-full left-0 right-0 mt-2 bg-white border border-gray-200 rounded-lg shadow-lg z-50 overflow-hidden"
                         >
-                          {locations.map(loc => (
+                          {['All', 'Africa', 'Asia', 'Europe', 'North America', 'South America', 'Oceania'].map(loc => (
                             <div
                               key={loc}
                               onClick={() => {
@@ -498,7 +400,7 @@ const Activities = () => {
                           exit={{ opacity: 0, y: -8 }}
                           className="absolute top-full left-0 right-0 mt-2 bg-white border border-gray-200 rounded-lg shadow-lg z-50 overflow-hidden"
                         >
-                          {locationCategories.map(cat => (
+                          {['All', 'Continent', 'Country', 'Region', 'City'].map(cat => (
                             <div
                               key={cat}
                               onClick={() => {
@@ -533,7 +435,7 @@ const Activities = () => {
                           exit={{ opacity: 0, y: -8 }}
                           className="absolute top-full left-0 right-0 mt-2 bg-white border border-gray-200 rounded-lg shadow-lg z-50 overflow-hidden"
                         >
-                          {carbonCreditStages.map(stage => (
+                          {['Stage', 'Planning', 'Validation', 'Implementation', 'Verification', 'Issuance'].map(stage => (
                             <div
                               key={stage}
                               onClick={() => {
@@ -568,7 +470,7 @@ const Activities = () => {
                           exit={{ opacity: 0, y: -8 }}
                           className="absolute top-full left-0 right-0 mt-2 bg-white border border-gray-200 rounded-lg shadow-lg z-50 overflow-hidden"
                         >
-                          {khExperts.map(expert => (
+                          {['All', 'John Smith', 'Jane Doe', 'Alex Johnson', 'Emily Brown', 'Sarah Wilson'].map(expert => (
                             <div
                               key={expert}
                               onClick={() => {
@@ -587,10 +489,15 @@ const Activities = () => {
                 )}
               </AnimatePresence>
 
-              {/* Activity Cards */}
+              {/* REAL SUBMITTED ACTIVITIES ONLY */}
               <div className="space-y-6">
                 {filteredCards.length === 0 ? (
-                  <p className="text-center py-12 text-gray-500">No activities match the selected filters.</p>
+                  <div className="text-center py-16 bg-white/80 rounded-xl border border-gray-200">
+                    <p className="text-gray-500 text-lg">No submitted activities yet.</p>
+                    <Link href="/activities/create-activities" className="mt-4 inline-block text-[#044D5E] font-medium underline">
+                      Create your first activity
+                    </Link>
+                  </div>
                 ) : (
                   filteredCards.map(card => (
                     <CollapsibleActivityCard key={card.id} card={card} />
