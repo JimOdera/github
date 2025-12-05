@@ -3,7 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import Image from 'next/image';
 import { Mail, Building2, ChevronLeft } from 'lucide-react';
-import { klima_logo_short } from '@/public';
+import { klima_logo_long, klima_logo_short } from '@/public';
 import { useRouter } from 'next/navigation';
 import { signIn, useSession, getSession } from 'next-auth/react';
 
@@ -199,19 +199,19 @@ export default function Auth() {
 
       <div className="relative z-10 bg-white rounded-3xl shadow-2xl p-8 w-full max-w-md mx-4">
         {screen !== 'initial' && (
-          <button onClick={handleBack} className="mb-6 flex items-center text-gray-600 hover:text-gray-900 transition">
-            <ChevronLeft className="w-5 h-5" /> Back
+          <button onClick={handleBack} className="mb-6 flex items-center justify-center gap-4 text-gray-600 hover:text-gray-900 transition">
+            <span className='w-fit h-fit p-1.5 border border-gray-200 rounded-full cursor-pointer'><ChevronLeft size={18} /></span> <p>Back</p>
           </button>
         )}
 
         <div className="text-center mb-8">
           <div className="flex justify-center mb-4">
-            <Image src={klima_logo_short} alt="Klima" width={40} height={40} />
+            <Image src={klima_logo_long} alt="Klima" width={200} />
           </div>
-          <h1 className="text-2xl font-bold text-gray-900">Klima Harvest</h1>
+          {/* <h1 className="text-2xl font-bold text-gray-900">Klima Harvest</h1> */}
           <p className="text-gray-600 mt-2">
             {screen === 'initial' && 'Log in or Sign up in seconds'}
-            {screen === 'email' && 'Enter your email to continue'}
+            {screen === 'email' && 'Enter your email address and we will send a one-time link'}
             {screen === 'otp' && 'Check your email'}
           </p>
         </div>
@@ -221,7 +221,7 @@ export default function Auth() {
             <button
               onClick={handleGoogleSignIn}
               disabled={googleLoading}
-              className="w-full flex items-center justify-center gap-3 py-3 px-4 border rounded-xl hover:bg-gray-50 mb-3 transition-colors font-medium disabled:opacity-50 disabled:cursor-not-allowed"
+              className="w-full flex items-center justify-center gap-3 py-3 px-4 bg-[#F9F9F9] border border-gray-200 rounded-xl hover:bg-gray-50 mb-3 transition-colors font-medium disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {googleLoading ? (
                 'Connecting to Google...'
@@ -235,7 +235,7 @@ export default function Auth() {
 
             <button
               onClick={() => setScreen('email')}
-              className="w-full flex items-center justify-center gap-3 py-3 px-4 border rounded-xl hover:bg-gray-50 mb-6 transition-colors font-medium"
+              className="w-full flex items-center justify-center gap-3 py-3 px-4 bg-[#F9F9F9] border border-gray-200 rounded-xl hover:bg-gray-50 mb-6 transition-colors font-medium"
             >
               <Mail className="w-5 h-5" /> Continue with email
             </button>
@@ -253,13 +253,14 @@ export default function Auth() {
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               placeholder="you@example.com"
-              className="w-full px-4 py-3 border rounded-xl focus:outline-none focus:border-teal-500"
+              className="w-full px-4 py-3 bg-[#F9F9F9] border border-gray-200 rounded-xl focus:outline-none focus:border-gray-500"
               autoFocus
             />
             <button
               onClick={handleSendCode}
               disabled={isLoading || !email.includes('@')}
-              className="w-full py-3 bg-[#E3FCEF] text-gray-800 font-medium rounded-xl hover:bg-[#d0f8e4] disabled:opacity-50 disabled:cursor-not-allowed transition"
+              className="w-full py-3 bg-[#E3FCEF] text-gray-800 font-medium rounded-xl hover:bg-[#d0f8e4] 
+              disabled:opacity-50 disabled:cursor-not-allowed transition cursor-pointer"
             >
               {isLoading ? 'Sending...' : 'Send code'}
             </button>
@@ -271,26 +272,56 @@ export default function Auth() {
             <p className="text-sm text-center text-gray-600">
               We sent a code to <strong>{email}</strong>
             </p>
-            <input
-              type="text"
-              maxLength={6}
-              value={otp}
-              onChange={(e) => setOtp(e.target.value.replace(/\D/g, '').slice(0, 6))}
-              placeholder="000000"
-              className="w-full text-center text-3xl font-bold tracking-widest border rounded-xl py-4 focus:outline-none focus:border-teal-500"
-              autoFocus
-            />
+            <div className="flex justify-center gap-3">
+              {[...Array(6)].map((_, index) => (
+                <input
+                  key={index}
+                  type="text"
+                  inputMode="numeric"
+                  maxLength={1}
+                  value={otp[index] || ''}
+                  autoFocus={index === 0}
+                  onChange={(e) => {
+                    const value = e.target.value.replace(/\D/g, '');
+
+                    if (!value) return;
+
+                    const newOtp = otp.split('');
+                    newOtp[index] = value;
+                    setOtp(newOtp.join('').slice(0, 6));
+
+                    // Auto focus next box
+                    const next = document.getElementById(`otp-${index + 1}`);
+                    next?.focus();
+                  }}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Backspace') {
+                      const newOtp = otp.split('');
+                      newOtp[index] = '';
+                      setOtp(newOtp.join(''));
+
+                      // Focus previous
+                      const prev = document.getElementById(`otp-${index - 1}`);
+                      prev?.focus();
+                    }
+                  }}
+                  id={`otp-${index}`}
+                  className="w-12 h-14 text-center text-2xl text-gray-500 font-medium border border-gray-200 rounded-xl focus:outline-none focus:border-gray-500"
+                />
+              ))}
+          </div>
+
             <button
               onClick={handleVerifyCode}
               disabled={otp.length !== 6}
-              className="w-full py-3 bg-[#E3FCEF] text-gray-800 font-medium rounded-xl hover:bg-[#d0f8e4] disabled:opacity-50 transition"
+              className="w-full py-3 bg-[#E3FCEF] text-gray-800 font-medium rounded-xl hover:bg-[#d0f8e4] disabled:opacity-50 transition cursor-pointer"
             >
               Confirm & Log in
             </button>
             <button
               onClick={handleSendCode}
               disabled={isLoading}
-              className="text-teal-600 text-sm hover:underline block mx-auto"
+              className="text-gray-600 text-sm hover:underline block mx-auto"
             >
               {isLoading ? 'Resending...' : 'Resend code'}
             </button>
