@@ -3,16 +3,18 @@
 import Header from "@/app/components/Header";
 import { message_circle_more } from "@/public";
 import {
-  Bell,
   ChevronDown,
   ChevronRight,
   ChevronUp,
-  CreditCard,
-  Pencil,
   UploadCloud,
-  UserRound,
-  X,
   FileText,
+  Building2,
+  Target,
+  AlertTriangle,
+  BarChart3,
+  Users,
+  ScrollText,
+  Handshake,
 } from "lucide-react";
 import Image from "next/image";
 import React, { useState, useEffect, useRef, useMemo } from "react";
@@ -296,22 +298,21 @@ const Page = () => {
               <div className="w-72 hidden md:flex flex-col gap-2 sticky top-17 self-start">
                 <div className="flex flex-col gap-1">
                   {[
-                    { name: "Institution Information", icon: Pencil },
-                    { name: "Investment Objectives", icon: UserRound },
-                    { name: "Risk Appetite", icon: CreditCard },
-                    { name: "Performance Metrics", icon: Bell },
-                    { name: "Stakeholder Engagement", icon: Bell },
-                    { name: "Regulatory Compliance", icon: Bell },
-                    { name: "Partnership Opportunities", icon: Bell },
+                    { name: "Institution Information", icon: Building2 },
+                    { name: "Investment Objectives", icon: Target },
+                    { name: "Risk Appetite", icon: AlertTriangle },
+                    { name: "Performance Metrics", icon: BarChart3 },
+                    { name: "Stakeholder Engagement", icon: Users },
+                    { name: "Regulatory Compliance", icon: ScrollText },
+                    { name: "Partnership Opportunities", icon: Handshake },
                   ].map(({ name, icon: Icon }) => (
                     <div
                       key={name}
                       onClick={() => handleNavClick(name)}
-                      className={`flex items-center gap-2 px-5 py-2 rounded-lg cursor-pointer transition-colors duration-300 ${
-                        activeSection === name
+                      className={`flex items-center gap-2 px-5 py-2 rounded-lg cursor-pointer transition-colors duration-300 ${activeSection === name
                           ? "bg-[#F2F2F2] text-[#044D5E]"
                           : "hover:bg-gray-50 text-gray-500"
-                      }`}
+                        }`}
                     >
                       <Icon size={16} />
                       <p className="text-xs">{name}</p>
@@ -406,9 +407,8 @@ const Page = () => {
                         What are your specific objectives in seeking green finance opportunities?
                       </p>
                       <div
-                        className={`w-full text-xs rounded-lg px-4 py-2 flex justify-between items-center cursor-pointer transition-all duration-200 ${
-                          objectiveOpen ? "border border-gray-400 bg-white shadow-sm" : "border border-gray-300 hover:bg-gray-50"
-                        }`}
+                        className={`w-full text-xs rounded-lg px-4 py-2 flex justify-between items-center cursor-pointer transition-all duration-200 ${objectiveOpen ? "border border-gray-400 bg-white shadow-sm" : "border border-gray-300 hover:bg-gray-50"
+                          }`}
                         onClick={() => setObjectiveOpen(!objectiveOpen)}
                       >
                         <span className="text-gray-600">{selectedObjective}</span>
@@ -470,15 +470,14 @@ const Page = () => {
                             key={level}
                             type="button"
                             onClick={() => setRiskTolerance(riskTolerance === level ? null : level as any)}
-                            className={`px-4 py-2 rounded-lg border text-xs font-medium text-gray-500 ${
-                              riskTolerance === level
+                            className={`px-4 py-2 rounded-lg border text-xs font-medium text-gray-500 ${riskTolerance === level
                                 ? level === "low"
                                   ? "bg-green-100 border-green-500"
                                   : level === "medium"
-                                  ? "bg-yellow-100 border-yellow-500"
-                                  : "bg-red-100 border-red-500"
+                                    ? "bg-yellow-100 border-yellow-500"
+                                    : "bg-red-100 border-red-500"
                                 : "hover:bg-gray-50 border-gray-300"
-                            } focus:outline-none`}
+                              } focus:outline-none`}
                           >
                             {level[0].toUpperCase() + level.slice(1)}
                           </button>
@@ -493,18 +492,16 @@ const Page = () => {
                         <button
                           type="button"
                           onClick={() => setExploreEmerging(exploreEmerging === true ? null : true)}
-                          className={`px-4 py-2 rounded-lg border text-xs font-medium text-gray-500 ${
-                            exploreEmerging === true ? "bg-green-100 border-green-500" : "hover:bg-gray-50 border-gray-300"
-                          } focus:outline-none`}
+                          className={`px-4 py-2 rounded-lg border text-xs font-medium text-gray-500 ${exploreEmerging === true ? "bg-green-100 border-green-500" : "hover:bg-gray-50 border-gray-300"
+                            } focus:outline-none`}
                         >
                           Yes
                         </button>
                         <button
                           type="button"
                           onClick={() => setExploreEmerging(exploreEmerging === false ? null : false)}
-                          className={`px-4 py-2 rounded-lg border text-xs font-medium text-gray-500 ${
-                            exploreEmerging === false ? "bg-red-100 border-red-500" : "hover:bg-gray-50 border-gray-300"
-                          } focus:outline-none`}
+                          className={`px-4 py-2 rounded-lg border text-xs font-medium text-gray-500 ${exploreEmerging === false ? "bg-red-100 border-red-500" : "hover:bg-gray-50 border-gray-300"
+                            } focus:outline-none`}
                         >
                           No
                         </button>
@@ -527,18 +524,16 @@ const Page = () => {
                         <button
                           type="button"
                           onClick={() => setMeasurePerformance(measurePerformance === true ? null : true)}
-                          className={`px-4 py-2 rounded-lg border text-xs font-medium text-gray-500 ${
-                            measurePerformance === true ? "bg-green-100 border-green-500" : "hover:bg-gray-50 border-gray-300"
-                          } focus:outline-none`}
+                          className={`px-4 py-2 rounded-lg border text-xs font-medium text-gray-500 ${measurePerformance === true ? "bg-green-100 border-green-500" : "hover:bg-gray-50 border-gray-300"
+                            } focus:outline-none`}
                         >
                           Yes
                         </button>
                         <button
                           type="button"
                           onClick={() => setMeasurePerformance(measurePerformance === false ? null : false)}
-                          className={`px-4 py-2 rounded-lg border text-xs font-medium text-gray-500 ${
-                            measurePerformance === false ? "bg-red-100 border-red-500" : "hover:bg-gray-50 border-gray-300"
-                          } focus:outline-none`}
+                          className={`px-4 py-2 rounded-lg border text-xs font-medium text-gray-500 ${measurePerformance === false ? "bg-red-100 border-red-500" : "hover:bg-gray-50 border-gray-300"
+                            } focus:outline-none`}
                         >
                           No
                         </button>
@@ -560,9 +555,8 @@ const Page = () => {
                         What Key Performance Indicators (KPIs) are important to your institution?
                       </p>
                       <div
-                        className={`w-full text-xs rounded-lg px-4 py-2 flex justify-between items-center cursor-pointer transition-all duration-200 ${
-                          kpiDropdownOpen ? "border border-gray-400 bg-white shadow-sm" : "border border-gray-300 hover:bg-gray-50"
-                        }`}
+                        className={`w-full text-xs rounded-lg px-4 py-2 flex justify-between items-center cursor-pointer transition-all duration-200 ${kpiDropdownOpen ? "border border-gray-400 bg-white shadow-sm" : "border border-gray-300 hover:bg-gray-50"
+                          }`}
                         onClick={() => setKpiDropdownOpen(!kpiDropdownOpen)}
                       >
                         <span className="text-gray-600">{selectedKpi || "Select KPI"}</span>
@@ -607,9 +601,8 @@ const Page = () => {
                         Who are the key stakeholders within your organization involved in green finance decisions?
                       </p>
                       <div
-                        className={`w-full text-xs rounded-lg px-4 py-2 flex justify-between items-center cursor-pointer transition-all duration-200 ${
-                          stakeholderDropdownOpen1 ? "border border-gray-400 bg-white shadow-sm" : "border border-gray-300 hover:bg-gray-50"
-                        }`}
+                        className={`w-full text-xs rounded-lg px-4 py-2 flex justify-between items-center cursor-pointer transition-all duration-200 ${stakeholderDropdownOpen1 ? "border border-gray-400 bg-white shadow-sm" : "border border-gray-300 hover:bg-gray-50"
+                          }`}
                         onClick={() => setStakeholderDropdownOpen1(!stakeholderDropdownOpen1)}
                       >
                         <span className="text-gray-600">{selectedStakeholder1 || "Select Stakeholder"}</span>
@@ -645,9 +638,8 @@ const Page = () => {
                         Are there any specific requirements or preferences from your stakeholders?
                       </p>
                       <div
-                        className={`w-full text-xs rounded-lg px-4 py-2 flex justify-between items-center cursor-pointer transition-all duration-200 ${
-                          stakeholderDropdownOpen2 ? "border border-gray-400 bg-white shadow-sm" : "border border-gray-300 hover:bg-gray-50"
-                        }`}
+                        className={`w-full text-xs rounded-lg px-4 py-2 flex justify-between items-center cursor-pointer transition-all duration-200 ${stakeholderDropdownOpen2 ? "border border-gray-400 bg-white shadow-sm" : "border border-gray-300 hover:bg-gray-50"
+                          }`}
                         onClick={() => setStakeholderDropdownOpen2(!stakeholderDropdownOpen2)}
                       >
                         <span className="text-gray-600">{selectedStakeholder2 || "Select Preference"}</span>
@@ -695,18 +687,16 @@ const Page = () => {
                         <button
                           type="button"
                           onClick={() => setRegulatoryCompliance(regulatoryCompliance === true ? null : true)}
-                          className={`px-4 py-2 rounded-lg border text-xs font-medium text-gray-500 ${
-                            regulatoryCompliance === true ? "bg-green-100 border-green-500" : "hover:bg-gray-50 border-gray-300"
-                          } focus:outline-none`}
+                          className={`px-4 py-2 rounded-lg border text-xs font-medium text-gray-500 ${regulatoryCompliance === true ? "bg-green-100 border-green-500" : "hover:bg-gray-50 border-gray-300"
+                            } focus:outline-none`}
                         >
                           Yes
                         </button>
                         <button
                           type="button"
                           onClick={() => setRegulatoryCompliance(regulatoryCompliance === false ? null : false)}
-                          className={`px-4 py-2 rounded-lg border text-xs font-medium text-gray-500 ${
-                            regulatoryCompliance === false ? "bg-red-100 border-red-500" : "hover:bg-gray-50 border-gray-300"
-                          } focus:outline-none`}
+                          className={`px-4 py-2 rounded-lg border text-xs font-medium text-gray-500 ${regulatoryCompliance === false ? "bg-red-100 border-red-500" : "hover:bg-gray-50 border-gray-300"
+                            } focus:outline-none`}
                         >
                           No
                         </button>
@@ -721,9 +711,8 @@ const Page = () => {
                               key={r}
                               type="button"
                               onClick={() => toggleRegulation(r)}
-                              className={`px-4 py-2 rounded-lg border text-xs font-medium text-gray-500 ${
-                                selectedRegulations.includes(r) ? "bg-green-100 border-green-500" : "hover:bg-gray-50 border-gray-300"
-                              } focus:outline-none`}
+                              className={`px-4 py-2 rounded-lg border text-xs font-medium text-gray-500 ${selectedRegulations.includes(r) ? "bg-green-100 border-green-500" : "hover:bg-gray-50 border-gray-300"
+                                } focus:outline-none`}
                             >
                               {r}
                             </button>
@@ -736,9 +725,8 @@ const Page = () => {
                         How do you ensure alignment with relevant sustainability standards?
                       </p>
                       <div
-                        className={`w-full text-xs rounded-lg px-4 py-2 flex justify-between items-center cursor-pointer transition-all duration-200 ${
-                          standardsDropdownOpen ? "border border-gray-400 bg-white shadow-sm" : "border border-gray-300 hover:bg-gray-50"
-                        }`}
+                        className={`w-full text-xs rounded-lg px-4 py-2 flex justify-between items-center cursor-pointer transition-all duration-200 ${standardsDropdownOpen ? "border border-gray-400 bg-white shadow-sm" : "border border-gray-300 hover:bg-gray-50"
+                          }`}
                         onClick={() => setStandardsDropdownOpen(!standardsDropdownOpen)}
                       >
                         <span className="text-gray-600">{selectedStandard || "Select Standard"}</span>
@@ -786,18 +774,16 @@ const Page = () => {
                         <button
                           type="button"
                           onClick={() => setPartnershipOpportunities(partnershipOpportunities === true ? null : true)}
-                          className={`px-4 py-2 rounded-lg border text-xs font-medium text-gray-500 ${
-                            partnershipOpportunities === true ? "bg-green-100 border-green-500" : "hover:bg-gray-50 border-gray-300"
-                          } focus:outline-none`}
+                          className={`px-4 py-2 rounded-lg border text-xs font-medium text-gray-500 ${partnershipOpportunities === true ? "bg-green-100 border-green-500" : "hover:bg-gray-50 border-gray-300"
+                            } focus:outline-none`}
                         >
                           Yes
                         </button>
                         <button
                           type="button"
                           onClick={() => setPartnershipOpportunities(partnershipOpportunities === false ? null : false)}
-                          className={`px-4 py-2 rounded-lg border text-xs font-medium text-gray-500 ${
-                            partnershipOpportunities === false ? "bg-red-100 border-red-500" : "hover:bg-gray-50 border-gray-300"
-                          } focus:outline-none`}
+                          className={`px-4 py-2 rounded-lg border text-xs font-medium text-gray-500 ${partnershipOpportunities === false ? "bg-red-100 border-red-500" : "hover:bg-gray-50 border-gray-300"
+                            } focus:outline-none`}
                         >
                           No
                         </button>
@@ -812,9 +798,8 @@ const Page = () => {
                               key={p}
                               type="button"
                               onClick={() => togglePartnership(p)}
-                              className={`px-4 py-2 rounded-lg border text-xs font-medium text-gray-500 ${
-                                selectedPartnerships.includes(p) ? "bg-green-100 border-green-500" : "hover:bg-gray-50 border-gray-300"
-                              } focus:outline-none`}
+                              className={`px-4 py-2 rounded-lg border text-xs font-medium text-gray-500 ${selectedPartnerships.includes(p) ? "bg-green-100 border-green-500" : "hover:bg-gray-50 border-gray-300"
+                                } focus:outline-none`}
                             >
                               {p}
                             </button>
